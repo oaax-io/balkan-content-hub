@@ -97,43 +97,37 @@ function Home() {
       </section>
 
       {/* Section 4 — Angebote */}
-      <section className="py-24 px-6 bg-card">
+      <section className="py-24 px-6">
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <p className="text-gold tracking-[0.3em] uppercase text-xs mb-4">{content.offers_eyebrow}</p>
             <h2 className="font-display text-4xl md:text-5xl">{content.offers_title}</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Brunch */}
-            <Link to="/brunch" className="group relative overflow-hidden rounded-sm bg-background p-8 flex flex-col items-center text-center hover:shadow-lg transition">
-              <div className="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition" />
-              <h3 className="font-display text-3xl mb-3 relative z-10">{content.offers_brunch_label}</h3>
-              <p className="text-muted-foreground mb-8 relative z-10">{content.offers_brunch_desc}</p>
-              <span className="mt-auto inline-flex items-center gap-2 text-gold text-sm font-medium uppercase tracking-widest relative z-10">
-                {content.offers_brunch_cta}
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </span>
-            </Link>
-            {/* Dinner */}
-            <Link to="/dinner" className="group relative overflow-hidden rounded-sm bg-background p-8 flex flex-col items-center text-center hover:shadow-lg transition">
-              <div className="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition" />
-              <h3 className="font-display text-3xl mb-3 relative z-10">{content.offers_dinner_label}</h3>
-              <p className="text-muted-foreground mb-8 relative z-10">{content.offers_dinner_desc}</p>
-              <span className="mt-auto inline-flex items-center gap-2 text-gold text-sm font-medium uppercase tracking-widest relative z-10">
-                {content.offers_dinner_cta}
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </span>
-            </Link>
-            {/* Events */}
-            <Link to="/events" className="group relative overflow-hidden rounded-sm bg-background p-8 flex flex-col items-center text-center hover:shadow-lg transition">
-              <div className="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition" />
-              <h3 className="font-display text-3xl mb-3 relative z-10">{content.offers_events_label}</h3>
-              <p className="text-muted-foreground mb-8 relative z-10">{content.offers_events_desc}</p>
-              <span className="mt-auto inline-flex items-center gap-2 text-gold text-sm font-medium uppercase tracking-widest relative z-10">
-                {content.offers_events_cta}
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </span>
-            </Link>
+            {[
+              { to: "/brunch", label: content.offers_brunch_label, desc: content.offers_brunch_desc, cta: content.offers_brunch_cta, img: galleries[0] || introImg },
+              { to: "/dinner", label: content.offers_dinner_label, desc: content.offers_dinner_desc, cta: content.offers_dinner_cta, img: galleries[1] || hostImg },
+              { to: "/events", label: content.offers_events_label, desc: content.offers_events_desc, cta: content.offers_events_cta, img: galleries[2] || sliderImages[0] },
+            ].map((card) => (
+              <Link
+                key={card.to}
+                to={card.to}
+                className="group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-xl shadow-black/5 ring-1 ring-border/60 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/10 transition-all duration-500"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img src={card.img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                </div>
+                <div className="p-8 flex flex-col flex-1 text-center">
+                  <h3 className="font-display text-3xl mb-3">{card.label}</h3>
+                  <p className="text-muted-foreground mb-8">{card.desc}</p>
+                  <span className="mt-auto inline-flex items-center justify-center gap-2 text-gold text-sm font-medium uppercase tracking-widest group-hover:gap-3 transition-all">
+                    {card.cta}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </span>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
