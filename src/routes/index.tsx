@@ -33,6 +33,10 @@ function Home() {
     .map((s) => s.trim())
     .filter(Boolean);
   const disclaimer = content.reservation_disclaimer || "";
+  const occasions = (content.reservation_occasions || "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   return (
     <div className="min-h-screen flex flex-col">
