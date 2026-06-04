@@ -56,7 +56,10 @@ function About() {
       </section>
 
       {/* Balkaneros? */}
-      <section className="py-24 px-6 bg-card">
+      <section
+        className="relative py-24 px-6 bg-background text-foreground"
+        style={{ backgroundImage: `linear-gradient(rgba(20,15,10,0.88), rgba(20,15,10,0.88)), url(${offerBrunch})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-gold tracking-[0.3em] uppercase text-xs mb-4">
             {content.about_eyebrow || "Wer sind die Balkaneros?"}
