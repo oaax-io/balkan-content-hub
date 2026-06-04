@@ -23,13 +23,21 @@ export interface ReservationCardProps {
   eventDates: string[];
   disclaimer?: string;
   occasions?: string[];
+  occasionsWithDates?: string[];
   variant?: "overlay" | "page";
 }
 
-export function ReservationCard({ eventDates, disclaimer, occasions, variant = "overlay" }: ReservationCardProps) {
+export function ReservationCard({
+  eventDates,
+  disclaimer,
+  occasions,
+  occasionsWithDates,
+  variant = "overlay",
+}: ReservationCardProps) {
   const createFn = useServerFn(createReservation);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [occasion, setOccasion] = useState("");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -59,110 +67,170 @@ export function ReservationCard({ eventDates, disclaimer, occasions, variant = "
     }
   }
 
+  const wrapperBase =
+    "bg-card text-card-foreground border border-gold/25 rounded-sm shadow-2xl backdrop-blur-sm";
   const wrapperClass =
     variant === "overlay"
-      ? "bg-[#faf8f5] text-[#2d2d2d] rounded-md p-5 sm:p-6 shadow-2xl border border-[#e8e0d4]"
-      : "bg-[#faf8f5] text-[#2d2d2d] border border-[#e8e0d4] rounded-md p-6 sm:p-8";
+      ? `${wrapperBase} p-5 sm:p-6`
+      : `${wrapperBase} p-6 sm:p-8`;
 
   if (done) {
     return (
       <div className={wrapperClass}>
-        <h3 className="font-display text-2xl text-[#8b6f5e] mb-2">Hvala! Anfrage erhalten.</h3>
-        <p className="text-sm text-[#5a4a3a]">
+        <p className="text-gold tracking-[0.3em] uppercase text-[10px] mb-2 font-semibold">Hvala!</p>
+        <h3 className="font-display text-2xl text-foreground mb-2">Anfrage erhalten.</h3>
+        <p className="text-sm text-muted-foreground">
           Du erhältst gleich eine Bestätigungs-E-Mail. Wir melden uns mit der finalen Zusage.
         </p>
       </div>
     );
   }
 
-  const occasionList = occasions && occasions.length > 0 ? occasions : [
-    "Dinner & Dance (99.- pro Person)",
-    "Balkan Brunch",
-    "Exklusiv Event",
-    "Keine (Nur eine Anfrage)",
-  ];
+  const occasionList =
+    occasions && occasions.length > 0
+      ? occasions
+      : [
+          "Dinner & Dance (99.- pro Person)",
+          "Balkan Brunch",
+          "Exklusiv Event",
+          "Keine (Nur eine Anfrage)",
+        ];
+
+  const dateOccasions =
+    occasionsWithDates && occasionsWithDates.length > 0
+      ? occasionsWithDates
+      : ["Dinner & Dance (99.- pro Person)"];
+
+  const showEventDates = dateOccasions.includes(occasion) && eventDates.length > 0;
 
   return (
-    <form onSubmit={onSubmit} className={wrapperClass + " space-y-3"}>
-      <div className="text-center">
-        <p className="text-[#8b6f5e] tracking-[0.25em] uppercase text-[10px] mb-1 font-semibold">Balkaneros-Booking</p>
-        <h3 className="font-display text-xl sm:text-2xl leading-tight text-[#2d2d2d]">
+    <form onSubmit={onSubmit} className={`${wrapperClass} space-y-3`}>
+      <div className="text-center pb-1">
+        <p className="text-gold tracking-[0.3em] uppercase text-[10px] mb-1 font-semibold">
+          Balkaneros-Booking
+        </p>
+        <h3 className="font-display text-xl sm:text-2xl leading-tight text-foreground">
           Wir freuen uns, dich bei uns verwöhnen zu dürfen.
         </h3>
       </div>
 
-      <Select label="Was ist der Anlass deiner Reservation? *" name="occasion" required dark>
+      <Select
+        label="Was ist der Anlass deiner Reservation? *"
+        name="occasion"
+        required
+        value={occasion}
+        onChange={(e) => setOccasion(e.target.value)}
+      >
         <option value="">Bitte wählen</option>
         {occasionList.map((o) => (
-          <option key={o} value={o}>{o}</option>
+          <option key={o} value={o}>
+            {o}
+          </option>
         ))}
       </Select>
 
-      <Input label="Name *" name="name" required maxLength={120} autoComplete="name" dark />
+      <Input label="Name *" name="name" required maxLength={120} autoComplete="name" />
 
-      <Input label="E-Mail *" name="email" type="email" required maxLength={255} autoComplete="email" inputMode="email" dark />
+      <Input
+        label="E-Mail *"
+        name="email"
+        type="email"
+        required
+        maxLength={255}
+        autoComplete="email"
+        inputMode="email"
+      />
 
       <div className="grid grid-cols-[7.5rem_1fr] gap-2">
-        <Select label="Vorwahl" name="country_code" defaultValue="+41" dark>
+        <Select label="Vorwahl" name="country_code" defaultValue="+41">
           {COUNTRY_CODES.map((c) => (
-            <option key={c.code} value={c.code}>{c.label}</option>
+            <option key={c.code} value={c.code}>
+              {c.label}
+            </option>
           ))}
         </Select>
-        <Input label="Telefon" name="phone" type="tel" maxLength={40} autoComplete="tel" inputMode="tel" dark />
+        <Input label="Telefon" name="phone" type="tel" maxLength={40} autoComplete="tel" inputMode="tel" />
       </div>
 
-      <Select label="Personen *" name="party_size" required defaultValue="2" dark>
+      <Select label="Personen *" name="party_size" required defaultValue="2">
         {PARTY_SIZES.map((p, i) => (
-          <option key={p} value={i < 15 ? String(i + 2) : "17"}>{p}</option>
+          <option key={p} value={i < 15 ? String(i + 2) : "17"}>
+            {p}
+          </option>
         ))}
       </Select>
 
-      <Select label="Nächste Event-Daten *" name="event_date" required dark>
-        <option value="">Bitte wählen</option>
-        {eventDates.map((d) => (
-          <option key={d} value={d}>{d}</option>
-        ))}
-      </Select>
+      {showEventDates && (
+        <Select label="Nächste Event-Daten *" name="event_date" required>
+          <option value="">Bitte wählen</option>
+          {eventDates.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </Select>
+      )}
+
+      <Textarea
+        label="Bemerkung (Allergien, Wünsche)"
+        name="notes"
+        maxLength={1000}
+        rows={3}
+        placeholder="z.B. Allergien, Geburtstag, Sitzwünsche …"
+      />
 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-full bg-[#8b6f5e] px-6 py-3 text-sm font-semibold uppercase tracking-widest text-white hover:opacity-90 active:scale-[0.99] transition disabled:opacity-50"
+        className="w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-widest text-primary-foreground hover:opacity-90 active:scale-[0.99] transition disabled:opacity-50"
       >
         {submitting ? "Wird gesendet …" : "Reservieren"}
       </button>
 
       {disclaimer && (
-        <p className="text-[11px] leading-snug text-[#5a4a3a]/80 text-center pt-1">{disclaimer}</p>
+        <p className="text-[11px] leading-snug text-muted-foreground text-center pt-1">{disclaimer}</p>
       )}
     </form>
   );
 }
 
-function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string; dark?: boolean }) {
-  const { label, dark, ...rest } = props;
+const fieldBase =
+  "w-full bg-background/60 border border-gold/20 rounded-sm px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:ring-1 focus:ring-gold/40 outline-none transition";
+
+function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+  const { label, ...rest } = props;
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-widest text-[#5a4a3a] mb-1 font-medium">{label}</label>
-      <input
-        {...rest}
-        className="w-full bg-white border border-[#d8d0c4] rounded-sm px-3 py-2 text-sm text-[#2d2d2d] placeholder:text-[#a09080] focus:border-[#8b6f5e] outline-none transition"
-      />
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-medium">
+        {label}
+      </label>
+      <input {...rest} className={fieldBase} />
     </div>
   );
 }
 
-function Select(props: React.SelectHTMLAttributes<HTMLSelectElement> & { label: string; dark?: boolean }) {
-  const { label, dark, children, ...rest } = props;
+function Select(props: React.SelectHTMLAttributes<HTMLSelectElement> & { label: string }) {
+  const { label, children, ...rest } = props;
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-widest text-[#5a4a3a] mb-1 font-medium">{label}</label>
-      <select
-        {...rest}
-        className="w-full bg-white border border-[#d8d0c4] rounded-sm px-3 py-2 text-sm text-[#2d2d2d] focus:border-[#8b6f5e] outline-none transition"
-      >
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-medium">
+        {label}
+      </label>
+      <select {...rest} className={fieldBase}>
         {children}
       </select>
+    </div>
+  );
+}
+
+function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
+  const { label, ...rest } = props;
+  return (
+    <div>
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-medium">
+        {label}
+      </label>
+      <textarea {...rest} className={`${fieldBase} resize-none`} />
     </div>
   );
 }
