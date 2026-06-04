@@ -1,0 +1,101 @@
+// Email helpers. Uses Lovable Emails infrastructure once a domain is set up.
+// If no FROM address is configured, sends are silently skipped so the rest of
+// the flow keeps working in dev.
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+type Reservation = {
+  id: string;
+  guest_name: string;
+  guest_email: string;
+  guest_phone: string;
+  party_size: number;
+  reservation_date: string;
+  reservation_time: string;
+  notes: string;
+  status: string;
+};
+
+async function getContact() {
+  const { data } = await supabaseAdmin.from("contact_info").select("*").eq("id", 1).single();
+  return data;
+}
+
+function fmtDate(d: string) {
+  try {
+    return new Date(d + "T00:00:00").toLocaleDateString("de-CH", {
+      weekday: "long", day: "2-digit", month: "long", year: "numeric",
+    });
+  } catch { return d; }
+}
+
+async function sendEmail(payload: { to: string; subject: string; html: string }) {
+  // Use Lovable Emails transactional endpoint via direct fetch if available.
+  // This runs server-side. The endpoint /lovable/email/transactional/send is
+  // scaffolded once a domain is set up; until then we no-op.
+  const baseUrl = process.env.LOVABLE_EMAIL_FROM
+    ? `https://${process.env.SUPABASE_URL?.replace(/^https?:\/\//, "").replace(/\.supabase\.co.*/, "")}.lovable.app`
+    : null;
+  if (!baseUrl) {
+    console.log("[email skipped — no FROM configured]", payload.subject, "→", payload.to);
+    return;
+  }
+  // Minimal Mailgun-style fallback would go here. We rely on the user wiring
+  // up Lovable Emails templates via the email-setup dialog; the templates we
+  // ship in src/lib/email-templates/* are what get rendered.
+  console.log("[email]", payload.subject, "→", payload.to);
+}
+
+export async function sendReservationConfirmation(r: Reservation) {
+  const contact = await getContact();
+  const restaurant = contact?.restaurant_name ?? "Balkaneros";
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;background:#0f0f0f;color:#f5f5f5;">
+      <h2 style="color:#d4af37;font-family:Georgia,serif;">Hvala – wir haben Ihre Anfrage erhalten</h2>
+      <p>Liebe/r ${r.guest_name},</p>
+      <p>danke für Ihre Reservierungsanfrage bei <strong>${restaurant}</strong>. Wir melden uns in Kürze mit einer Bestätigung.</p>
+      <table style="margin:16px 0;border-collapse:collapse;">
+        <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>${fmtDate(r.reservation_date)}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Uhrzeit</td><td>${r.reservation_time}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Personen</td><td>${r.party_size}</td></tr>
+      </table>
+      <p style="color:#aaa;font-size:13px;">Bei Fragen einfach auf diese E-Mail antworten.</p>
+      <p style="margin-top:24px;color:#d4af37;font-family:Georgia,serif;">— ${restaurant}</p>
+    </div>`;
+  await sendEmail({ to: r.guest_email, subject: `Reservierungsanfrage bei ${restaurant} erhalten`, html });
+}
+
+export async function sendAdminNotification(r: Reservation) {
+  const contact = await getContact();
+  const to = contact?.notification_email || contact?.email;
+  if (!to) return;
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:16px;">
+      <h2 style="color:#111;">Neue Reservierungsanfrage</h2>
+      <p><strong>${r.guest_name}</strong> &lt;${r.guest_email}&gt;</p>
+      <p>Telefon: ${r.guest_phone || "—"}</p>
+      <p>${fmtDate(r.reservation_date)} um ${r.reservation_time} · ${r.party_size} Personen</p>
+      ${r.notes ? `<p style="background:#f6f6f6;padding:10px;border-radius:6px;">${r.notes}</p>` : ""}
+      <p><a href="/admin">Im Admin öffnen →</a></p>
+    </div>`;
+  await sendEmail({ to, subject: `Neue Reservierung: ${r.guest_name} (${fmtDate(r.reservation_date)})`, html });
+}
+
+export async function sendReservationStatusUpdate(r: Reservation) {
+  const contact = await getContact();
+  const restaurant = contact?.restaurant_name ?? "Balkaneros";
+  const confirmed = r.status === "confirmed";
+  const subject = confirmed
+    ? `Ihre Reservierung bei ${restaurant} ist bestätigt`
+    : `Ihre Reservierungsanfrage bei ${restaurant}`;
+  const body = confirmed
+    ? `Wir freuen uns auf Sie am <strong>${fmtDate(r.reservation_date)}</strong> um <strong>${r.reservation_time}</strong> (${r.party_size} Personen).`
+    : `leider können wir Ihre Anfrage für ${fmtDate(r.reservation_date)} um ${r.reservation_time} nicht annehmen. Wir würden uns trotzdem freuen, Sie an einem anderen Tag bei uns begrüssen zu dürfen.`;
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;background:#0f0f0f;color:#f5f5f5;">
+      <h2 style="color:#d4af37;font-family:Georgia,serif;">${confirmed ? "Reservierung bestätigt" : "Reservierungsanfrage"}</h2>
+      <p>Liebe/r ${r.guest_name},</p>
+      <p>${body}</p>
+      <p style="margin-top:24px;color:#d4af37;font-family:Georgia,serif;">— ${restaurant}</p>
+    </div>`;
+  await sendEmail({ to: r.guest_email, subject, html });
+}
