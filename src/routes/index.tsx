@@ -76,7 +76,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Section 3 — Gastgeberin */}
+      {/* Section 3 — Gastgeberin & Wer sind die Balkaneros? */}
       <section className="py-24 px-6 bg-card">
         <div className="mx-auto max-w-6xl grid md:grid-cols-2 gap-16 items-center">
           <div className="order-2 md:order-1 aspect-[4/5] overflow-hidden rounded-sm">
@@ -88,11 +88,8 @@ function Home() {
             <p className="text-muted-foreground leading-relaxed text-lg">{content.host_text}</p>
           </div>
         </div>
-      </section>
 
-      {/* Section 3b — Wer sind die Balkaneros? */}
-      <section className="py-24 px-6">
-        <div className="mx-auto max-w-4xl text-center">
+        <div className="mx-auto max-w-4xl text-center mt-20 pt-16 border-t border-border">
           <p className="text-gold tracking-[0.3em] uppercase text-xs mb-4">{content.about_eyebrow || "Wer sind die Balkaneros?"}</p>
           <h2 className="font-display text-4xl md:text-5xl mb-8">{content.about_title}</h2>
           <div className="text-muted-foreground leading-relaxed text-lg whitespace-pre-line">{content.about_text}</div>
