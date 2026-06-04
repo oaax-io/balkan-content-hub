@@ -184,14 +184,15 @@ export function ReservationCard({
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-full bg-[#0d0d0d] px-6 py-3 text-sm font-semibold uppercase tracking-widest text-[#f0d78c] hover:bg-[#1a1a1a] active:scale-[0.99] transition disabled:opacity-50"
+        className="w-full rounded-full bg-gold px-6 py-3 text-sm font-bold uppercase tracking-widest text-[#0d0d0d] hover:bg-[#0d0d0d] hover:text-gold border border-gold active:scale-[0.99] transition disabled:opacity-50"
       >
         {submitting ? "Wird gesendet …" : "Reservieren"}
       </button>
 
       {disclaimer && (
-        <p className="text-[11px] leading-snug text-[#7a7a7a] text-center pt-1">{disclaimer}</p>
+        <p className="text-[11px] leading-snug text-[#2d2d2d] text-center pt-1">{disclaimer}</p>
       )}
+
     </form>
   );
 }
