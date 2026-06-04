@@ -201,7 +201,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
   const { label, ...rest } = props;
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-medium">
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#6b6b6b] mb-1 font-medium">
         {label}
       </label>
       <input {...rest} className={fieldBase} />
