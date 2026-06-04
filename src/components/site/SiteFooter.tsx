@@ -47,73 +47,81 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
 
       {/* Footer content */}
       <div className="bg-[oklch(0.93_0.015_80)]">
-        <div className="mx-auto max-w-7xl px-6 py-14 grid gap-10 md:grid-cols-3">
-          {/* Logo + Address (centered) */}
-          <div className="md:col-span-1 flex flex-col items-center text-center space-y-4">
+        <div className="mx-auto max-w-7xl px-6 py-14 flex flex-col items-center gap-10">
+          {/* Logo + Infotext (centered) */}
+          <div className="flex flex-col items-center text-center space-y-4">
             <img
               src={logo}
               alt="Balkaneros"
-              className="h-16 w-auto"
+              className="h-20 w-auto"
               style={{ filter: "brightness(0.35) sepia(1) hue-rotate(5deg) saturate(2)" }}
             />
-            <p className="text-sm text-[oklch(0.4_0.01_60)] max-w-xs">
+            <p className="text-sm text-[oklch(0.4_0.01_60)] max-w-sm">
               Seit 2019 sind wir in diversen Locations in der Schweiz mit unserem Balkaneros Dinner unterwegs
             </p>
-            <p className="text-sm text-[oklch(0.4_0.01_60)] flex items-start gap-2 justify-center">
-              <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-              <span>
-                Kaspar-Koppstrasse 90<br />
-                CH-6030 Ebikon
-              </span>
-            </p>
           </div>
 
-          {/* Kontakt */}
-          <div className="text-sm space-y-3">
-            <h4 className="uppercase tracking-widest text-xs text-[oklch(0.45_0.08_75)] mb-3 font-semibold">Kontakt</h4>
-            {contact.phone && (
-              <p className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                <a href={`tel:${contact.phone}`} className="hover:text-gold transition-colors">{contact.phone}</a>
+          {/* 3 columns: Kontakt, Adresse, Social Media */}
+          <div className="w-full grid gap-10 md:grid-cols-3 text-center md:text-left">
+            {/* Kontakt */}
+            <div className="text-sm space-y-3">
+              <h4 className="uppercase tracking-widest text-xs text-[oklch(0.45_0.08_75)] mb-3 font-semibold">Kontakt</h4>
+              {contact.phone && (
+                <p className="flex items-center gap-2 justify-center md:justify-start">
+                  <Phone className="w-4 h-4" />
+                  <a href={`tel:${contact.phone}`} className="hover:text-gold transition-colors">{contact.phone}</a>
+                </p>
+              )}
+              <p className="flex items-center gap-2 justify-center md:justify-start">
+                <Mail className="w-4 h-4" />
+                <a href="mailto:info@balkaneros.ch" className="hover:text-gold transition-colors">info@balkaneros.ch</a>
               </p>
-            )}
-            <p className="flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              <a href="mailto:info@balkaneros.ch" className="hover:text-gold transition-colors">info@balkaneros.ch</a>
-            </p>
-          </div>
+            </div>
 
-          {/* Social Media */}
-          <div className="text-sm space-y-3">
-            <h4 className="uppercase tracking-widest text-xs text-[oklch(0.45_0.08_75)] mb-3 font-semibold">Social Media</h4>
-            <div className="flex gap-4">
-              <a
-                href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="w-10 h-10 rounded-full bg-[oklch(0.85_0.02_75)] flex items-center justify-center hover:bg-gold hover:text-gold-foreground transition-all"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href={facebookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className="w-10 h-10 rounded-full bg-[oklch(0.85_0.02_75)] flex items-center justify-center hover:bg-gold hover:text-gold-foreground transition-all"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href={youtubeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="YouTube"
-                className="w-10 h-10 rounded-full bg-[oklch(0.85_0.02_75)] flex items-center justify-center hover:bg-gold hover:text-gold-foreground transition-all"
-              >
-                <Youtube className="w-5 h-5" />
-              </a>
+            {/* Adresse */}
+            <div className="text-sm space-y-3">
+              <h4 className="uppercase tracking-widest text-xs text-[oklch(0.45_0.08_75)] mb-3 font-semibold">Adresse</h4>
+              <p className="flex items-start gap-2 justify-center md:justify-start">
+                <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  Kaspar-Koppstrasse 90<br />
+                  CH-6030 Ebikon
+                </span>
+              </p>
+            </div>
+
+            {/* Social Media */}
+            <div className="text-sm space-y-3">
+              <h4 className="uppercase tracking-widest text-xs text-[oklch(0.45_0.08_75)] mb-3 font-semibold">Social Media</h4>
+              <div className="flex gap-4 justify-center md:justify-start">
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="w-10 h-10 rounded-full bg-[oklch(0.85_0.02_75)] flex items-center justify-center hover:bg-gold hover:text-gold-foreground transition-all"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+                <a
+                  href={facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="w-10 h-10 rounded-full bg-[oklch(0.85_0.02_75)] flex items-center justify-center hover:bg-gold hover:text-gold-foreground transition-all"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="YouTube"
+                  className="w-10 h-10 rounded-full bg-[oklch(0.85_0.02_75)] flex items-center justify-center hover:bg-gold hover:text-gold-foreground transition-all"
+                >
+                  <Youtube className="w-5 h-5" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
