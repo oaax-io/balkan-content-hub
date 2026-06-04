@@ -67,8 +67,8 @@ function Home() {
 
       {/* Section 2 — Intro */}
       <section
-        className="relative py-24 px-6 bg-card/30"
-        style={{ backgroundImage: `linear-gradient(rgba(255,250,240,0.92), rgba(255,250,240,0.92)), url(${offerBrunch})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        className="relative py-24 px-6 bg-background text-foreground"
+        style={{ backgroundImage: `linear-gradient(rgba(20,15,10,0.88), rgba(20,15,10,0.88)), url(${offerBrunch})`, backgroundSize: "cover", backgroundPosition: "center" }}
       >
         <div className="relative mx-auto max-w-6xl grid md:grid-cols-2 gap-16 items-center">
           <div>
@@ -84,8 +84,8 @@ function Home() {
 
       {/* Section 3 — Gastgeberin & Wer sind die Balkaneros? */}
       <section
-        className="relative py-24 px-6"
-        style={{ backgroundImage: `linear-gradient(rgba(245,235,220,0.94), rgba(245,235,220,0.94)), url(${offerDinner})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        className="relative py-24 px-6 bg-background text-foreground"
+        style={{ backgroundImage: `linear-gradient(rgba(15,12,8,0.9), rgba(15,12,8,0.9)), url(${offerDinner})`, backgroundSize: "cover", backgroundPosition: "center" }}
       >
         <div className="relative mx-auto max-w-6xl grid md:grid-cols-2 gap-16 items-center">
           <div className="order-2 md:order-1 aspect-[4/5] overflow-hidden rounded-sm shadow-xl">
@@ -107,8 +107,8 @@ function Home() {
 
       {/* Section 4 — Angebote */}
       <section
-        className="relative py-24 px-6"
-        style={{ backgroundImage: `linear-gradient(rgba(240,245,240,0.94), rgba(240,245,240,0.94)), url(${offerEvents})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        className="relative py-24 px-6 bg-background text-foreground"
+        style={{ backgroundImage: `linear-gradient(rgba(12,10,8,0.9), rgba(12,10,8,0.9)), url(${offerEvents})`, backgroundSize: "cover", backgroundPosition: "center" }}
       >
         <div className="relative mx-auto max-w-6xl">
           <div className="text-center mb-16">
