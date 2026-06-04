@@ -39,7 +39,6 @@ export function SiteHeader() {
           <Link to="/dinner" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Dinner</Link>
           <Link to="/events" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Events</Link>
           <Link to="/ueber-uns" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Über uns</Link>
-          <Link to="/kontakt" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Kontakt</Link>
         </nav>
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2">
@@ -72,10 +71,10 @@ export function SiteHeader() {
             </a>
           </div>
           <Link
-            to="/reservieren"
+            to="/kontakt"
             className="hidden sm:inline-flex items-center rounded-full bg-gold px-5 py-2.5 text-sm font-medium uppercase tracking-widest text-gold-foreground hover:opacity-90 transition"
           >
-            Reservieren
+            Kontakt
           </Link>
         </div>
       </div>
