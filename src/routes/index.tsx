@@ -48,7 +48,7 @@ function Home() {
         title={content.hero_title}
         subtitle={content.hero_subtitle}
       >
-        <ReservationCard eventDates={eventDates} disclaimer={disclaimer} variant="overlay" />
+        <ReservationCard eventDates={eventDates} disclaimer={disclaimer} occasions={occasions} variant="overlay" />
       </HeroSlider>
 
 
