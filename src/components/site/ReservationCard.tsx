@@ -68,7 +68,7 @@ export function ReservationCard({
   }
 
   const wrapperBase =
-    "bg-[#fdfbf7]/85 text-[#2d2d2d] border border-[#c9b99a]/30 rounded-2xl shadow-2xl backdrop-blur-md";
+    "bg-[#fdfbf7]/55 text-[#1a1a1a] border border-gold/40 rounded-2xl shadow-2xl backdrop-blur-xl";
   const wrapperClass =
     variant === "overlay"
       ? `${wrapperBase} p-5 sm:p-6`
@@ -77,14 +77,15 @@ export function ReservationCard({
   if (done) {
     return (
       <div className={wrapperClass}>
-        <p className="text-[#8b6f5e] tracking-[0.3em] uppercase text-[10px] mb-2 font-semibold">Hvala!</p>
-        <h3 className="font-display text-2xl text-[#2d2d2d] mb-2">Anfrage erhalten.</h3>
-        <p className="text-sm text-[#5a5a5a]">
+        <p className="text-[#8a6a14] tracking-[0.3em] uppercase text-[10px] mb-2 font-bold">Hvala!</p>
+        <h3 className="font-display text-2xl text-[#1a1a1a] mb-2">Anfrage erhalten.</h3>
+        <p className="text-sm text-[#2d2d2d]">
           Du erhältst gleich eine Bestätigungs-E-Mail. Wir melden uns mit der finalen Zusage.
         </p>
       </div>
     );
   }
+
 
   const occasionList =
     occasions && occasions.length > 0
