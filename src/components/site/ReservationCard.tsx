@@ -198,13 +198,13 @@ export function ReservationCard({
 }
 
 const fieldBase =
-  "w-full bg-white/80 border border-[#d4c8b8]/60 rounded-lg px-3 py-2 text-sm text-[#2d2d2d] placeholder:text-[#9a9a9a]/70 focus:border-[#8b6f5e] focus:ring-1 focus:ring-[#8b6f5e]/30 outline-none transition";
+  "w-full bg-white/85 border border-gold/40 rounded-lg px-3 py-2 text-sm text-[#1a1a1a] placeholder:text-[#8a8a8a] focus:border-gold focus:ring-2 focus:ring-gold/40 outline-none transition";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   const { label, ...rest } = props;
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#6b6b6b] mb-1 font-medium">
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#1a1a1a] mb-1 font-semibold">
         {label}
       </label>
       <input {...rest} className={fieldBase} />
@@ -216,7 +216,7 @@ function Select(props: React.SelectHTMLAttributes<HTMLSelectElement> & { label: 
   const { label, children, ...rest } = props;
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#6b6b6b] mb-1 font-medium">
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#1a1a1a] mb-1 font-semibold">
         {label}
       </label>
       <select {...rest} className={fieldBase}>
@@ -230,10 +230,11 @@ function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { l
   const { label, ...rest } = props;
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#6b6b6b] mb-1 font-medium">
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#1a1a1a] mb-1 font-semibold">
         {label}
       </label>
       <textarea {...rest} className={`${fieldBase} resize-none`} />
     </div>
   );
 }
+
