@@ -134,7 +134,7 @@ function Home() {
 
       {/* Gallery */}
       {galleries.length > 0 && (
-        <section className="py-16 px-6">
+        <section className="py-20 px-6 bg-card">
           <div className="mx-auto max-w-7xl">
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
               {galleries.map((src, i) => (
