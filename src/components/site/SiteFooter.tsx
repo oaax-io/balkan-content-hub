@@ -21,7 +21,7 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
   const youtubeUrl = "https://youtube.com";
 
   return (
-    <footer className="mt-24 text-[oklch(0.2_0.01_60)]">
+    <footer className="text-[oklch(0.2_0.01_60)]">
       {/* Newsletter */}
       <div className="bg-[oklch(0.95_0.012_80)] border-y border-[oklch(0.88_0.02_75)]">
         <div className="mx-auto max-w-7xl px-6 py-14 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
