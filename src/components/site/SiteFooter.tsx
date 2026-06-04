@@ -80,7 +80,7 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
             {contact.email && (
               <p className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <a href={`mailto:${contact.email}`} className="hover:text-gold transition-colors">{contact.email}</a>
+                <a href="mailto:info@balkaneros.ch" className="hover:text-gold transition-colors">info@balkaneros.ch</a>
               </p>
             )}
           </div>
