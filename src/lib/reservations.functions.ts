@@ -9,9 +9,12 @@ const createSchema = z.object({
   guest_name: z.string().trim().min(2).max(120),
   guest_email: z.string().trim().email().max(255),
   guest_phone: z.string().trim().max(40).default(""),
-  party_size: z.number().int().min(1).max(50),
-  reservation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  reservation_time: z.string().regex(/^\d{2}:\d{2}$/),
+  country_code: z.string().trim().max(10).default(""),
+  party_size: z.number().int().min(1).max(99),
+  reservation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).default("1970-01-01"),
+  reservation_time: z.string().regex(/^\d{2}:\d{2}$/).default("00:00"),
+  occasion: z.string().trim().max(120).default(""),
+  event_date_label: z.string().trim().max(200).default(""),
   notes: z.string().trim().max(1000).default(""),
 });
 
