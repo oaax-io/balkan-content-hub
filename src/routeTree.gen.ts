@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UeberUnsRouteImport } from './routes/ueber-uns'
 import { Route as ReservierenRouteImport } from './routes/reservieren'
 import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as BrunchRouteImport } from './routes/brunch'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -30,6 +31,11 @@ const ReservierenRoute = ReservierenRouteImport.update({
 const KontaktRoute = KontaktRouteImport.update({
   id: '/kontakt',
   path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrunchRoute = BrunchRouteImport.update({
+  id: '/brunch',
+  path: '/brunch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -55,6 +61,7 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/brunch': typeof BrunchRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/brunch': typeof BrunchRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
@@ -73,6 +81,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/brunch': typeof BrunchRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
@@ -83,17 +92,26 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/brunch'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/kontakt' | '/reservieren' | '/ueber-uns' | '/admin'
+  to:
+    | '/'
+    | '/auth'
+    | '/brunch'
+    | '/kontakt'
+    | '/reservieren'
+    | '/ueber-uns'
+    | '/admin'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/brunch'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
@@ -104,6 +122,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  BrunchRoute: typeof BrunchRoute
   KontaktRoute: typeof KontaktRoute
   ReservierenRoute: typeof ReservierenRoute
   UeberUnsRoute: typeof UeberUnsRoute
@@ -130,6 +149,13 @@ declare module '@tanstack/react-router' {
       path: '/kontakt'
       fullPath: '/kontakt'
       preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brunch': {
+      id: '/brunch'
+      path: '/brunch'
+      fullPath: '/brunch'
+      preLoaderRoute: typeof BrunchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -178,6 +204,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  BrunchRoute: BrunchRoute,
   KontaktRoute: KontaktRoute,
   ReservierenRoute: ReservierenRoute,
   UeberUnsRoute: UeberUnsRoute,
@@ -185,3 +212,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
