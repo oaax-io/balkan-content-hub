@@ -3,6 +3,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { publicDataQuery } from "@/lib/queries";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { HeroSlider } from "@/components/site/HeroSlider";
+import { ReservationCard } from "@/components/site/ReservationCard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,34 +24,29 @@ function Home() {
   const { data } = useSuspenseQuery(publicDataQuery);
   const { content } = data;
 
-  const heroBg = content.hero_image || "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=80";
+  const sliderImages = [content.slider_1, content.slider_2, content.slider_3, content.hero_image].filter(Boolean) as string[];
   const introImg = content.intro_image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80";
   const hostImg = content.host_image || "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&q=80";
   const galleries = [content.gallery_1, content.gallery_2, content.gallery_3].filter(Boolean);
+  const eventDates = (content.reservation_event_dates || "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const disclaimer = content.reservation_disclaimer || "";
 
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Section 1 — Hero */}
-      <section className="relative h-screen min-h-[640px] flex items-center justify-center">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroBg})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
-        <div className="relative z-10 text-center px-6 max-w-4xl">
-          <p className="text-gold tracking-[0.3em] uppercase text-sm mb-6">{content.hero_eyebrow}</p>
-          <h1 className="font-display text-5xl md:text-7xl leading-tight mb-6">{content.hero_title}</h1>
-          <p className="text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto mb-10">{content.hero_subtitle}</p>
-          <Link
-            to="/reservieren"
-            className="inline-flex items-center gap-2 rounded-full bg-gold px-8 py-4 text-sm font-medium uppercase tracking-widest text-gold-foreground hover:opacity-90 transition"
-          >
-            {content.hero_cta_label || "Tisch reservieren"}
-          </Link>
-        </div>
-      </section>
+      <HeroSlider
+        images={sliderImages}
+        eyebrow={content.hero_eyebrow}
+        title={content.hero_title}
+        subtitle={content.hero_subtitle}
+      >
+        <ReservationCard eventDates={eventDates} disclaimer={disclaimer} variant="overlay" />
+      </HeroSlider>
+
 
       {/* Section 2 — Intro */}
       <section className="py-24 px-6">
