@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { publicDataQuery } from "@/lib/queries";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import offerBrunch from "@/assets/offer-brunch.jpg";
 
 export const Route = createFileRoute("/brunch")({
   head: () => ({
@@ -82,7 +83,10 @@ function BrunchPage() {
       </section>
 
       {/* Feature blocks */}
-      <section className="py-20 px-6 bg-card">
+      <section
+        className="relative py-20 px-6 bg-background text-foreground"
+        style={{ backgroundImage: `linear-gradient(rgba(20,15,10,0.88), rgba(20,15,10,0.88)), url(${offerBrunch})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
         <div className="mx-auto max-w-6xl space-y-20">
           {features.map((f, i) => (
             <div
