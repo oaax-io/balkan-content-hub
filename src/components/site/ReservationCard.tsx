@@ -182,7 +182,7 @@ export function ReservationCard({
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-full bg-[#8b6f5e] px-6 py-3 text-sm font-semibold uppercase tracking-widest text-white hover:bg-[#7a6050] active:scale-[0.99] transition disabled:opacity-50"
+        className="w-full rounded-full bg-[#0d0d0d] px-6 py-3 text-sm font-semibold uppercase tracking-widest text-[#f0d78c] hover:bg-[#1a1a1a] active:scale-[0.99] transition disabled:opacity-50"
       >
         {submitting ? "Wird gesendet …" : "Reservieren"}
       </button>
