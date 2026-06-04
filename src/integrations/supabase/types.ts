@@ -95,12 +95,15 @@ export type Database = {
       reservations: {
         Row: {
           admin_note: string
+          country_code: string
           created_at: string
+          event_date_label: string
           guest_email: string
           guest_name: string
           guest_phone: string
           id: string
           notes: string
+          occasion: string
           party_size: number
           reservation_date: string
           reservation_time: string
@@ -109,12 +112,15 @@ export type Database = {
         }
         Insert: {
           admin_note?: string
+          country_code?: string
           created_at?: string
+          event_date_label?: string
           guest_email: string
           guest_name: string
           guest_phone?: string
           id?: string
           notes?: string
+          occasion?: string
           party_size: number
           reservation_date: string
           reservation_time: string
@@ -123,12 +129,15 @@ export type Database = {
         }
         Update: {
           admin_note?: string
+          country_code?: string
           created_at?: string
+          event_date_label?: string
           guest_email?: string
           guest_name?: string
           guest_phone?: string
           id?: string
           notes?: string
+          occasion?: string
           party_size?: number
           reservation_date?: string
           reservation_time?: string
