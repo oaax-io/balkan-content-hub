@@ -30,6 +30,10 @@ function Reserve() {
     .split("\n")
     .map((s) => s.trim())
     .filter(Boolean);
+  const occasionsWithDates = (content.reservation_occasions_with_dates || "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -38,7 +42,13 @@ function Reserve() {
         <div className="mx-auto max-w-xl">
           <p className="text-gold tracking-[0.3em] uppercase text-xs mb-3 text-center">Reservierung</p>
           <h1 className="font-display text-4xl sm:text-5xl text-center mb-8">Tisch reservieren</h1>
-          <ReservationCard eventDates={eventDates} disclaimer={disclaimer} occasions={occasions} variant="page" />
+          <ReservationCard
+            eventDates={eventDates}
+            disclaimer={disclaimer}
+            occasions={occasions}
+            occasionsWithDates={occasionsWithDates}
+            variant="page"
+          />
         </div>
       </section>
       <SiteFooter contact={contact} hours={hours} />
