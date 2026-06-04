@@ -71,10 +71,10 @@ export function SiteHeader() {
             </a>
           </div>
           <Link
-            to="/reservieren"
+            to="/kontakt"
             className="hidden sm:inline-flex items-center rounded-full bg-gold px-5 py-2.5 text-sm font-medium uppercase tracking-widest text-gold-foreground hover:opacity-90 transition"
           >
-            Reservieren
+            Kontakt
           </Link>
         </div>
       </div>
