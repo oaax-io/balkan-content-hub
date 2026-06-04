@@ -20,16 +20,18 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { data } = useSuspenseQuery(publicDataQuery);
-  const { content, contact, hours } = data;
+  const { content } = data;
+
   const heroBg = content.hero_image || "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=80";
   const introImg = content.intro_image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80";
+  const hostImg = content.host_image || "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&q=80";
   const galleries = [content.gallery_1, content.gallery_2, content.gallery_3].filter(Boolean);
 
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Hero */}
+      {/* Section 1 — Hero */}
       <section className="relative h-screen min-h-[640px] flex items-center justify-center">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -49,7 +51,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Intro */}
+      {/* Section 2 — Intro */}
       <section className="py-24 px-6">
         <div className="mx-auto max-w-6xl grid md:grid-cols-2 gap-16 items-center">
           <div>
@@ -63,9 +65,74 @@ function Home() {
         </div>
       </section>
 
+      {/* Section 3 — Gastgeberin */}
+      <section className="py-24 px-6 bg-card">
+        <div className="mx-auto max-w-6xl grid md:grid-cols-2 gap-16 items-center">
+          <div className="order-2 md:order-1 aspect-[4/5] overflow-hidden rounded-sm">
+            <img src={hostImg} alt="" className="w-full h-full object-cover" />
+          </div>
+          <div className="order-1 md:order-2">
+            <p className="text-gold tracking-[0.3em] uppercase text-xs mb-4">{content.host_eyebrow}</p>
+            <h2 className="font-display text-4xl md:text-5xl mb-6">{content.host_title}</h2>
+            <p className="text-muted-foreground leading-relaxed text-lg">{content.host_text}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3b — Wer sind die Balkaneros? */}
+      <section className="py-24 px-6">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-gold tracking-[0.3em] uppercase text-xs mb-4">{content.about_eyebrow || "Wer sind die Balkaneros?"}</p>
+          <h2 className="font-display text-4xl md:text-5xl mb-8">{content.about_title}</h2>
+          <div className="text-muted-foreground leading-relaxed text-lg whitespace-pre-line">{content.about_text}</div>
+        </div>
+      </section>
+
+      {/* Section 4 — Angebote */}
+      <section className="py-24 px-6 bg-card">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <p className="text-gold tracking-[0.3em] uppercase text-xs mb-4">{content.offers_eyebrow}</p>
+            <h2 className="font-display text-4xl md:text-5xl">{content.offers_title}</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Brunch */}
+            <Link to="/brunch" className="group relative overflow-hidden rounded-sm bg-background p-8 flex flex-col items-center text-center hover:shadow-lg transition">
+              <div className="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition" />
+              <h3 className="font-display text-3xl mb-3 relative z-10">{content.offers_brunch_label}</h3>
+              <p className="text-muted-foreground mb-8 relative z-10">{content.offers_brunch_desc}</p>
+              <span className="mt-auto inline-flex items-center gap-2 text-gold text-sm font-medium uppercase tracking-widest relative z-10">
+                {content.offers_brunch_cta}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </span>
+            </Link>
+            {/* Dinner */}
+            <Link to="/dinner" className="group relative overflow-hidden rounded-sm bg-background p-8 flex flex-col items-center text-center hover:shadow-lg transition">
+              <div className="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition" />
+              <h3 className="font-display text-3xl mb-3 relative z-10">{content.offers_dinner_label}</h3>
+              <p className="text-muted-foreground mb-8 relative z-10">{content.offers_dinner_desc}</p>
+              <span className="mt-auto inline-flex items-center gap-2 text-gold text-sm font-medium uppercase tracking-widest relative z-10">
+                {content.offers_dinner_cta}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </span>
+            </Link>
+            {/* Events */}
+            <Link to="/events" className="group relative overflow-hidden rounded-sm bg-background p-8 flex flex-col items-center text-center hover:shadow-lg transition">
+              <div className="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition" />
+              <h3 className="font-display text-3xl mb-3 relative z-10">{content.offers_events_label}</h3>
+              <p className="text-muted-foreground mb-8 relative z-10">{content.offers_events_desc}</p>
+              <span className="mt-auto inline-flex items-center gap-2 text-gold text-sm font-medium uppercase tracking-widest relative z-10">
+                {content.offers_events_cta}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Gallery */}
       {galleries.length > 0 && (
-        <section className="py-16 px-6 bg-card">
+        <section className="py-16 px-6">
           <div className="mx-auto max-w-7xl">
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
               {galleries.map((src, i) => (
@@ -78,7 +145,7 @@ function Home() {
         </section>
       )}
 
-      <SiteFooter contact={contact} hours={hours} />
+      <SiteFooter contact={data.contact} hours={data.hours} />
     </div>
   );
 }
