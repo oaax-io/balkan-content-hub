@@ -62,26 +62,26 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
           </div>
 
           {/* 3 columns: Kontakt, Adresse, Social Media */}
-          <div className="w-full grid gap-10 md:grid-cols-3 text-center md:text-left">
+          <div className="w-full grid gap-10 md:grid-cols-3 text-center justify-items-center">
             {/* Kontakt */}
-            <div className="text-sm space-y-3">
+            <div className="text-sm space-y-3 flex flex-col items-center">
               <h4 className="uppercase tracking-widest text-xs text-[oklch(0.45_0.08_75)] mb-3 font-semibold">Kontakt</h4>
               {contact.phone && (
-                <p className="flex items-center gap-2 justify-center md:justify-start">
+                <p className="flex items-center gap-2 justify-center">
                   <Phone className="w-4 h-4" />
                   <a href={`tel:${contact.phone}`} className="hover:text-gold transition-colors">{contact.phone}</a>
                 </p>
               )}
-              <p className="flex items-center gap-2 justify-center md:justify-start">
+              <p className="flex items-center gap-2 justify-center">
                 <Mail className="w-4 h-4" />
                 <a href="mailto:info@balkaneros.ch" className="hover:text-gold transition-colors">info@balkaneros.ch</a>
               </p>
             </div>
 
             {/* Adresse */}
-            <div className="text-sm space-y-3">
+            <div className="text-sm space-y-3 flex flex-col items-center">
               <h4 className="uppercase tracking-widest text-xs text-[oklch(0.45_0.08_75)] mb-3 font-semibold">Adresse</h4>
-              <p className="flex items-start gap-2 justify-center md:justify-start">
+              <p className="flex items-start gap-2 justify-center">
                 <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>
                   Kaspar-Koppstrasse 90<br />
@@ -91,9 +91,9 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
             </div>
 
             {/* Social Media */}
-            <div className="text-sm space-y-3">
+            <div className="text-sm space-y-3 flex flex-col items-center">
               <h4 className="uppercase tracking-widest text-xs text-[oklch(0.45_0.08_75)] mb-3 font-semibold">Social Media</h4>
-              <div className="flex gap-4 justify-center md:justify-start">
+              <div className="flex gap-4 justify-center">
                 <a
                   href={instagramUrl}
                   target="_blank"
