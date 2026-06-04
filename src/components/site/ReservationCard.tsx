@@ -195,7 +195,7 @@ export function ReservationCard({
 }
 
 const fieldBase =
-  "w-full bg-background/60 border border-gold/20 rounded-sm px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:ring-1 focus:ring-gold/40 outline-none transition";
+  "w-full bg-white/80 border border-[#d4c8b8]/60 rounded-lg px-3 py-2 text-sm text-[#2d2d2d] placeholder:text-[#9a9a9a]/70 focus:border-[#8b6f5e] focus:ring-1 focus:ring-[#8b6f5e]/30 outline-none transition";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   const { label, ...rest } = props;
