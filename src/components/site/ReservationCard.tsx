@@ -107,13 +107,14 @@ export function ReservationCard({
   return (
     <form onSubmit={onSubmit} className={`${wrapperClass} space-y-3`}>
       <div className="text-center pb-1">
-        <p className="text-[#8b6f5e] tracking-[0.3em] uppercase text-[10px] mb-1 font-semibold">
+        <p className="text-[#8a6a14] tracking-[0.3em] uppercase text-[10px] mb-1 font-bold">
           Balkaneros-Booking
         </p>
-        <h3 className="font-display text-xl sm:text-2xl leading-tight text-[#2d2d2d]">
+        <h3 className="font-display text-xl sm:text-2xl leading-tight text-[#1a1a1a]">
           Wir freuen uns, dich bei uns verwöhnen zu dürfen.
         </h3>
       </div>
+
 
       <Select
         label="Was ist der Anlass deiner Reservation? *"
