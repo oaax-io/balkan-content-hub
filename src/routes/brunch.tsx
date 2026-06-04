@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { publicDataQuery } from "@/lib/queries";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import offerBrunch from "@/assets/offer-brunch.jpg";
 
 export const Route = createFileRoute("/brunch")({
   head: () => ({
