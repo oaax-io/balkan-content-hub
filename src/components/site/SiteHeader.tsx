@@ -8,8 +8,11 @@ export function SiteHeader() {
         <Link to="/" className="flex items-center gap-3">
           <img src={logo} alt="Balkaneros" className="h-12 w-auto" />
         </Link>
-        <nav className="hidden md:flex items-center gap-8 text-sm tracking-widest uppercase">
+        <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm tracking-widest uppercase">
           <Link to="/" activeOptions={{ exact: true }} className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Home</Link>
+          <Link to="/brunch" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Brunch</Link>
+          <Link to="/dinner" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Dinner</Link>
+          <Link to="/events" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Events</Link>
           <Link to="/ueber-uns" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Über uns</Link>
           <Link to="/kontakt" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Kontakt</Link>
         </nav>
