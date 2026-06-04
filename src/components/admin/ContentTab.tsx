@@ -25,7 +25,7 @@ export function ContentTab() {
   );
 }
 
-type Row = Awaited<ReturnType<ReturnType<typeof useServerFn<typeof listSiteContent>>>>[number];
+type Row = { key: string; value: string; label: string; kind: string; sort_order: number; preview_url: string };
 
 function ContentRow({ row, onSaved }: { row: Row; onSaved: () => void }) {
   const updateFn = useServerFn(updateSiteContent);
