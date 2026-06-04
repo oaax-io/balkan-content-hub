@@ -66,23 +66,29 @@ function Home() {
 
 
       {/* Section 2 — Intro */}
-      <section className="py-24 px-6">
-        <div className="mx-auto max-w-6xl grid md:grid-cols-2 gap-16 items-center">
+      <section
+        className="relative py-24 px-6 bg-card/30"
+        style={{ backgroundImage: `linear-gradient(rgba(255,250,240,0.92), rgba(255,250,240,0.92)), url(${offerBrunch})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
+        <div className="relative mx-auto max-w-6xl grid md:grid-cols-2 gap-16 items-center">
           <div>
             <p className="text-gold tracking-[0.3em] uppercase text-xs mb-4">{content.intro_eyebrow}</p>
             <h2 className="font-display text-4xl md:text-5xl mb-6">{content.intro_title}</h2>
             <p className="text-muted-foreground leading-relaxed text-lg">{content.intro_text}</p>
           </div>
-          <div className="aspect-[4/5] overflow-hidden rounded-sm">
+          <div className="aspect-[4/5] overflow-hidden rounded-sm shadow-xl">
             <img src={introImg} alt="" className="w-full h-full object-cover" />
           </div>
         </div>
       </section>
 
       {/* Section 3 — Gastgeberin & Wer sind die Balkaneros? */}
-      <section className="py-24 px-6 bg-card">
-        <div className="mx-auto max-w-6xl grid md:grid-cols-2 gap-16 items-center">
-          <div className="order-2 md:order-1 aspect-[4/5] overflow-hidden rounded-sm">
+      <section
+        className="relative py-24 px-6"
+        style={{ backgroundImage: `linear-gradient(rgba(245,235,220,0.94), rgba(245,235,220,0.94)), url(${offerDinner})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
+        <div className="relative mx-auto max-w-6xl grid md:grid-cols-2 gap-16 items-center">
+          <div className="order-2 md:order-1 aspect-[4/5] overflow-hidden rounded-sm shadow-xl">
             <img src={hostImg} alt="" className="w-full h-full object-cover" />
           </div>
           <div className="order-1 md:order-2">
@@ -92,7 +98,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-4xl text-center mt-20 pt-16 border-t border-border">
+        <div className="relative mx-auto max-w-4xl text-center mt-20 pt-16 border-t border-border/60">
           <p className="text-gold tracking-[0.3em] uppercase text-xs mb-4">{content.about_eyebrow || "Wer sind die Balkaneros?"}</p>
           <h2 className="font-display text-4xl md:text-5xl mb-8">{content.about_title}</h2>
           <div className="text-muted-foreground leading-relaxed text-lg whitespace-pre-line">{content.about_text}</div>
@@ -100,17 +106,20 @@ function Home() {
       </section>
 
       {/* Section 4 — Angebote */}
-      <section className="py-24 px-6">
-        <div className="mx-auto max-w-6xl">
+      <section
+        className="relative py-24 px-6"
+        style={{ backgroundImage: `linear-gradient(rgba(240,245,240,0.94), rgba(240,245,240,0.94)), url(${offerEvents})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
+        <div className="relative mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <p className="text-gold tracking-[0.3em] uppercase text-xs mb-4">{content.offers_eyebrow}</p>
             <h2 className="font-display text-4xl md:text-5xl">{content.offers_title}</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { to: "/brunch", label: content.offers_brunch_label, desc: content.offers_brunch_desc, cta: content.offers_brunch_cta, img: offerBrunch },
-              { to: "/dinner", label: content.offers_dinner_label, desc: content.offers_dinner_desc, cta: content.offers_dinner_cta, img: offerDinner },
-              { to: "/events", label: content.offers_events_label, desc: content.offers_events_desc, cta: content.offers_events_cta, img: offerEvents },
+              { to: "/brunch", label: content.offers_brunch_label, desc: content.offers_brunch_desc, cta: content.offers_brunch_cta, img: content.brunch_image || "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=1200&q=80" },
+              { to: "/dinner", label: content.offers_dinner_label, desc: content.offers_dinner_desc, cta: content.offers_dinner_cta, img: content.dinner_image || "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80" },
+              { to: "/events", label: content.offers_events_label, desc: content.offers_events_desc, cta: content.offers_events_cta, img: content.events_image || "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=1200&q=80" },
             ].map((card) => (
               <Link
                 key={card.to}
