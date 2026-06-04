@@ -33,6 +33,10 @@ function Home() {
     .map((s) => s.trim())
     .filter(Boolean);
   const disclaimer = content.reservation_disclaimer || "";
+  const occasions = (content.reservation_occasions || "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -44,7 +48,7 @@ function Home() {
         title={content.hero_title}
         subtitle={content.hero_subtitle}
       >
-        <ReservationCard eventDates={eventDates} disclaimer={disclaimer} variant="overlay" />
+        <ReservationCard eventDates={eventDates} disclaimer={disclaimer} occasions={occasions} variant="overlay" />
       </HeroSlider>
 
 
