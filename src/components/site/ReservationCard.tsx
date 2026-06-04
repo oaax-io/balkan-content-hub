@@ -68,7 +68,7 @@ export function ReservationCard({
   }
 
   const wrapperBase =
-    "bg-card text-card-foreground border border-gold/25 rounded-sm shadow-2xl backdrop-blur-sm";
+    "bg-[#fdfbf7]/85 text-[#2d2d2d] border border-[#c9b99a]/30 rounded-2xl shadow-2xl backdrop-blur-md";
   const wrapperClass =
     variant === "overlay"
       ? `${wrapperBase} p-5 sm:p-6`
@@ -77,9 +77,9 @@ export function ReservationCard({
   if (done) {
     return (
       <div className={wrapperClass}>
-        <p className="text-gold tracking-[0.3em] uppercase text-[10px] mb-2 font-semibold">Hvala!</p>
-        <h3 className="font-display text-2xl text-foreground mb-2">Anfrage erhalten.</h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[#8b6f5e] tracking-[0.3em] uppercase text-[10px] mb-2 font-semibold">Hvala!</p>
+        <h3 className="font-display text-2xl text-[#2d2d2d] mb-2">Anfrage erhalten.</h3>
+        <p className="text-sm text-[#5a5a5a]">
           Du erhältst gleich eine Bestätigungs-E-Mail. Wir melden uns mit der finalen Zusage.
         </p>
       </div>
@@ -106,10 +106,10 @@ export function ReservationCard({
   return (
     <form onSubmit={onSubmit} className={`${wrapperClass} space-y-3`}>
       <div className="text-center pb-1">
-        <p className="text-gold tracking-[0.3em] uppercase text-[10px] mb-1 font-semibold">
+        <p className="text-[#8b6f5e] tracking-[0.3em] uppercase text-[10px] mb-1 font-semibold">
           Balkaneros-Booking
         </p>
-        <h3 className="font-display text-xl sm:text-2xl leading-tight text-foreground">
+        <h3 className="font-display text-xl sm:text-2xl leading-tight text-[#2d2d2d]">
           Wir freuen uns, dich bei uns verwöhnen zu dürfen.
         </h3>
       </div>
@@ -182,26 +182,26 @@ export function ReservationCard({
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-widest text-primary-foreground hover:opacity-90 active:scale-[0.99] transition disabled:opacity-50"
+        className="w-full rounded-full bg-[#8b6f5e] px-6 py-3 text-sm font-semibold uppercase tracking-widest text-white hover:bg-[#7a6050] active:scale-[0.99] transition disabled:opacity-50"
       >
         {submitting ? "Wird gesendet …" : "Reservieren"}
       </button>
 
       {disclaimer && (
-        <p className="text-[11px] leading-snug text-muted-foreground text-center pt-1">{disclaimer}</p>
+        <p className="text-[11px] leading-snug text-[#7a7a7a] text-center pt-1">{disclaimer}</p>
       )}
     </form>
   );
 }
 
 const fieldBase =
-  "w-full bg-background/60 border border-gold/20 rounded-sm px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:ring-1 focus:ring-gold/40 outline-none transition";
+  "w-full bg-white/80 border border-[#d4c8b8]/60 rounded-lg px-3 py-2 text-sm text-[#2d2d2d] placeholder:text-[#9a9a9a]/70 focus:border-[#8b6f5e] focus:ring-1 focus:ring-[#8b6f5e]/30 outline-none transition";
 
 function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   const { label, ...rest } = props;
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-medium">
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#6b6b6b] mb-1 font-medium">
         {label}
       </label>
       <input {...rest} className={fieldBase} />
@@ -213,7 +213,7 @@ function Select(props: React.SelectHTMLAttributes<HTMLSelectElement> & { label: 
   const { label, children, ...rest } = props;
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-medium">
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#6b6b6b] mb-1 font-medium">
         {label}
       </label>
       <select {...rest} className={fieldBase}>
@@ -227,7 +227,7 @@ function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { l
   const { label, ...rest } = props;
   return (
     <div>
-      <label className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-medium">
+      <label className="block text-[10px] uppercase tracking-[0.2em] text-[#6b6b6b] mb-1 font-medium">
         {label}
       </label>
       <textarea {...rest} className={`${fieldBase} resize-none`} />
