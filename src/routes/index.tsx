@@ -5,6 +5,9 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { HeroSlider } from "@/components/site/HeroSlider";
 import { ReservationCard } from "@/components/site/ReservationCard";
+import offerBrunch from "@/assets/offer-brunch.jpg";
+import offerDinner from "@/assets/offer-dinner.jpg";
+import offerEvents from "@/assets/offer-events.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
