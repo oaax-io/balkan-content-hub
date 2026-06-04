@@ -57,7 +57,7 @@ export const updateReservationStatus = createServerFn({ method: "POST" })
   .inputValidator((input) => updateSchema.parse(input))
   .handler(async ({ data, context }) => {
     await requireAdmin(context.userId);
-    const patch: { status: string; admin_note?: string } = { status: data.status };
+    const patch: { status: typeof data.status; admin_note?: string } = { status: data.status };
     if (data.admin_note !== undefined) patch.admin_note = data.admin_note;
     const { data: row, error } = await supabaseAdmin
       .from("reservations")
