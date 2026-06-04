@@ -4,14 +4,14 @@ import { createReservation } from "@/lib/reservations.functions";
 import { toast } from "sonner";
 
 const COUNTRY_CODES = [
-  { code: "+41", label: "Schweiz +41" },
-  { code: "+49", label: "Deutschland +49" },
-  { code: "+43", label: "Österreich +43" },
-  { code: "+39", label: "Italien +39" },
-  { code: "+33", label: "Frankreich +33" },
-  { code: "+31", label: "Niederlande +31" },
-  { code: "+44", label: "UK +44" },
-  { code: "+1", label: "USA/Kanada +1" },
+  { code: "+41", label: "+41" },
+  { code: "+49", label: "+49" },
+  { code: "+43", label: "+43" },
+  { code: "+39", label: "+39" },
+  { code: "+33", label: "+33" },
+  { code: "+31", label: "+31" },
+  { code: "+44", label: "+44" },
+  { code: "+1", label: "+1" },
 ];
 
 const PARTY_SIZES = [
