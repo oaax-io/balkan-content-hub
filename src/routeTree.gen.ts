@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UeberUnsRouteImport } from './routes/ueber-uns'
 import { Route as ReservierenRouteImport } from './routes/reservieren'
 import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as DinnerRouteImport } from './routes/dinner'
 import { Route as BrunchRouteImport } from './routes/brunch'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -31,6 +32,11 @@ const ReservierenRoute = ReservierenRouteImport.update({
 const KontaktRoute = KontaktRouteImport.update({
   id: '/kontakt',
   path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DinnerRoute = DinnerRouteImport.update({
+  id: '/dinner',
+  path: '/dinner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrunchRoute = BrunchRouteImport.update({
@@ -62,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/brunch': typeof BrunchRoute
+  '/dinner': typeof DinnerRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/brunch': typeof BrunchRoute
+  '/dinner': typeof DinnerRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/brunch': typeof BrunchRoute
+  '/dinner': typeof DinnerRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
@@ -93,6 +102,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/brunch'
+    | '/dinner'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
@@ -102,6 +112,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/brunch'
+    | '/dinner'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/brunch'
+    | '/dinner'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
@@ -123,6 +135,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BrunchRoute: typeof BrunchRoute
+  DinnerRoute: typeof DinnerRoute
   KontaktRoute: typeof KontaktRoute
   ReservierenRoute: typeof ReservierenRoute
   UeberUnsRoute: typeof UeberUnsRoute
@@ -149,6 +162,13 @@ declare module '@tanstack/react-router' {
       path: '/kontakt'
       fullPath: '/kontakt'
       preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dinner': {
+      id: '/dinner'
+      path: '/dinner'
+      fullPath: '/dinner'
+      preLoaderRoute: typeof DinnerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/brunch': {
@@ -205,6 +225,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BrunchRoute: BrunchRoute,
+  DinnerRoute: DinnerRoute,
   KontaktRoute: KontaktRoute,
   ReservierenRoute: ReservierenRoute,
   UeberUnsRoute: UeberUnsRoute,
