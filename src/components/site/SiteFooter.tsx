@@ -77,12 +77,10 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
                 <a href={`tel:${contact.phone}`} className="hover:text-gold transition-colors">{contact.phone}</a>
               </p>
             )}
-            {contact.email && (
-              <p className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                <a href="mailto:info@balkaneros.ch" className="hover:text-gold transition-colors">info@balkaneros.ch</a>
-              </p>
-            )}
+            <p className="flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              <a href="mailto:info@balkaneros.ch" className="hover:text-gold transition-colors">info@balkaneros.ch</a>
+            </p>
           </div>
 
           {/* Social Media */}
