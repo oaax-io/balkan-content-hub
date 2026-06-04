@@ -71,7 +71,10 @@ function DinnerPage() {
       </section>
 
       {/* Feature blocks */}
-      <section className="py-20 px-6 bg-card">
+      <section
+        className="relative py-20 px-6 bg-background text-foreground"
+        style={{ backgroundImage: `linear-gradient(rgba(15,12,8,0.9), rgba(15,12,8,0.9)), url(${offerDinner})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
         <div className="mx-auto max-w-6xl space-y-20">
           {features.map((f, i) => (
             <div
