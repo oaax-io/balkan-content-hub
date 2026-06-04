@@ -94,8 +94,10 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthSync />
       <Outlet />
+      <BackToTop />
       <Toaster theme="dark" position="top-right" richColors />
     </QueryClientProvider>
+
   );
 }
 
