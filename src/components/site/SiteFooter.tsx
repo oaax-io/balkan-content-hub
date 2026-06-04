@@ -49,19 +49,21 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
       <div className="bg-[oklch(0.93_0.015_80)]">
         <div className="mx-auto max-w-7xl px-6 py-14 grid gap-10 md:grid-cols-3">
           {/* Logo + Address (centered) */}
-          <div className="md:col-span-1 flex flex-col items-center text-center">
+          <div className="md:col-span-1 flex flex-col items-center text-center space-y-4">
             <img
               src={logo}
-              alt={contact.restaurant_name}
-              className="h-16 w-auto mb-4"
+              alt="Balkaneros"
+              className="h-16 w-auto"
               style={{ filter: "brightness(0.35) sepia(1) hue-rotate(5deg) saturate(2)" }}
             />
+            <p className="text-sm text-[oklch(0.4_0.01_60)] max-w-xs">
+              Seit 2019 sind wir in diversen Locations in der Schweiz mit unserem Balkaneros Dinner unterwegs
+            </p>
             <p className="text-sm text-[oklch(0.4_0.01_60)] flex items-start gap-2 justify-center">
               <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
               <span>
-                {contact.address_line1}<br />
-                {contact.address_line2 && <>{contact.address_line2}<br /></>}
-                {contact.postal_code} {contact.city}
+                Kaspar-Koppstrasse 90<br />
+                CH-6030 Ebikon
               </span>
             </p>
           </div>
@@ -75,12 +77,10 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
                 <a href={`tel:${contact.phone}`} className="hover:text-gold transition-colors">{contact.phone}</a>
               </p>
             )}
-            {contact.email && (
-              <p className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                <a href={`mailto:${contact.email}`} className="hover:text-gold transition-colors">{contact.email}</a>
-              </p>
-            )}
+            <p className="flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              <a href="mailto:info@balkaneros.ch" className="hover:text-gold transition-colors">info@balkaneros.ch</a>
+            </p>
           </div>
 
           {/* Social Media */}
