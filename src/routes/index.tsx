@@ -5,6 +5,9 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { HeroSlider } from "@/components/site/HeroSlider";
 import { ReservationCard } from "@/components/site/ReservationCard";
+import offerBrunch from "@/assets/offer-brunch.jpg";
+import offerDinner from "@/assets/offer-dinner.jpg";
+import offerEvents from "@/assets/offer-events.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -105,9 +108,9 @@ function Home() {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { to: "/brunch", label: content.offers_brunch_label, desc: content.offers_brunch_desc, cta: content.offers_brunch_cta, img: galleries[0] || introImg },
-              { to: "/dinner", label: content.offers_dinner_label, desc: content.offers_dinner_desc, cta: content.offers_dinner_cta, img: galleries[1] || hostImg },
-              { to: "/events", label: content.offers_events_label, desc: content.offers_events_desc, cta: content.offers_events_cta, img: galleries[2] || sliderImages[0] },
+              { to: "/brunch", label: content.offers_brunch_label, desc: content.offers_brunch_desc, cta: content.offers_brunch_cta, img: offerBrunch },
+              { to: "/dinner", label: content.offers_dinner_label, desc: content.offers_dinner_desc, cta: content.offers_dinner_cta, img: offerDinner },
+              { to: "/events", label: content.offers_events_label, desc: content.offers_events_desc, cta: content.offers_events_cta, img: offerEvents },
             ].map((card) => (
               <Link
                 key={card.to}
