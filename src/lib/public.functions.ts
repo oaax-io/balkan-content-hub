@@ -42,6 +42,7 @@ export const getPublicData = createServerFn({ method: "GET" }).handler(async () 
     instagram_url: "",
     facebook_url: "",
     maps_embed_url: "",
+    hours_public_visible: true,
   }) as ContactInfo;
   const hours = (hoursRes.data ?? []) as OpeningHour[];
   // Order so Monday comes first
