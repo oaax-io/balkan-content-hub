@@ -68,20 +68,22 @@ function Contact() {
                   </div>
                 </div>
               )}
-              <div className="flex gap-4">
-                <Clock className="w-6 h-6 text-gold shrink-0 mt-1" />
-                <div>
-                  <h3 className="font-display text-xl mb-3">Öffnungszeiten</h3>
-                  <ul className="space-y-1 text-muted-foreground">
-                    {hours.map((h) => (
-                      <li key={h.weekday} className="flex justify-between gap-8">
-                        <span>{h.label}</span>
-                        <span>{h.is_closed ? "geschlossen" : `${h.open_time} – ${h.close_time}`}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {contact.hours_public_visible !== false && (
+                <div className="flex gap-4">
+                  <Clock className="w-6 h-6 text-gold shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-display text-xl mb-3">Öffnungszeiten</h3>
+                    <ul className="space-y-1 text-muted-foreground">
+                      {hours.map((h) => (
+                        <li key={h.weekday} className="flex justify-between gap-8">
+                          <span>{h.label}</span>
+                          <span>{h.is_closed ? "geschlossen" : `${h.open_time} – ${h.close_time}`}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
+              )}
               <Link to="/reservieren" className="inline-flex items-center rounded-full bg-gold px-8 py-3.5 text-sm font-medium uppercase tracking-widest text-gold-foreground hover:opacity-90 transition">
                 Tisch reservieren
               </Link>

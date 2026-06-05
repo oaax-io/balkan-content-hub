@@ -94,6 +94,7 @@ const contactSchema = z.object({
   instagram_url: z.string().trim().max(500),
   facebook_url: z.string().trim().max(500),
   maps_embed_url: z.string().trim().max(2000),
+  hours_public_visible: z.boolean(),
 });
 export const updateContactInfo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

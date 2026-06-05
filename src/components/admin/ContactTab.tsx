@@ -23,28 +23,32 @@ export function ContactTab() {
   const { data: contact, isLoading } = useQuery({ queryKey: ["contact-admin"], queryFn: () => getFn() });
   const publicData = useQuery(publicDataQuery);
   const [form, setForm] = useState<Record<string, string>>({});
+  const [hoursVisible, setHoursVisible] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (contact) setForm({
-      restaurant_name: contact.restaurant_name ?? "",
-      address_line1: contact.address_line1 ?? "",
-      address_line2: contact.address_line2 ?? "",
-      city: contact.city ?? "",
-      postal_code: contact.postal_code ?? "",
-      phone: contact.phone ?? "",
-      email: contact.email ?? "",
-      notification_email: contact.notification_email ?? "",
-      instagram_url: contact.instagram_url ?? "",
-      facebook_url: contact.facebook_url ?? "",
-      maps_embed_url: contact.maps_embed_url ?? "",
-    });
+    if (contact) {
+      setForm({
+        restaurant_name: contact.restaurant_name ?? "",
+        address_line1: contact.address_line1 ?? "",
+        address_line2: contact.address_line2 ?? "",
+        city: contact.city ?? "",
+        postal_code: contact.postal_code ?? "",
+        phone: contact.phone ?? "",
+        email: contact.email ?? "",
+        notification_email: contact.notification_email ?? "",
+        instagram_url: contact.instagram_url ?? "",
+        facebook_url: contact.facebook_url ?? "",
+        maps_embed_url: contact.maps_embed_url ?? "",
+      });
+      setHoursVisible((contact as { hours_public_visible?: boolean }).hours_public_visible ?? true);
+    }
   }, [contact]);
 
   async function save() {
     setSaving(true);
     try {
-      await updFn({ data: form as never });
+      await updFn({ data: { ...form, hours_public_visible: hoursVisible } as never });
       toast.success("Kontakt gespeichert");
       qc.invalidateQueries({ queryKey: ["public-data"] });
     } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
@@ -88,6 +92,16 @@ export function ContactTab() {
       <section>
         <h2 className="font-display text-2xl mb-4">Öffnungszeiten</h2>
         <div className="bg-card border border-border rounded-sm p-6 space-y-3">
+          <div className="flex items-center justify-between gap-3 pb-3 mb-2 border-b border-border">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={hoursVisible} onChange={(e) => setHoursVisible(e.target.checked)} />
+              <span>Öffnungszeiten auf der Website anzeigen</span>
+            </label>
+            <button onClick={save} disabled={saving}
+              className="rounded-full bg-gold px-4 py-1.5 text-xs uppercase tracking-widest text-gold-foreground disabled:opacity-50">
+              {saving ? "…" : "Sichtbarkeit speichern"}
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2 pb-3 mb-2 border-b border-border">
             <button
               onClick={async () => {
