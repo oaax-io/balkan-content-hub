@@ -9,14 +9,14 @@ import offerBrunch from "@/assets/offer-brunch.jpg";
 import offerDinner from "@/assets/offer-dinner.jpg";
 import offerEvents from "@/assets/offer-events.jpg";
 
+import { buildSeoMeta } from "@/lib/seo-head";
+
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Balkaneros — Köstlichkeiten aus dem Herzen des Balkans" },
-      { name: "description", content: "Hausgemachte Balkan-Küche bei Balkaneros in Rothenburg. Jetzt Tisch reservieren." },
-      { property: "og:title", content: "Balkaneros — Homemade Cuisine" },
-      { property: "og:description", content: "Hausgemachte Balkan-Küche in Rothenburg." },
-    ],
+  head: ({ loaderData }) => ({
+    meta: buildSeoMeta(loaderData, "/", {
+      title: "Balkaneros — Köstlichkeiten aus dem Herzen des Balkans",
+      description: "Hausgemachte Balkan-Küche bei Balkaneros in Rothenburg. Jetzt Tisch reservieren.",
+    }),
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: Home,
