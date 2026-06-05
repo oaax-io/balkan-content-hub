@@ -95,6 +95,36 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          country: string
+          created_at: string
+          device: string
+          id: number
+          path: string
+          referrer: string
+          session_id: string
+        }
+        Insert: {
+          country?: string
+          created_at?: string
+          device?: string
+          id?: number
+          path: string
+          referrer?: string
+          session_id?: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          device?: string
+          id?: number
+          path?: string
+          referrer?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       reservations: {
         Row: {
           admin_note: string
