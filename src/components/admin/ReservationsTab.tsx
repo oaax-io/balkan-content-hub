@@ -6,10 +6,10 @@ import { toast } from "sonner";
 import { Check, X, Phone, Mail, Users, Calendar } from "lucide-react";
 
 const STATUS_STYLES: Record<string, string> = {
-  pending: "bg-yellow-500/20 text-yellow-300 border-yellow-500/40",
-  confirmed: "bg-green-500/20 text-green-300 border-green-500/40",
-  declined: "bg-red-500/20 text-red-300 border-red-500/40",
-  cancelled: "bg-muted text-muted-foreground border-border",
+  pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
+  confirmed: "bg-green-100 text-green-700 border-green-300",
+  declined: "bg-red-100 text-red-700 border-red-300",
+  cancelled: "bg-gray-100 text-gray-600 border-gray-300",
 };
 const STATUS_LABEL: Record<string, string> = {
   pending: "Neu", confirmed: "Bestätigt", declined: "Abgelehnt", cancelled: "Storniert",
