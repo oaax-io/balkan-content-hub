@@ -19,6 +19,13 @@ export const Route = createFileRoute("/kontakt")({
   errorComponent: ({ error }) => <div className="p-10">Fehler: {error.message}</div>,
 });
 
+function extractMapsSrc(input: string): string {
+  if (!input) return "";
+  const s = input.trim();
+  const m = s.match(/src=["']([^"']+)["']/i);
+  return m ? m[1] : s;
+}
+
 function Contact() {
   const { data } = useSuspenseQuery(publicDataQuery);
   const { contact, hours } = data;
