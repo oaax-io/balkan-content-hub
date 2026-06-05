@@ -92,7 +92,7 @@ export function DashboardTab({ onNavigate }: { onNavigate: (tab: string) => void
                     <div className="font-medium truncate">{r.guest_name}</div>
                     <div className="text-xs text-muted-foreground">{fmtDate(r.reservation_date)} · {r.reservation_time}</div>
                   </div>
-                  <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${r.status === "pending" ? "border-yellow-500/40 text-yellow-300 bg-yellow-500/10" : "border-green-500/40 text-green-300 bg-green-500/10"}`}>
+                  <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${r.status === "pending" ? "border-yellow-300 text-yellow-700 bg-yellow-100" : "border-green-300 text-green-700 bg-green-100"}`}>
                     {r.status === "pending" ? "Offen" : "Bestätigt"}
                   </span>
                 </li>

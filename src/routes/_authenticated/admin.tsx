@@ -65,7 +65,7 @@ function AdminShell() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-background light">
         <Sidebar className="border-r border-border">
           <SidebarHeader className="border-b border-border">
             <Link to="/" className="flex items-center gap-3 px-2 py-3">
