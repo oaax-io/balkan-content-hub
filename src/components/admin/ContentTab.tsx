@@ -4,6 +4,7 @@ import { useState, useRef, useMemo } from "react";
 import { listSiteContent, updateSiteContent, uploadSiteImage } from "@/lib/admin.functions";
 import { toast } from "sonner";
 import { CalendarDays, FileText, Image as ImageIcon } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 type Row = { key: string; value: string; label: string; kind: string; sort_order: number; preview_url: string };
 
