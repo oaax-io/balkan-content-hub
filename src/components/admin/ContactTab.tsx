@@ -92,6 +92,16 @@ export function ContactTab() {
       <section>
         <h2 className="font-display text-2xl mb-4">Öffnungszeiten</h2>
         <div className="bg-card border border-border rounded-sm p-6 space-y-3">
+          <div className="flex items-center justify-between gap-3 pb-3 mb-2 border-b border-border">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={hoursVisible} onChange={(e) => setHoursVisible(e.target.checked)} />
+              <span>Öffnungszeiten auf der Website anzeigen</span>
+            </label>
+            <button onClick={save} disabled={saving}
+              className="rounded-full bg-gold px-4 py-1.5 text-xs uppercase tracking-widest text-gold-foreground disabled:opacity-50">
+              {saving ? "…" : "Sichtbarkeit speichern"}
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2 pb-3 mb-2 border-b border-border">
             <button
               onClick={async () => {
