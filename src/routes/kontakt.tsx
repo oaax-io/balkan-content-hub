@@ -5,14 +5,14 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
+import { buildSeoMeta } from "@/lib/seo-head";
+
 export const Route = createFileRoute("/kontakt")({
-  head: () => ({
-    meta: [
-      { title: "Kontakt — Balkaneros" },
-      { name: "description", content: "Adresse, Telefon und Öffnungszeiten von Balkaneros in Rothenburg." },
-      { property: "og:title", content: "Kontakt — Balkaneros" },
-      { property: "og:description", content: "So erreichst du uns." },
-    ],
+  head: ({ loaderData }) => ({
+    meta: buildSeoMeta(loaderData, "/kontakt", {
+      title: "Kontakt — Balkaneros",
+      description: "Adresse, Telefon und Öffnungszeiten von Balkaneros in Rothenburg.",
+    }),
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: Contact,
