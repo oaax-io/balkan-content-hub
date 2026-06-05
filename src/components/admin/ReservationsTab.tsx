@@ -1,9 +1,15 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { listReservations, updateReservationStatus } from "@/lib/reservations.functions";
+import { useEffect, useMemo, useState } from "react";
+import {
+  listReservations,
+  updateReservationStatus,
+  listOccasionCapacities,
+  setOccasionCapacity,
+} from "@/lib/reservations.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles } from "lucide-react";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
@@ -15,12 +21,32 @@ const STATUS_LABEL: Record<string, string> = {
   pending: "Neu", confirmed: "Bestätigt", declined: "Abgelehnt", cancelled: "Storniert",
 };
 
+const OCCASION_LABEL_FALLBACK = "Kein Anlass angegeben";
+
 export function ReservationsTab() {
   const listFn = useServerFn(listReservations);
   const updFn = useServerFn(updateReservationStatus);
+  const capListFn = useServerFn(listOccasionCapacities);
   const qc = useQueryClient();
+
   const { data, isLoading } = useQuery({ queryKey: ["reservations"], queryFn: () => listFn() });
+  const { data: capacities } = useQuery({ queryKey: ["occasion-capacities"], queryFn: () => capListFn() });
+  const { data: occasionsList } = useQuery({
+    queryKey: ["occasions-from-content"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_content")
+        .select("value")
+        .eq("key", "reservation_occasions")
+        .maybeSingle();
+      if (error) return [] as string[];
+      return ((data?.value as string | undefined) ?? "")
+        .split("\n").map((s) => s.trim()).filter(Boolean);
+    },
+  });
+
   const [filter, setFilter] = useState<string>("all");
+  const [occasionFilter, setOccasionFilter] = useState<string>("all");
   const [busy, setBusy] = useState<string | null>(null);
 
   async function setStatus(id: string, status: "confirmed" | "declined" | "pending" | "cancelled") {
@@ -34,62 +60,289 @@ export function ReservationsTab() {
   }
 
   if (isLoading) return <p className="text-muted-foreground">Lade …</p>;
-  const items = (data ?? []).filter((r) => filter === "all" || r.status === filter);
+
+  const all = data ?? [];
+  // Active reservations only count towards totals (not declined/cancelled)
+  const active = all.filter((r) => r.status !== "declined" && r.status !== "cancelled");
+
+  // Build occasions: from configured list + actually used
+  const occKeySet = new Set<string>();
+  (occasionsList ?? []).forEach((o) => occKeySet.add(o));
+  active.forEach((r) => occKeySet.add((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK));
+  (capacities ?? []).forEach((c) => occKeySet.add(c.occasion));
+  const occKeys = Array.from(occKeySet);
+
+  const capMap = new Map<string, number>();
+  (capacities ?? []).forEach((c) => capMap.set(c.occasion, c.max_reservations));
+
+  const perOccasion = occKeys.map((name) => {
+    const matches = active.filter((r) => ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === name);
+    const reservations = matches.length;
+    const persons = matches.reduce((s, r) => s + (r.party_size || 0), 0);
+    const max = capMap.get(name) ?? 0;
+    const remaining = max > 0 ? Math.max(0, max - reservations) : 0;
+    const pct = max > 0 ? Math.min(100, Math.round((reservations / max) * 100)) : 0;
+    const isConfigured = !!(occasionsList ?? []).includes(name);
+    return { name, reservations, persons, max, remaining, pct, isConfigured };
+  }).sort((a, b) => b.reservations - a.reservations || a.name.localeCompare(b.name));
+
+  const totals = {
+    reservations: active.length,
+    persons: active.reduce((s, r) => s + (r.party_size || 0), 0),
+    pending: all.filter((r) => r.status === "pending").length,
+    confirmed: all.filter((r) => r.status === "confirmed").length,
+  };
+
+  const filtered = all
+    .filter((r) => filter === "all" || r.status === filter)
+    .filter((r) => occasionFilter === "all"
+      || ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === occasionFilter);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-2xl">Reservierungen</h2>
-        <div className="flex gap-1 text-xs">
-          {["all", "pending", "confirmed", "declined"].map((f) => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-full border ${filter === f ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}>
-              {f === "all" ? "Alle" : STATUS_LABEL[f]}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="space-y-8">
+      {/* ───────────── Overview ───────────── */}
+      <section className="space-y-4">
+        <header>
+          <h2 className="font-display text-3xl">Reservierungen</h2>
+          <p className="text-sm text-muted-foreground mt-1">Übersicht über alle aktiven Reservierungen und Anlässe.</p>
+        </header>
 
-      {items.length === 0 ? (
-        <p className="text-muted-foreground text-center py-12">Keine Reservierungen.</p>
-      ) : (
-        <ul className="space-y-3">
-          {items.map((r) => (
-            <li key={r.id} className="bg-card border border-border rounded-sm p-5">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-display text-lg">{r.guest_name}</h3>
-                    <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${STATUS_STYLES[r.status]}`}>
-                      {STATUS_LABEL[r.status]}
-                    </span>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat icon={CalendarDays} label="Aktive Reservierungen" value={totals.reservations} hint="Bestätigt + offen" />
+          <Stat icon={Users} label="Personen gesamt" value={totals.persons} hint="Summe aller Gäste" />
+          <Stat icon={Sparkles} label="Offene Anfragen" value={totals.pending} hint="Noch zu bestätigen" accent={totals.pending > 0} />
+          <Stat icon={Check} label="Bestätigt" value={totals.confirmed} hint="Insgesamt" />
+        </div>
+
+        <OccasionsPanel
+          rows={perOccasion}
+          onSaved={() => qc.invalidateQueries({ queryKey: ["occasion-capacities"] })}
+          onFilterByOccasion={(name) => setOccasionFilter(name)}
+        />
+      </section>
+
+      {/* ───────────── Filters ───────────── */}
+      <section>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h3 className="font-display text-xl">Alle Reservierungen</h3>
+          <div className="flex flex-wrap gap-1 text-xs">
+            {["all", "pending", "confirmed", "declined"].map((f) => (
+              <button key={f} onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-full border ${filter === f ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}>
+                {f === "all" ? "Alle Status" : STATUS_LABEL[f]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {occasionFilter !== "all" && (
+          <div className="mb-4 flex items-center gap-2 text-xs">
+            <span className="text-muted-foreground">Anlass:</span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-gold/10 border border-gold/30 px-3 py-1">
+              {occasionFilter}
+              <button onClick={() => setOccasionFilter("all")} className="hover:text-gold">
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          </div>
+        )}
+
+        {filtered.length === 0 ? (
+          <p className="text-muted-foreground text-center py-12">Keine Reservierungen.</p>
+        ) : (
+          <ul className="space-y-3">
+            {filtered.map((r) => (
+              <li key={r.id} className="bg-card border border-border rounded-sm p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <h3 className="font-display text-lg">{r.guest_name}</h3>
+                      <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${STATUS_STYLES[r.status]}`}>
+                        {STATUS_LABEL[r.status]}
+                      </span>
+                      {r.occasion && (
+                        <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border border-gold/40 text-gold bg-gold/5">
+                          {r.occasion}
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> {fmt(r.reservation_date)} · {r.reservation_time}</span>
+                      <span className="flex items-center gap-2"><Users className="w-4 h-4" /> {r.party_size} Personen</span>
+                      <a href={`mailto:${r.guest_email}`} className="flex items-center gap-2 hover:text-gold"><Mail className="w-4 h-4" /> {r.guest_email}</a>
+                      {r.guest_phone && <a href={`tel:${r.guest_phone}`} className="flex items-center gap-2 hover:text-gold"><Phone className="w-4 h-4" /> {r.guest_phone}</a>}
+                    </div>
+                    {r.event_date_label && (
+                      <p className="mt-2 text-xs text-muted-foreground">Anlass-Datum: <span className="text-foreground">{r.event_date_label}</span></p>
+                    )}
+                    {r.notes && <p className="mt-3 text-sm bg-background border border-border rounded-sm p-3 text-muted-foreground">{r.notes}</p>}
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> {fmt(r.reservation_date)} · {r.reservation_time}</span>
-                    <span className="flex items-center gap-2"><Users className="w-4 h-4" /> {r.party_size} Personen</span>
-                    <a href={`mailto:${r.guest_email}`} className="flex items-center gap-2 hover:text-gold"><Mail className="w-4 h-4" /> {r.guest_email}</a>
-                    {r.guest_phone && <a href={`tel:${r.guest_phone}`} className="flex items-center gap-2 hover:text-gold"><Phone className="w-4 h-4" /> {r.guest_phone}</a>}
-                  </div>
-                  {r.notes && <p className="mt-3 text-sm bg-background border border-border rounded-sm p-3 text-muted-foreground">{r.notes}</p>}
+                  {r.status === "pending" && (
+                    <div className="flex gap-2">
+                      <button onClick={() => setStatus(r.id, "confirmed")} disabled={busy === r.id}
+                        className="rounded-full bg-green-600/90 hover:bg-green-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
+                        <Check className="w-4 h-4" /> Bestätigen
+                      </button>
+                      <button onClick={() => setStatus(r.id, "declined")} disabled={busy === r.id}
+                        className="rounded-full bg-red-600/90 hover:bg-red-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
+                        <X className="w-4 h-4" /> Ablehnen
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {r.status === "pending" && (
-                  <div className="flex gap-2">
-                    <button onClick={() => setStatus(r.id, "confirmed")} disabled={busy === r.id}
-                      className="rounded-full bg-green-600/90 hover:bg-green-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
-                      <Check className="w-4 h-4" /> Bestätigen
-                    </button>
-                    <button onClick={() => setStatus(r.id, "declined")} disabled={busy === r.id}
-                      className="rounded-full bg-red-600/90 hover:bg-red-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
-                      <X className="w-4 h-4" /> Ablehnen
-                    </button>
-                  </div>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
+  );
+}
+
+function Stat({ icon: Icon, label, value, hint, accent }: {
+  icon: typeof Users; label: string; value: number; hint: string; accent?: boolean;
+}) {
+  return (
+    <div className="rounded-sm border border-border bg-card p-5">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs uppercase tracking-widest text-muted-foreground">{label}</span>
+        <Icon className={`w-4 h-4 ${accent ? "text-gold" : "text-muted-foreground"}`} />
+      </div>
+      <div className={`text-3xl font-display ${accent ? "text-gold" : ""}`}>{value.toLocaleString("de-CH")}</div>
+      <div className="text-xs text-muted-foreground mt-1">{hint}</div>
+    </div>
+  );
+}
+
+type OccRow = {
+  name: string; reservations: number; persons: number;
+  max: number; remaining: number; pct: number; isConfigured: boolean;
+};
+
+function OccasionsPanel({ rows, onSaved, onFilterByOccasion }: {
+  rows: OccRow[]; onSaved: () => void; onFilterByOccasion: (name: string) => void;
+}) {
+  const setCapFn = useServerFn(setOccasionCapacity);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+
+  // Reset drafts when rows change (keep edits in progress though)
+  useEffect(() => {
+    setDrafts((d) => {
+      const next = { ...d };
+      // Drop drafts for occasions that no longer exist
+      Object.keys(next).forEach((k) => { if (!rows.some((r) => r.name === k)) delete next[k]; });
+      return next;
+    });
+  }, [rows]);
+
+  async function save(name: string) {
+    const raw = drafts[name];
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0) { toast.error("Bitte eine Zahl ≥ 0 eingeben."); return; }
+    setSavingKey(name);
+    try {
+      await setCapFn({ data: { occasion: name, max_reservations: Math.floor(n) } });
+      toast.success(`Maximum für „${name}" gespeichert.`);
+      setDrafts((d) => { const c = { ...d }; delete c[name]; return c; });
+      onSaved();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setSavingKey(null); }
+  }
+
+  if (rows.length === 0) {
+    return (
+      <section className="rounded-sm border border-border bg-card p-6">
+        <header className="mb-2"><h3 className="font-display text-xl">Pro Anlass</h3></header>
+        <p className="text-sm text-muted-foreground">
+          Noch keine Anlässe konfiguriert. Füge sie unter <em>Inhalte & Bilder → reservation_occasions</em> hinzu.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-sm border border-border bg-card p-6">
+      <header className="mb-4 flex items-end justify-between gap-3 flex-wrap">
+        <div>
+          <h3 className="font-display text-xl">Pro Anlass</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Anzahl Reservierungen, Personen und freier Platz bis zum Maximum.
+          </p>
+        </div>
+      </header>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-xs uppercase tracking-widest text-muted-foreground">
+            <tr className="border-b border-border">
+              <th className="text-left py-2 pr-4 font-medium">Anlass</th>
+              <th className="text-right py-2 px-2 font-medium">Reservierungen</th>
+              <th className="text-right py-2 px-2 font-medium">Personen</th>
+              <th className="text-left py-2 px-2 font-medium w-1/3">Auslastung</th>
+              <th className="text-right py-2 px-2 font-medium">Max</th>
+              <th className="text-right py-2 pl-2 font-medium">Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const draft = drafts[r.name];
+              const editing = draft !== undefined;
+              const barColor = r.pct >= 100 ? "bg-red-500"
+                : r.pct >= 80 ? "bg-amber-500" : "bg-emerald-500";
+              return (
+                <tr key={r.name} className="border-b border-border last:border-0">
+                  <td className="py-3 pr-4">
+                    <button onClick={() => onFilterByOccasion(r.name)} className="text-left hover:text-gold">
+                      <div className="font-medium">{r.name}</div>
+                      {!r.isConfigured && (
+                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">
+                          nicht in Dropdown
+                        </div>
+                      )}
+                    </button>
+                  </td>
+                  <td className="py-3 px-2 text-right tabular-nums font-display text-lg">{r.reservations}</td>
+                  <td className="py-3 px-2 text-right tabular-nums text-muted-foreground">{r.persons}</td>
+                  <td className="py-3 px-2">
+                    {r.max > 0 ? (
+                      <div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div className={`h-full ${barColor} transition-all`} style={{ width: `${r.pct}%` }} />
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-1">
+                          {r.pct}% · {r.remaining > 0 ? `noch ${r.remaining} frei` : "ausgebucht"}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">kein Limit</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-2 text-right">
+                    <input
+                      type="number" min={0} inputMode="numeric"
+                      value={editing ? draft : (r.max || "")}
+                      placeholder="—"
+                      onChange={(e) => setDrafts((d) => ({ ...d, [r.name]: e.target.value }))}
+                      className="w-20 rounded border border-border bg-background px-2 py-1 text-right text-sm focus:outline-none focus:border-gold"
+                    />
+                  </td>
+                  <td className="py-3 pl-2 text-right">
+                    <button
+                      onClick={() => save(r.name)}
+                      disabled={!editing || savingKey === r.name}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-[11px] uppercase tracking-widest text-gold-foreground disabled:opacity-30">
+                      <Save className="w-3 h-3" />
+                      {savingKey === r.name ? "…" : "Speichern"}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
