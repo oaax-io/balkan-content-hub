@@ -73,10 +73,30 @@ export function SeoTab() {
   }
 
   async function analyzeAll() {
-    for (const r of rows) await analyze(r);
+    await Promise.all(rows.map((r) => analyze(r)));
   }
 
+  // auto-run a full scan once after rows are loaded so the overview is populated
+  useEffect(() => {
+    if (rows.length > 0 && Object.keys(analyses).length === 0 && !Object.values(analyzing).some(Boolean)) {
+      void analyzeAll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows.length]);
+
   if (isLoading) return <p className="text-muted-foreground">Lade …</p>;
+
+  const scanned = Object.values(analyses);
+  const avgScore = scanned.length
+    ? Math.round(scanned.reduce((s, a) => s + (a.score || 0), 0) / scanned.length)
+    : null;
+  const failCount = scanned.reduce((s, a) => s + a.checks.filter((c) => c.status === "fail").length, 0);
+  const warnCount = scanned.reduce((s, a) => s + a.checks.filter((c) => c.status === "warn").length, 0);
+  const okCount = scanned.reduce((s, a) => s + a.checks.filter((c) => c.status === "ok").length, 0);
+  const avgLoad = scanned.length
+    ? Math.round(scanned.reduce((s, a) => s + (a.loadMs || 0), 0) / scanned.length)
+    : null;
+  const isScanning = Object.values(analyzing).some(Boolean);
 
   return (
     <div className="space-y-8">
@@ -84,20 +104,34 @@ export function SeoTab() {
         <div>
           <h2 className="font-display text-2xl mb-2">SEO Optimierung</h2>
           <p className="text-sm text-muted-foreground max-w-2xl">
-            Titel, Beschreibung und Vorschaubild für Google, Facebook, WhatsApp & Co. – pro Seite.
-            Mit <strong>Analysieren</strong> prüfst du jede Seite live: HTTP-Status, Ladezeit, H1, Open-Graph-Bild,
-            Mobile-Tauglichkeit, alt-Texte uvm. → Qualitäts-Score 0-100.
+            Übersicht über Qualität & Sichtbarkeit der gesamten Website. Darunter pro Seite
+            Titel, Beschreibung, Vorschaubild und detaillierter Live-Check.
           </p>
         </div>
         <button
           onClick={analyzeAll}
-          className="rounded-full border border-border px-5 py-2 text-xs uppercase tracking-widest hover:bg-secondary"
+          disabled={isScanning}
+          className="rounded-full border border-border px-5 py-2 text-xs uppercase tracking-widest hover:bg-secondary disabled:opacity-50 inline-flex items-center gap-2"
         >
-          Alle analysieren
+          {isScanning ? <Loader2 className="size-3 animate-spin" /> : <Gauge className="size-3" />}
+          {isScanning ? "Scanne …" : "Alle neu scannen"}
         </button>
       </div>
 
+      <SiteOverview
+        avgScore={avgScore}
+        pagesScanned={scanned.length}
+        totalPages={rows.length}
+        okCount={okCount}
+        warnCount={warnCount}
+        failCount={failCount}
+        avgLoad={avgLoad}
+        isScanning={isScanning}
+        perPage={rows.map((r) => ({ path: r.path, label: r.label, score: analyses[r.path]?.score ?? null }))}
+      />
+
       <RankingsBanner />
+
 
       {rows.map((row) => {
         const titleLen = row.title.length;
