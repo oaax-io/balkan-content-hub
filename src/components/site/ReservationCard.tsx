@@ -15,7 +15,7 @@ const COUNTRY_CODES = [
 ];
 
 const PARTY_SIZES = [
-  ...Array.from({ length: 15 }, (_, i) => `${i + 2} Personen`),
+  ...Array.from({ length: 16 }, (_, i) => `${i + 1} Personen`),
   "Mehr als 16 (Wir werden Sie kontaktieren)",
 ];
 
