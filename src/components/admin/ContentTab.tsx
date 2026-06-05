@@ -196,10 +196,23 @@ function ContentRow({ row, onSaved }: { row: Row; onSaved: () => void }) {
   }
 
   async function onFile(file: File) {
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("Bild ist zu gross (max. 15 MB)");
+      return;
+    }
     setUploading(true);
     try {
       const buf = await file.arrayBuffer();
-      const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+      const bytes = new Uint8Array(buf);
+      let binary = "";
+      const CHUNK = 0x8000;
+      for (let i = 0; i < bytes.length; i += CHUNK) {
+        binary += String.fromCharCode.apply(
+          null,
+          Array.from(bytes.subarray(i, Math.min(i + CHUNK, bytes.length))),
+        );
+      }
+      const b64 = btoa(binary);
       const res = await uploadFn({ data: {
         key: row.key, filename: file.name, content_type: file.type || "image/jpeg", data_base64: b64,
       }});
