@@ -65,6 +65,24 @@ export type Database = {
         }
         Relationships: []
       }
+      occasion_capacities: {
+        Row: {
+          max_reservations: number
+          occasion: string
+          updated_at: string
+        }
+        Insert: {
+          max_reservations?: number
+          occasion: string
+          updated_at?: string
+        }
+        Update: {
+          max_reservations?: number
+          occasion?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       opening_hours: {
         Row: {
           close_time: string
