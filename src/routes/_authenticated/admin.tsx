@@ -10,6 +10,7 @@ import { ContentTab } from "@/components/admin/ContentTab";
 import { ContactTab } from "@/components/admin/ContactTab";
 import { ReservationsTab } from "@/components/admin/ReservationsTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
+import { SeoTab } from "@/components/admin/SeoTab";
 import { toast } from "sonner";
 import logo from "@/assets/logo.webp";
 import {
@@ -17,7 +18,7 @@ import {
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarMenuBadge,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Balkaneros" }] }),
