@@ -64,90 +64,92 @@ function AdminShell() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background light">
-        <Sidebar className="border-r border-border">
-          <SidebarHeader className="border-b border-border">
-            <Link to="/" className="flex items-center gap-3 px-2 py-3">
-              <img src={logo} alt="Balkaneros" className="h-9 w-auto" />
-              <div className="leading-tight">
-                <div className="font-display text-base">Balkaneros</div>
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Admin-Konsole</div>
-              </div>
-            </Link>
-          </SidebarHeader>
+    <div className="light">
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background text-foreground">
+          <Sidebar className="border-r border-sidebar-border">
+            <SidebarHeader className="border-b border-sidebar-border">
+              <Link to="/" className="flex items-center gap-3 px-2 py-3">
+                <img src={logo} alt="Balkaneros" className="h-9 w-auto" />
+                <div className="leading-tight">
+                  <div className="font-display text-base text-sidebar-foreground">Balkaneros</div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Admin</div>
+                </div>
+              </Link>
+            </SidebarHeader>
 
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Verwaltung</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {NAV.map((item) => (
-                    <SidebarMenuItem key={item.key}>
-                      <SidebarMenuButton isActive={tab === item.key} onClick={() => setTab(item.key)} tooltip={item.label}>
-                        <item.icon className="w-4 h-4" />
-                        <span>{item.label}</span>
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupLabel>Verwaltung</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {NAV.map((item) => (
+                      <SidebarMenuItem key={item.key}>
+                        <SidebarMenuButton isActive={tab === item.key} onClick={() => setTab(item.key)} tooltip={item.label}>
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                        {item.key === "reservations" && pendingCount > 0 && (
+                          <SidebarMenuBadge className="bg-primary text-primary-foreground">{pendingCount}</SidebarMenuBadge>
+                        )}
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+
+              <SidebarGroup>
+                <SidebarGroupLabel>Website</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild tooltip="Website öffnen">
+                        <Link to="/" target="_blank">
+                          <ExternalLink className="w-4 h-4" />
+                          <span>Website öffnen</span>
+                        </Link>
                       </SidebarMenuButton>
-                      {item.key === "reservations" && pendingCount > 0 && (
-                        <SidebarMenuBadge className="bg-gold text-gold-foreground">{pendingCount}</SidebarMenuBadge>
-                      )}
                     </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
 
-            <SidebarGroup>
-              <SidebarGroupLabel>Website</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Website öffnen">
-                      <Link to="/" target="_blank">
-                        <ExternalLink className="w-4 h-4" />
-                        <span>Website öffnen</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
+            <SidebarFooter className="border-t border-sidebar-border">
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={logout} tooltip="Abmelden">
+                    <LogOut className="w-4 h-4" />
+                    <span>Abmelden</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarFooter>
+          </Sidebar>
 
-          <SidebarFooter className="border-t border-border">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={logout} tooltip="Abmelden">
-                  <LogOut className="w-4 h-4" />
-                  <span>Abmelden</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
-        </Sidebar>
+          <div className="flex-1 flex flex-col min-w-0">
+            <header className="h-14 border-b border-border bg-card flex items-center gap-3 px-4 sticky top-0 z-10">
+              <SidebarTrigger />
+              <div className="h-5 w-px bg-border" />
+              <h1 className="font-display text-lg text-foreground">{TITLES[tab]}</h1>
+              <div className="ml-auto flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <ShieldCheck className="w-4 h-4 text-primary" /> Administrator
+              </div>
+            </header>
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 border-b border-border bg-card/60 backdrop-blur flex items-center gap-3 px-4 sticky top-0 z-10">
-            <SidebarTrigger />
-            <div className="h-5 w-px bg-border" />
-            <h1 className="font-display text-lg">{TITLES[tab]}</h1>
-            <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-              <ShieldCheck className="w-4 h-4 text-gold" /> Administrator
-            </div>
-          </header>
-
-          <main className="flex-1 px-6 py-8 overflow-y-auto">
-            <div className="mx-auto max-w-6xl">
-              {tab === "dashboard" && <DashboardTab onNavigate={(t) => setTab(t as Tab)} />}
-              {tab === "reservations" && <ReservationsTab />}
-              {tab === "content" && <ContentTab />}
-              {tab === "contact" && <ContactTab />}
-              {tab === "settings" && <SettingsTab />}
-            </div>
-          </main>
+            <main className="flex-1 px-6 py-8 overflow-y-auto bg-background">
+              <div className="mx-auto max-w-6xl">
+                {tab === "dashboard" && <DashboardTab onNavigate={(t) => setTab(t as Tab)} />}
+                {tab === "reservations" && <ReservationsTab />}
+                {tab === "content" && <ContentTab />}
+                {tab === "contact" && <ContactTab />}
+                {tab === "settings" && <SettingsTab />}
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </div>
   );
 }
 
