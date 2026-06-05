@@ -1,0 +1,16 @@
+UPDATE public.site_content SET kind='image', label='Gastgeberin · Bild' WHERE key='host_image';
+UPDATE public.site_content SET label='Gastgeberin · Gruß' WHERE key='host_eyebrow';
+UPDATE public.site_content SET label='Gastgeberin · Titel' WHERE key='host_title';
+UPDATE public.site_content SET label='Gastgeberin · Text' WHERE key='host_text';
+UPDATE public.site_content SET label='Angebote · Gruß' WHERE key='offers_eyebrow';
+UPDATE public.site_content SET label='Angebote · Titel' WHERE key='offers_title';
+UPDATE public.site_content SET label='Angebote · Brunch Label' WHERE key='offers_brunch_label';
+UPDATE public.site_content SET label='Angebote · Brunch Beschreibung' WHERE key='offers_brunch_desc';
+UPDATE public.site_content SET label='Angebote · Brunch Button' WHERE key='offers_brunch_cta';
+UPDATE public.site_content SET label='Angebote · Dinner Label' WHERE key='offers_dinner_label';
+UPDATE public.site_content SET label='Angebote · Dinner Beschreibung' WHERE key='offers_dinner_desc';
+UPDATE public.site_content SET label='Angebote · Dinner Button' WHERE key='offers_dinner_cta';
+UPDATE public.site_content SET label='Angebote · Events Label' WHERE key='offers_events_label';
+UPDATE public.site_content SET label='Angebote · Events Beschreibung' WHERE key='offers_events_desc';
+UPDATE public.site_content SET label='Angebote · Events Button' WHERE key='offers_events_cta';
+UPDATE public.site_content SET label='Über uns · Gruß' WHERE key='about_eyebrow';
