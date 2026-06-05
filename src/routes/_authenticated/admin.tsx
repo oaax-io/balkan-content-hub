@@ -1,43 +1,169 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { checkIsAdmin, claimAdmin } from "@/lib/admin.functions";
+import { listReservations } from "@/lib/reservations.functions";
+import { DashboardTab } from "@/components/admin/DashboardTab";
 import { ContentTab } from "@/components/admin/ContentTab";
 import { ContactTab } from "@/components/admin/ContactTab";
 import { ReservationsTab } from "@/components/admin/ReservationsTab";
+import { SettingsTab } from "@/components/admin/SettingsTab";
 import { toast } from "sonner";
 import logo from "@/assets/logo.webp";
-import { LogOut } from "lucide-react";
+import {
+  Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
+  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
+  SidebarMenuBadge,
+} from "@/components/ui/sidebar";
+import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Balkaneros" }] }),
   component: Admin,
 });
 
-type Tab = "content" | "contact" | "reservations";
+type Tab = "dashboard" | "reservations" | "content" | "contact" | "settings";
+
+const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
+  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { key: "reservations", label: "Reservierungen", icon: CalendarDays },
+  { key: "content", label: "Inhalte & Bilder", icon: FileText },
+  { key: "contact", label: "Kontakt & Zeiten", icon: MapPin },
+  { key: "settings", label: "Einstellungen", icon: Settings },
+];
+
+const TITLES: Record<Tab, string> = {
+  dashboard: "Dashboard",
+  reservations: "Reservierungen",
+  content: "Inhalte & Bilder",
+  contact: "Kontakt & Öffnungszeiten",
+  settings: "Einstellungen",
+};
 
 function Admin() {
-  const navigate = useNavigate();
   const checkFn = useServerFn(checkIsAdmin);
+  const { data, isLoading, refetch } = useQuery({ queryKey: ["is-admin"], queryFn: () => checkFn() });
+
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Lade …</div>;
+  if (!data?.isAdmin) return <NoAccess onClaimed={refetch} />;
+  return <AdminShell />;
+}
+
+function AdminShell() {
+  const navigate = useNavigate();
+  const [tab, setTab] = useState<Tab>("dashboard");
+  const listFn = useServerFn(listReservations);
+  const { data: reservations } = useQuery({ queryKey: ["reservations"], queryFn: () => listFn() });
+  const pendingCount = (reservations ?? []).filter((r) => r.status === "pending").length;
+
+  async function logout() {
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <Sidebar className="border-r border-border">
+          <SidebarHeader className="border-b border-border">
+            <Link to="/" className="flex items-center gap-3 px-2 py-3">
+              <img src={logo} alt="Balkaneros" className="h-9 w-auto" />
+              <div className="leading-tight">
+                <div className="font-display text-base">Balkaneros</div>
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Admin-Konsole</div>
+              </div>
+            </Link>
+          </SidebarHeader>
+
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Verwaltung</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {NAV.map((item) => (
+                    <SidebarMenuItem key={item.key}>
+                      <SidebarMenuButton isActive={tab === item.key} onClick={() => setTab(item.key)} tooltip={item.label}>
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                      {item.key === "reservations" && pendingCount > 0 && (
+                        <SidebarMenuBadge className="bg-gold text-gold-foreground">{pendingCount}</SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Website</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Website öffnen">
+                      <Link to="/" target="_blank">
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Website öffnen</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+
+          <SidebarFooter className="border-t border-border">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={logout} tooltip="Abmelden">
+                  <LogOut className="w-4 h-4" />
+                  <span>Abmelden</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        </Sidebar>
+
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 border-b border-border bg-card/60 backdrop-blur flex items-center gap-3 px-4 sticky top-0 z-10">
+            <SidebarTrigger />
+            <div className="h-5 w-px bg-border" />
+            <h1 className="font-display text-lg">{TITLES[tab]}</h1>
+            <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="w-4 h-4 text-gold" /> Administrator
+            </div>
+          </header>
+
+          <main className="flex-1 px-6 py-8 overflow-y-auto">
+            <div className="mx-auto max-w-6xl">
+              {tab === "dashboard" && <DashboardTab onNavigate={(t) => setTab(t as Tab)} />}
+              {tab === "reservations" && <ReservationsTab />}
+              {tab === "content" && <ContentTab />}
+              {tab === "contact" && <ContactTab />}
+              {tab === "settings" && <SettingsTab />}
+            </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+function NoAccess({ onClaimed }: { onClaimed: () => void }) {
+  const navigate = useNavigate();
   const claimFn = useServerFn(claimAdmin);
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["is-admin"],
-    queryFn: () => checkFn(),
-  });
-  const [tab, setTab] = useState<Tab>("reservations");
   const [claiming, setClaiming] = useState(false);
 
   async function doClaim() {
     setClaiming(true);
     try {
       const res = await claimFn();
-      if (res.ok) { toast.success("Du bist jetzt Admin."); refetch(); }
+      if (res.ok) { toast.success("Du bist jetzt Admin."); onClaimed(); }
       else toast.error("Es existiert bereits ein Admin-Account.");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Fehler");
-    } finally { setClaiming(false); }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setClaiming(false); }
   }
 
   async function logout() {
@@ -45,61 +171,19 @@ function Admin() {
     navigate({ to: "/auth", replace: true });
   }
 
-  useEffect(() => {
-    if (data && !data.isAdmin) {
-      // user is logged in but not admin
-    }
-  }, [data]);
-
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Lade …</div>;
-
-  if (!data?.isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="bg-card border border-border rounded-sm p-8 max-w-md text-center">
-          <h1 className="font-display text-2xl mb-3">Kein Admin-Zugriff</h1>
-          <p className="text-muted-foreground text-sm mb-6">
-            Dein Konto hat noch keine Admin-Rechte. Wenn noch kein Admin existiert,
-            kannst du dich jetzt als erster Admin einrichten.
-          </p>
-          <button onClick={doClaim} disabled={claiming}
-            className="rounded-full bg-gold px-6 py-2.5 text-sm uppercase tracking-widest text-gold-foreground disabled:opacity-50">
-            {claiming ? "…" : "Als Admin einrichten"}
-          </button>
-          <button onClick={logout} className="block mx-auto mt-4 text-xs text-muted-foreground hover:text-gold">Abmelden</button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3"><img src={logo} alt="Balkaneros" className="h-10" /></Link>
-          <h1 className="font-display text-xl hidden md:block">Admin</h1>
-          <button onClick={logout} className="text-sm text-muted-foreground hover:text-gold flex items-center gap-2">
-            <LogOut className="w-4 h-4" /> Abmelden
-          </button>
-        </div>
-        <nav className="mx-auto max-w-7xl px-6 flex gap-1 -mb-px">
-          {([
-            ["reservations", "Reservierungen"],
-            ["content", "Inhalte & Bilder"],
-            ["contact", "Kontakt & Öffnungszeiten"],
-          ] as const).map(([k, label]) => (
-            <button key={k} onClick={() => setTab(k)}
-              className={`px-4 py-3 text-sm border-b-2 transition ${tab === k ? "border-gold text-gold" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              {label}
-            </button>
-          ))}
-        </nav>
-      </header>
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        {tab === "reservations" && <ReservationsTab />}
-        {tab === "content" && <ContentTab />}
-        {tab === "contact" && <ContactTab />}
-      </main>
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="bg-card border border-border rounded-sm p-8 max-w-md text-center">
+        <h1 className="font-display text-2xl mb-3">Kein Admin-Zugriff</h1>
+        <p className="text-muted-foreground text-sm mb-6">
+          Dein Konto hat noch keine Admin-Rechte. Wenn noch kein Admin existiert, kannst du dich jetzt als erster Admin einrichten.
+        </p>
+        <button onClick={doClaim} disabled={claiming}
+          className="rounded-full bg-gold px-6 py-2.5 text-sm uppercase tracking-widest text-gold-foreground disabled:opacity-50">
+          {claiming ? "…" : "Als Admin einrichten"}
+        </button>
+        <button onClick={logout} className="block mx-auto mt-4 text-xs text-muted-foreground hover:text-gold">Abmelden</button>
+      </div>
     </div>
   );
 }
