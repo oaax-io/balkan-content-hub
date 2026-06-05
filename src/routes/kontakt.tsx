@@ -80,11 +80,13 @@ function Contact() {
               </Link>
             </div>
             <div className="aspect-square md:aspect-auto md:min-h-[500px] bg-card rounded-sm overflow-hidden">
-              {contact.maps_embed_url ? (
+              {extractMapsSrc(contact.maps_embed_url) ? (
                 <iframe
-                  src={contact.maps_embed_url}
+                  src={extractMapsSrc(contact.maps_embed_url)}
                   className="w-full h-full border-0"
                   loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
                   title="Karte"
                 />
               ) : (
