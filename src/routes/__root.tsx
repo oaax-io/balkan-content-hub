@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import { BackToTop } from "@/components/site/BackToTop";
+import { PageViewTracker } from "@/components/site/PageViewTracker";
 
 
 function NotFoundComponent() {
@@ -100,6 +101,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthSync />
+      <PageViewTracker />
       <Outlet />
       <BackToTop />
       <Toaster theme="dark" position="top-right" richColors />
