@@ -149,6 +149,36 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_settings: {
+        Row: {
+          description: string
+          label: string
+          og_image: string
+          path: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          description?: string
+          label?: string
+          og_image?: string
+          path: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string
+          label?: string
+          og_image?: string
+          path?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           key: string
