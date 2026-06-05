@@ -138,3 +138,33 @@ export const claimAdmin = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---- SEO settings ----
+export const listSeoSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("seo_settings").select("*").order("sort_order");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+const seoSchema = z.object({
+  path: z.string().min(1).max(120),
+  title: z.string().trim().max(180),
+  description: z.string().trim().max(400),
+  og_image: z.string().trim().max(1000),
+});
+export const updateSeoSetting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => seoSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("seo_settings")
+      .update({ title: data.title, description: data.description, og_image: data.og_image, updated_at: new Date().toISOString() })
+      .eq("path", data.path);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

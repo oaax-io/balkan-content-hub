@@ -10,6 +10,7 @@ import { ContentTab } from "@/components/admin/ContentTab";
 import { ContactTab } from "@/components/admin/ContactTab";
 import { ReservationsTab } from "@/components/admin/ReservationsTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
+import { SeoTab } from "@/components/admin/SeoTab";
 import { toast } from "sonner";
 import logo from "@/assets/logo.webp";
 import {
@@ -17,20 +18,21 @@ import {
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarMenuBadge,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Balkaneros" }] }),
   component: Admin,
 });
 
-type Tab = "dashboard" | "reservations" | "content" | "contact" | "settings";
+type Tab = "dashboard" | "reservations" | "content" | "contact" | "seo" | "settings";
 
 const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "reservations", label: "Reservierungen", icon: CalendarDays },
   { key: "content", label: "Inhalte & Bilder", icon: FileText },
   { key: "contact", label: "Kontakt & Zeiten", icon: MapPin },
+  { key: "seo", label: "SEO Optimierung", icon: Search },
   { key: "settings", label: "Einstellungen", icon: Settings },
 ];
 
@@ -39,6 +41,7 @@ const TITLES: Record<Tab, string> = {
   reservations: "Reservierungen",
   content: "Inhalte & Bilder",
   contact: "Kontakt & Öffnungszeiten",
+  seo: "SEO Optimierung",
   settings: "Einstellungen",
 };
 
@@ -143,6 +146,7 @@ function AdminShell() {
                 {tab === "reservations" && <ReservationsTab />}
                 {tab === "content" && <ContentTab />}
                 {tab === "contact" && <ContactTab />}
+                {tab === "seo" && <SeoTab />}
                 {tab === "settings" && <SettingsTab />}
               </div>
             </main>

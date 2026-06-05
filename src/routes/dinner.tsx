@@ -5,14 +5,14 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import offerDinner from "@/assets/offer-dinner.jpg";
 
+import { buildSeoMeta } from "@/lib/seo-head";
+
 export const Route = createFileRoute("/dinner")({
-  head: () => ({
-    meta: [
-      { title: "Dinner — Balkaneros" },
-      { name: "description", content: "Balkaneros Dinner: moderne Balkan-Fusion-Küche mit Live-Musik, Wein und Rakija in Luzern." },
-      { property: "og:title", content: "Dinner — Balkaneros" },
-      { property: "og:description", content: "Balkan-Fusion-Dinner mit Live-Musik." },
-    ],
+  head: ({ loaderData }) => ({
+    meta: buildSeoMeta(loaderData, "/dinner", {
+      title: "Dinner — Balkaneros",
+      description: "Balkaneros Dinner: moderne Balkan-Fusion-Küche mit Live-Musik, Wein und Rakija in Luzern.",
+    }),
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: DinnerPage,

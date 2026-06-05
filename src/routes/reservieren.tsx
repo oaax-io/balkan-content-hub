@@ -5,13 +5,14 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { ReservationCard } from "@/components/site/ReservationCard";
 
+import { buildSeoMeta } from "@/lib/seo-head";
+
 export const Route = createFileRoute("/reservieren")({
-  head: () => ({
-    meta: [
-      { title: "Reservieren — Balkaneros" },
-      { name: "description", content: "Reserviere deinen Tisch bei Balkaneros." },
-      { property: "og:title", content: "Reservieren — Balkaneros" },
-    ],
+  head: ({ loaderData }) => ({
+    meta: buildSeoMeta(loaderData, "/reservieren", {
+      title: "Reservieren — Balkaneros",
+      description: "Reserviere deinen Tisch bei Balkaneros.",
+    }),
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: Reserve,

@@ -5,14 +5,14 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import offerBrunch from "@/assets/offer-brunch.jpg";
 
+import { buildSeoMeta } from "@/lib/seo-head";
+
 export const Route = createFileRoute("/ueber-uns")({
-  head: () => ({
-    meta: [
-      { title: "Über uns — Balkaneros" },
-      { name: "description", content: "Seit 2019 mit dem Balkaneros Dinner in der Schweiz unterwegs. Lerne unsere Geschichte und Gastgeberin Nena Spadea kennen." },
-      { property: "og:title", content: "Über uns — Balkaneros" },
-      { property: "og:description", content: "Die Geschichte hinter Balkaneros und unsere Gastgeberin Nena Spadea." },
-    ],
+  head: ({ loaderData }) => ({
+    meta: buildSeoMeta(loaderData, "/ueber-uns", {
+      title: "Über uns — Balkaneros",
+      description: "Seit 2019 mit dem Balkaneros Dinner in der Schweiz unterwegs. Lerne unsere Geschichte und Gastgeberin Nena Spadea kennen.",
+    }),
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: About,

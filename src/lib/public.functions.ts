@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { loadSiteContent } from "./site.server";
+import { loadSiteContent, loadSeoSettings, type SeoRow } from "./site.server";
+
+export type { SeoRow };
 
 export type ContactInfo = {
   restaurant_name: string;
@@ -26,10 +28,11 @@ export type OpeningHour = {
 };
 
 export const getPublicData = createServerFn({ method: "GET" }).handler(async () => {
-  const [content, contactRes, hoursRes] = await Promise.all([
+  const [content, contactRes, hoursRes, seo] = await Promise.all([
     loadSiteContent(),
     supabaseAdmin.from("contact_info").select("*").eq("id", 1).single(),
     supabaseAdmin.from("opening_hours").select("*").order("weekday"),
+    loadSeoSettings(),
   ]);
   const contact = (contactRes.data ?? {
     restaurant_name: "Balkaneros",
@@ -48,5 +51,5 @@ export const getPublicData = createServerFn({ method: "GET" }).handler(async () 
   // Order so Monday comes first
   const order = [1, 2, 3, 4, 5, 6, 0];
   hours.sort((a, b) => order.indexOf(a.weekday) - order.indexOf(b.weekday));
-  return { content, contact, hours };
+  return { content, contact, hours, seo };
 });

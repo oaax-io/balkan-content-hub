@@ -5,14 +5,14 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import offerEvents from "@/assets/offer-events.jpg";
 
+import { buildSeoMeta } from "@/lib/seo-head";
+
 export const Route = createFileRoute("/events")({
-  head: () => ({
-    meta: [
-      { title: "Exklusiv Events — Balkaneros" },
-      { name: "description", content: "Geburtstag, Familienfeier oder Firmenanlass – Balkan Dinner mit Live-Musik, ausgewählten Weinen und Rakija in Luzern." },
-      { property: "og:title", content: "Exklusiv Events — Balkaneros" },
-      { property: "og:description", content: "Dein exklusiver Balkaneros Event in Luzern." },
-    ],
+  head: ({ loaderData }) => ({
+    meta: buildSeoMeta(loaderData, "/events", {
+      title: "Exklusiv Events — Balkaneros",
+      description: "Geburtstag, Familienfeier oder Firmenanlass – Balkan Dinner mit Live-Musik, ausgewählten Weinen und Rakija in Luzern.",
+    }),
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: EventsPage,
