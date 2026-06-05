@@ -1,0 +1,1 @@
+ALTER TABLE public.contact_info ADD COLUMN IF NOT EXISTS hours_public_visible boolean NOT NULL DEFAULT true;

@@ -21,6 +21,7 @@ export type Database = {
           city: string
           email: string
           facebook_url: string
+          hours_public_visible: boolean
           id: number
           instagram_url: string
           maps_embed_url: string
@@ -36,6 +37,7 @@ export type Database = {
           city?: string
           email?: string
           facebook_url?: string
+          hours_public_visible?: boolean
           id?: number
           instagram_url?: string
           maps_embed_url?: string
@@ -51,6 +53,7 @@ export type Database = {
           city?: string
           email?: string
           facebook_url?: string
+          hours_public_visible?: boolean
           id?: number
           instagram_url?: string
           maps_embed_url?: string
