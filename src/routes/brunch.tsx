@@ -5,14 +5,14 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import offerBrunch from "@/assets/offer-brunch.jpg";
 
+import { buildSeoMeta } from "@/lib/seo-head";
+
 export const Route = createFileRoute("/brunch")({
-  head: () => ({
-    meta: [
-      { title: "Brunch — Balkaneros" },
-      { name: "description", content: "Hausgemachte Brunch-Köstlichkeiten aus dem Balkan – traditionell, modern und voller Geschmack." },
-      { property: "og:title", content: "Brunch — Balkaneros" },
-      { property: "og:description", content: "Balkan Brunch in Luzern – herzhaft, gemütlich, authentisch." },
-    ],
+  head: ({ loaderData }) => ({
+    meta: buildSeoMeta(loaderData, "/brunch", {
+      title: "Brunch — Balkaneros",
+      description: "Hausgemachte Brunch-Köstlichkeiten aus dem Balkan – traditionell, modern und voller Geschmack.",
+    }),
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: BrunchPage,
