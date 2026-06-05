@@ -25,13 +25,14 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type Tab = "dashboard" | "reservations" | "content" | "contact" | "settings";
+type Tab = "dashboard" | "reservations" | "content" | "contact" | "seo" | "settings";
 
 const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "reservations", label: "Reservierungen", icon: CalendarDays },
   { key: "content", label: "Inhalte & Bilder", icon: FileText },
   { key: "contact", label: "Kontakt & Zeiten", icon: MapPin },
+  { key: "seo", label: "SEO Optimierung", icon: Search },
   { key: "settings", label: "Einstellungen", icon: Settings },
 ];
 
@@ -40,6 +41,7 @@ const TITLES: Record<Tab, string> = {
   reservations: "Reservierungen",
   content: "Inhalte & Bilder",
   contact: "Kontakt & Öffnungszeiten",
+  seo: "SEO Optimierung",
   settings: "Einstellungen",
 };
 
