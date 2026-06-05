@@ -29,11 +29,11 @@ const PAGES: Page[] = [
       { id: "intro", title: "Intro-Sektion", keys: ["intro_eyebrow", "intro_title", "intro_text", "intro_image"] },
       { id: "host", title: "Gastgeberin", keys: ["host_eyebrow", "host_title", "host_name", "host_text", "host_image"] },
       { id: "gallery", title: "Galerie", keys: ["gallery_1", "gallery_2", "gallery_3"] },
-      { id: "offers", title: "Angebote (3 Karten)", keys: [
+      { id: "offers", title: "Angebote (3 Karten mit Bild)", keys: [
         "offers_eyebrow", "offers_title",
-        "offers_brunch_label", "offers_brunch_desc", "offers_brunch_cta",
-        "offers_dinner_label", "offers_dinner_desc", "offers_dinner_cta",
-        "offers_events_label", "offers_events_desc", "offers_events_cta",
+        "offers_brunch_label", "offers_brunch_desc", "offers_brunch_cta", "brunch_image",
+        "offers_dinner_label", "offers_dinner_desc", "offers_dinner_cta", "dinner_image",
+        "offers_events_label", "offers_events_desc", "offers_events_cta", "events_image",
       ]},
     ],
   },
