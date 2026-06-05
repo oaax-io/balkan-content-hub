@@ -168,3 +168,101 @@ export const updateSeoSetting = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---- On-Page SEO quality analyzer ----
+const analyzeSchema = z.object({ path: z.string().min(1).max(120) });
+
+export type SeoCheck = {
+  id: string;
+  label: string;
+  status: "ok" | "warn" | "fail";
+  detail: string;
+  weight: number;
+};
+
+export const analyzeSeoPage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => analyzeSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.userId);
+    const base = "https://balkaneros.oaase.com";
+    const url = base + (data.path === "/" ? "" : data.path);
+    const started = Date.now();
+    let html = "";
+    let status = 0;
+    let ok = false;
+    let bytes = 0;
+    try {
+      const res = await fetch(url, { headers: { "User-Agent": "Lovable-SEO-Bot/1.0 (+admin)" } });
+      status = res.status;
+      ok = res.ok;
+      html = await res.text();
+      bytes = html.length;
+    } catch (e) {
+      return {
+        url,
+        error: e instanceof Error ? e.message : "fetch_failed",
+        score: 0,
+        status: 0,
+        loadMs: Date.now() - started,
+        checks: [] as SeoCheck[],
+        title: "",
+        description: "",
+        ogImage: "",
+        h1: "",
+      };
+    }
+    const loadMs = Date.now() - started;
+
+    const pick = (re: RegExp) => {
+      const m = html.match(re);
+      return m ? m[1].trim() : "";
+    };
+    const title = pick(/<title[^>]*>([^<]*)<\/title>/i);
+    const desc = pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i);
+    const ogTitle = pick(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']/i);
+    const ogDesc = pick(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i);
+    const ogImage = pick(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']*)["']/i);
+    const canonical = pick(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']*)["']/i);
+    const viewport = pick(/<meta[^>]+name=["']viewport["'][^>]+content=["']([^"']*)["']/i);
+    const lang = pick(/<html[^>]+lang=["']([^"']*)["']/i);
+    const h1Matches = html.match(/<h1[\s>][\s\S]*?<\/h1>/gi) || [];
+    const h1Count = h1Matches.length;
+    const h1Text = h1Matches[0]?.replace(/<[^>]+>/g, "").trim() ?? "";
+    const imgs = html.match(/<img\b[^>]*>/gi) || [];
+    const imgsNoAlt = imgs.filter((t) => !/\salt\s*=/i.test(t)).length;
+    const isHttps = url.startsWith("https://");
+
+    const mk = (id: string, label: string, cond: boolean, detail: string, weight: number, warnCond = false): SeoCheck => ({
+      id,
+      label,
+      status: cond ? "ok" : warnCond ? "warn" : "fail",
+      detail,
+      weight,
+    });
+
+    const checks: SeoCheck[] = [
+      mk("status", "HTTP Status 200", ok && status === 200, String(status || "—"), 15),
+      mk("https", "HTTPS aktiv", isHttps, isHttps ? "ja" : "nein", 5),
+      mk("load", "Ladezeit < 1.5 s", loadMs < 1500, `${loadMs} ms`, 8, loadMs < 3000),
+      mk("title", "Titel vorhanden", !!title, title || "fehlt", 10),
+      mk("titleLen", "Titel 30–60 Zeichen", title.length >= 30 && title.length <= 60, `${title.length} Zeichen`, 6, title.length > 0 && title.length <= 70),
+      mk("desc", "Meta-Beschreibung vorhanden", !!desc, desc ? `${desc.length} Zeichen` : "fehlt", 8),
+      mk("descLen", "Beschreibung 120–160 Zeichen", desc.length >= 120 && desc.length <= 160, `${desc.length} Zeichen`, 5, desc.length > 0 && desc.length <= 175),
+      mk("h1", "Genau eine H1-Überschrift", h1Count === 1, `${h1Count} gefunden${h1Text ? ` – „${h1Text.slice(0, 60)}"` : ""}`, 8, h1Count > 1),
+      mk("canonical", "Canonical-URL gesetzt", !!canonical, canonical || "fehlt", 5),
+      mk("ogTitle", "Open Graph Titel", !!ogTitle, ogTitle ? "ok" : "fehlt", 4),
+      mk("ogDesc", "Open Graph Beschreibung", !!ogDesc, ogDesc ? "ok" : "fehlt", 4),
+      mk("ogImage", "Open Graph Bild (Social-Vorschau)", !!ogImage, ogImage ? "vorhanden" : "fehlt – Vorschau ohne Bild", 8),
+      mk("viewport", "Mobile Viewport Meta", !!viewport, viewport ? "ok" : "fehlt", 4),
+      mk("lang", "HTML Sprach-Attribut", !!lang, lang || "fehlt", 3),
+      mk("imgAlt", "Bilder mit alt-Text", imgsNoAlt === 0, `${imgs.length - imgsNoAlt}/${imgs.length} mit alt`, 4, imgsNoAlt > 0 && imgsNoAlt <= 3),
+      mk("size", "Seitengrösse < 800 KB", bytes < 800_000, `${Math.round(bytes / 1024)} KB`, 3, bytes < 2_000_000),
+    ];
+
+    const total = checks.reduce((s, c) => s + c.weight, 0);
+    const got = checks.reduce((s, c) => s + (c.status === "ok" ? c.weight : c.status === "warn" ? c.weight * 0.5 : 0), 0);
+    const score = Math.round((got / total) * 100);
+
+    return { url, status, loadMs, score, checks, title, description: desc, ogImage, h1: h1Text };
+  });
