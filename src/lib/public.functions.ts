@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { loadSiteContent } from "./site.server";
+import { loadSiteContent, loadSeoSettings, type SeoRow } from "./site.server";
+
+export type { SeoRow };
 
 export type ContactInfo = {
   restaurant_name: string;
