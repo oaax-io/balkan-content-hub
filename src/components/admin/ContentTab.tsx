@@ -37,27 +37,50 @@ export function ContentTab() {
   };
 
   return (
-    <div className="space-y-10 max-w-3xl">
-      <Section
-        icon={<CalendarDays className="w-4 h-4 text-primary" />}
-        title="Reservierungsformular"
-        description="Diese Werte erscheinen direkt im Reservierungsformular auf der Website. Jede Zeile in den Listen wird zu einem Eintrag im Dropdown."
-        rows={groups.reservation}
-        onSaved={refresh}
-      />
-      <Section
-        icon={<FileText className="w-4 h-4 text-primary" />}
-        title="Texte"
-        rows={groups.texts}
-        onSaved={refresh}
-      />
-      <Section
-        icon={<ImageIcon className="w-4 h-4 text-primary" />}
-        title="Bilder"
-        rows={groups.images}
-        onSaved={refresh}
-      />
-    </div>
+    <Tabs defaultValue="reservation" className="max-w-3xl">
+      <TabsList className="mb-6">
+        <TabsTrigger value="reservation">
+          <CalendarDays className="w-4 h-4 mr-2" />
+          Reservierung
+        </TabsTrigger>
+        <TabsTrigger value="texts">
+          <FileText className="w-4 h-4 mr-2" />
+          Texte
+        </TabsTrigger>
+        <TabsTrigger value="images">
+          <ImageIcon className="w-4 h-4 mr-2" />
+          Bilder
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="reservation">
+        <Section
+          icon={<CalendarDays className="w-4 h-4 text-primary" />}
+          title="Reservierungsformular"
+          description="Diese Werte erscheinen direkt im Reservierungsformular auf der Website. Jede Zeile in den Listen wird zu einem Eintrag im Dropdown."
+          rows={groups.reservation}
+          onSaved={refresh}
+        />
+      </TabsContent>
+
+      <TabsContent value="texts">
+        <Section
+          icon={<FileText className="w-4 h-4 text-primary" />}
+          title="Texte"
+          rows={groups.texts}
+          onSaved={refresh}
+        />
+      </TabsContent>
+
+      <TabsContent value="images">
+        <Section
+          icon={<ImageIcon className="w-4 h-4 text-primary" />}
+          title="Bilder"
+          rows={groups.images}
+          onSaved={refresh}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }
 
