@@ -35,3 +35,22 @@ export async function loadSiteContent(): Promise<Record<string, string>> {
   }
   return out;
 }
+
+export type SeoRow = {
+  path: string;
+  label: string;
+  title: string;
+  description: string;
+  og_image: string;
+};
+
+export async function loadSeoSettings(): Promise<Record<string, SeoRow>> {
+  const { data, error } = await supabaseAdmin
+    .from("seo_settings")
+    .select("path, label, title, description, og_image")
+    .order("sort_order");
+  if (error) throw new Error(error.message);
+  const out: Record<string, SeoRow> = {};
+  for (const r of data ?? []) out[r.path] = r as SeoRow;
+  return out;
+}
