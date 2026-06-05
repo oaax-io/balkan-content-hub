@@ -88,6 +88,36 @@ export function ContactTab() {
       <section>
         <h2 className="font-display text-2xl mb-4">Öffnungszeiten</h2>
         <div className="bg-card border border-border rounded-sm p-6 space-y-3">
+          <div className="flex flex-wrap gap-2 pb-3 mb-2 border-b border-border">
+            <button
+              onClick={async () => {
+                try {
+                  await Promise.all(WEEKDAYS.map((d) => {
+                    const row = publicData.data?.hours.find((h) => h.weekday === d.weekday);
+                    return hourFn({ data: { weekday: d.weekday, is_closed: true, open_time: row?.open_time ?? "", close_time: row?.close_time ?? "", note: row?.note ?? "" } });
+                  }));
+                  toast.success("Alle Tage als geschlossen markiert");
+                  qc.invalidateQueries({ queryKey: ["public-data"] });
+                } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+              }}
+              className="rounded-full bg-destructive/90 hover:bg-destructive px-4 py-1.5 text-xs uppercase tracking-widest text-destructive-foreground">
+              Alle Tage geschlossen
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await Promise.all(WEEKDAYS.map((d) => {
+                    const row = publicData.data?.hours.find((h) => h.weekday === d.weekday);
+                    return hourFn({ data: { weekday: d.weekday, is_closed: false, open_time: row?.open_time ?? "", close_time: row?.close_time ?? "", note: row?.note ?? "" } });
+                  }));
+                  toast.success("Alle Tage geöffnet");
+                  qc.invalidateQueries({ queryKey: ["public-data"] });
+                } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+              }}
+              className="rounded-full bg-gold/90 hover:bg-gold px-4 py-1.5 text-xs uppercase tracking-widest text-gold-foreground">
+              Alle Tage öffnen
+            </button>
+          </div>
           {WEEKDAYS.map((d) => {
             const row = publicData.data?.hours.find((h) => h.weekday === d.weekday);
             if (!row) return null;
