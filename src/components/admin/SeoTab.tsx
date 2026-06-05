@@ -252,17 +252,162 @@ function ScorePanel({ ana }: { ana: Analysis }) {
   );
 }
 
+function SiteOverview({
+  avgScore,
+  pagesScanned,
+  totalPages,
+  okCount,
+  warnCount,
+  failCount,
+  avgLoad,
+  isScanning,
+  perPage,
+}: {
+  avgScore: number | null;
+  pagesScanned: number;
+  totalPages: number;
+  okCount: number;
+  warnCount: number;
+  failCount: number;
+  avgLoad: number | null;
+  isScanning: boolean;
+  perPage: { path: string; label: string; score: number | null }[];
+}) {
+  const grade =
+    avgScore == null ? "—" : avgScore >= 85 ? "A" : avgScore >= 75 ? "B" : avgScore >= 65 ? "C" : avgScore >= 50 ? "D" : "F";
+  const color =
+    avgScore == null
+      ? "text-muted-foreground border-border"
+      : avgScore >= 85
+        ? "text-emerald-600 border-emerald-600"
+        : avgScore >= 65
+          ? "text-amber-600 border-amber-600"
+          : "text-destructive border-destructive";
+
+  return (
+    <div className="bg-card border border-border rounded-sm p-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap mb-5">
+        <div>
+          <h3 className="font-display text-xl">Website-Übersicht</h3>
+          <p className="text-xs text-muted-foreground">
+            Aggregierter SEO-Qualitäts-Score über alle öffentlichen Seiten
+            {isScanning && pagesScanned < totalPages && (
+              <> · <Loader2 className="inline size-3 animate-spin" /> scanne {pagesScanned}/{totalPages}</>
+            )}
+          </p>
+        </div>
+        <a
+          href="https://balkaneros.oaase.com"
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs text-muted-foreground underline truncate max-w-xs"
+        >
+          balkaneros.oaase.com
+        </a>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div className={`rounded-sm border-2 ${color} p-4 flex flex-col items-center justify-center`}>
+          <div className="text-3xl font-display">{avgScore ?? "—"}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Score Ø</div>
+          <div className={`text-xs font-medium ${color.split(" ")[0]}`}>Note {grade}</div>
+        </div>
+        <Stat label="Seiten geprüft" value={`${pagesScanned}/${totalPages}`} />
+        <Stat label="Checks bestanden" value={okCount} tone="ok" />
+        <Stat label="Warnungen" value={warnCount} tone="warn" />
+        <Stat label="Fehler" value={failCount} tone="fail" />
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Qualität pro Seite</div>
+          <ul className="space-y-1.5">
+            {perPage.map((p) => (
+              <li key={p.path} className="flex items-center gap-3 text-xs">
+                <span className="flex-1 truncate">{p.label || p.path}</span>
+                <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className={
+                      p.score == null
+                        ? "h-full bg-muted-foreground/30"
+                        : p.score >= 85
+                          ? "h-full bg-emerald-600"
+                          : p.score >= 65
+                            ? "h-full bg-amber-500"
+                            : "h-full bg-destructive"
+                    }
+                    style={{ width: `${p.score ?? 0}%` }}
+                  />
+                </div>
+                <span className="w-10 text-right font-mono tabular-nums">{p.score ?? "—"}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">
+            Sichtbarkeit & Rankings
+          </div>
+          <div className="rounded-sm border border-dashed border-border p-4 text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <span>Ø Ladezeit</span>
+              <span className="font-mono">{avgLoad != null ? `${avgLoad} ms` : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>Google-Position Ø</span>
+              <span>nicht verbunden</span>
+            </div>
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>Klicks (letzte 28 Tage)</span>
+              <span>nicht verbunden</span>
+            </div>
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>Impressionen (letzte 28 Tage)</span>
+              <span>nicht verbunden</span>
+            </div>
+            <div className="flex items-center justify-between text-muted-foreground">
+              <span>Authority Score (Semrush)</span>
+              <span>nicht verbunden</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground pt-2 border-t border-border mt-2">
+              Für echte Live-Daten Google Search Console und/oder Semrush verbinden.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, tone }: { label: string; value: number | string; tone?: "ok" | "warn" | "fail" }) {
+  const c =
+    tone === "ok"
+      ? "text-emerald-600"
+      : tone === "warn"
+        ? "text-amber-600"
+        : tone === "fail"
+          ? "text-destructive"
+          : "text-foreground";
+  return (
+    <div className="rounded-sm border border-border p-4 flex flex-col items-center justify-center bg-background">
+      <div className={`text-2xl font-display ${c}`}>{value}</div>
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1 text-center">{label}</div>
+    </div>
+  );
+}
+
 function RankingsBanner() {
   return (
     <div className="border border-dashed border-border rounded-sm p-5 bg-background">
       <div className="flex items-start gap-3">
         <Gauge className="size-5 text-gold shrink-0 mt-0.5" />
         <div className="text-sm space-y-1">
-          <div className="font-display text-base">Echte Google-Rankings & Authority-Daten</div>
+          <div className="font-display text-base">Echte Google-Rankings & Authority-Daten freischalten</div>
           <p className="text-muted-foreground">
-            Für Live-Position in Google, Klicks/Impressions und Wettbewerbs-Daten verbinde
+            Für Live-Position in Google, Klicks/Impressionen und Wettbewerbs-Daten verbinde
             <strong> Google Search Console</strong> (kostenlos) und <strong>Semrush</strong>.
-            Sobald verbunden, erscheinen hier pro Seite die echten Suchpositionen, Top-Keywords und der Authority Score.
+            Sobald verbunden, erscheinen oben in der Übersicht die echten Werte und pro Seite die Top-Keywords.
           </p>
         </div>
       </div>
