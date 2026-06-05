@@ -13,6 +13,7 @@ export type ContactInfo = {
   instagram_url: string;
   facebook_url: string;
   maps_embed_url: string;
+  hours_public_visible: boolean;
 };
 
 export type OpeningHour = {
