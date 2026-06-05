@@ -74,3 +74,31 @@ export const updateReservationStatus = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+// ---- Occasion capacities ----
+export const listOccasionCapacities = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("occasion_capacities")
+      .select("*");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+const capSchema = z.object({
+  occasion: z.string().trim().min(1).max(120),
+  max_reservations: z.number().int().min(0).max(100000),
+});
+export const setOccasionCapacity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => capSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("occasion_capacities")
+      .upsert({ occasion: data.occasion, max_reservations: data.max_reservations });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
