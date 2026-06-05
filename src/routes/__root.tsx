@@ -62,6 +62,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Balkaneros — Homemade Cuisine" },
       { name: "description", content: "Balkaneros — Köstlichkeiten aus dem Herzen des Balkans." },
       { property: "og:type", content: "website" },
+      { property: "og:title", content: "Balkaneros — Homemade Cuisine" },
+      { name: "twitter:title", content: "Balkaneros — Homemade Cuisine" },
+      { property: "og:description", content: "Balkaneros — Köstlichkeiten aus dem Herzen des Balkans." },
+      { name: "twitter:description", content: "Balkaneros — Köstlichkeiten aus dem Herzen des Balkans." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/69803e05-673c-4c8e-85c7-b633526dbec7" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/69803e05-673c-4c8e-85c7-b633526dbec7" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
