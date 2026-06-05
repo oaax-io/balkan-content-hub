@@ -93,14 +93,18 @@ export function ContactTab() {
         <h2 className="font-display text-2xl mb-4">Öffnungszeiten</h2>
         <div className="bg-card border border-border rounded-sm p-6 space-y-3">
           <div className="flex items-center justify-between gap-3 pb-3 mb-2 border-b border-border">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={hoursVisible} onChange={(e) => setHoursVisible(e.target.checked)} />
-              <span>Öffnungszeiten auf der Website anzeigen</span>
-            </label>
-            <button onClick={save} disabled={saving}
-              className="rounded-full bg-gold px-4 py-1.5 text-xs uppercase tracking-widest text-gold-foreground disabled:opacity-50">
-              {saving ? "…" : "Sichtbarkeit speichern"}
-            </button>
+            <span className="text-sm">Öffnungszeiten auf der Website anzeigen</span>
+            <ToggleSwitch
+              checked={hoursVisible}
+              onChange={async (v) => {
+                setHoursVisible(v);
+                try {
+                  await updFn({ data: { ...form, hours_public_visible: v } as never });
+                  toast.success(v ? "Öffnungszeiten werden angezeigt" : "Öffnungszeiten sind verborgen");
+                  qc.invalidateQueries({ queryKey: ["public-data"] });
+                } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+              }}
+            />
           </div>
           <div className="flex flex-wrap gap-2 pb-3 mb-2 border-b border-border">
             <button
@@ -183,5 +187,22 @@ function HourRow({ row, onSave }: { row: Hour; onSave: (patch: Omit<Hour, "weekd
         Speichern
       </button>
     </div>
+  );
+}
+
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
+  return (
+    <button
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        checked ? "bg-gold" : "bg-muted"
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          checked ? "translate-x-6" : "translate-x-1"
+        }`}
+      />
+    </button>
   );
 }
