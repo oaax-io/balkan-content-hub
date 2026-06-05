@@ -146,6 +146,7 @@ function AdminShell() {
                 {tab === "reservations" && <ReservationsTab />}
                 {tab === "content" && <ContentTab />}
                 {tab === "contact" && <ContactTab />}
+                {tab === "seo" && <SeoTab />}
                 {tab === "settings" && <SettingsTab />}
               </div>
             </main>
