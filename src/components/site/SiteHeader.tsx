@@ -7,6 +7,7 @@ import logo from "@/assets/logo.webp";
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -35,6 +36,8 @@ export function SiteHeader() {
             className={`w-auto transition-all duration-300 ${scrolled ? "h-9" : "h-12"}`}
           />
         </Link>
+
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm tracking-widest uppercase">
           <Link to="/" activeOptions={{ exact: true }} className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Home</Link>
           <Link to="/brunch" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Brunch</Link>
@@ -42,6 +45,7 @@ export function SiteHeader() {
           <Link to="/events" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Events</Link>
           <Link to="/ueber-uns" className="hover:text-gold transition-colors" activeProps={{ className: "text-gold" }}>Über uns</Link>
         </nav>
+
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2">
             <a
@@ -78,6 +82,49 @@ export function SiteHeader() {
           >
             Kontakt
           </Link>
+
+          {/* Mobile Hamburger */}
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="md:hidden p-2 rounded-full text-foreground/80 hover:text-gold hover:bg-gold/10 transition"
+                aria-label="Menü öffnen"
+              >
+                <Menu size={24} />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] bg-background border-l border-gold/20 p-6">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-8">
+                  <img src={logo} alt="Balkaneros" className="h-8 w-auto" />
+                  <SheetClose asChild>
+                    <button className="p-2 rounded-full text-foreground/80 hover:text-gold hover:bg-gold/10 transition" aria-label="Menü schliessen">
+                      <X size={24} />
+                    </button>
+                  </SheetClose>
+                </div>
+                <nav className="flex flex-col gap-4 text-sm tracking-widest uppercase">
+                  <Link to="/" activeOptions={{ exact: true }} onClick={() => setOpen(false)} className="py-2 hover:text-gold transition-colors" activeProps={{ className: "text-gold py-2" }}>Home</Link>
+                  <Link to="/brunch" onClick={() => setOpen(false)} className="py-2 hover:text-gold transition-colors" activeProps={{ className: "text-gold py-2" }}>Brunch</Link>
+                  <Link to="/dinner" onClick={() => setOpen(false)} className="py-2 hover:text-gold transition-colors" activeProps={{ className: "text-gold py-2" }}>Dinner</Link>
+                  <Link to="/events" onClick={() => setOpen(false)} className="py-2 hover:text-gold transition-colors" activeProps={{ className: "text-gold py-2" }}>Events</Link>
+                  <Link to="/ueber-uns" onClick={() => setOpen(false)} className="py-2 hover:text-gold transition-colors" activeProps={{ className: "text-gold py-2" }}>Über uns</Link>
+                  <Link to="/kontakt" onClick={() => setOpen(false)} className="py-2 hover:text-gold transition-colors" activeProps={{ className: "text-gold py-2" }}>Kontakt</Link>
+                </nav>
+                <div className="mt-auto flex items-center gap-3 pt-6 border-t border-gold/10">
+                  <a href="https://www.instagram.com/balkaneros.ch" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="p-2 rounded-full text-foreground/80 hover:text-gold hover:bg-gold/10 transition">
+                    <Instagram size={20} />
+                  </a>
+                  <a href="https://www.facebook.com/balkaneros.ch" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="p-2 rounded-full text-foreground/80 hover:text-gold hover:bg-gold/10 transition">
+                    <Facebook size={20} />
+                  </a>
+                  <a href="https://www.youtube.com/@balkaneros" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="p-2 rounded-full text-foreground/80 hover:text-gold hover:bg-gold/10 transition">
+                    <Youtube size={20} />
+                  </a>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
