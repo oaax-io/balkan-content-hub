@@ -10,7 +10,8 @@ import {
 } from "@/lib/reservations.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil } from "lucide-react";
+import { ReservationFormEditorDialog } from "./ReservationFormEditor";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
@@ -50,6 +51,7 @@ export function ReservationsTab() {
   const [filter, setFilter] = useState<string>("all");
   const [occasionFilter, setOccasionFilter] = useState<string>("all");
   const [busy, setBusy] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   async function setStatus(id: string, status: "confirmed" | "declined" | "pending" | "cancelled") {
     setBusy(id);
@@ -117,11 +119,21 @@ export function ReservationsTab() {
 
   return (
     <div className="space-y-8">
+      <ReservationFormEditorDialog open={editorOpen} onClose={() => setEditorOpen(false)} />
       {/* ───────────── Overview ───────────── */}
       <section className="space-y-4">
-        <header>
-          <h2 className="font-display text-3xl">Reservierungen</h2>
-          <p className="text-sm text-muted-foreground mt-1">Übersicht über alle aktiven Reservierungen und Anlässe.</p>
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-3xl">Reservierungen</h2>
+            <p className="text-sm text-muted-foreground mt-1">Übersicht über alle aktiven Reservierungen und Anlässe.</p>
+          </div>
+          <button
+            onClick={() => setEditorOpen(true)}
+            className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-card hover:bg-accent px-4 py-2 text-xs uppercase tracking-widest text-foreground transition-colors"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Formular bearbeiten
+          </button>
         </header>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
