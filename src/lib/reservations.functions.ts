@@ -26,6 +26,41 @@ async function isPaidOccasionServer(occasion: string): Promise<boolean> {
   return s.includes("99.- pro person") || s.includes("dinner & dance");
 }
 
+const GERMAN_MONTHS: Record<string, number> = {
+  januar: 1, februar: 2, märz: 3, april: 4, mai: 5, juni: 6,
+  juli: 7, august: 8, september: 9, oktober: 10, november: 11, dezember: 12,
+};
+
+function parseEventDateLabel(label: string): { date: string; time: string } | null {
+  const raw = (label || "").trim();
+  if (!raw) return null;
+
+  // Bevorzugtes Format: "YYYY-MM-DD | Anzeige-Label" oder "YYYY-MM-DD HH:MM | Anzeige-Label"
+  const pipeIdx = raw.indexOf("|");
+  const machinePart = pipeIdx >= 0 ? raw.slice(0, pipeIdx).trim() : raw;
+
+  const isoMatch = machinePart.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?$/);
+  if (isoMatch) {
+    const [, y, m, d, hh, mm] = isoMatch;
+    const date = `${y}-${m}-${d}`;
+    const time = hh && mm ? `${hh}:${mm}` : "18:00";
+    return { date, time };
+  }
+
+  // Bestehende deutsche Labels: "Samstag, 20. Juni 2026" oder "20. Juni 2026"
+  const germanMatch = raw.match(/(\d{1,2})\.\s*([A-Za-zäöüÄÖÜ]+)\s+(\d{4})/);
+  if (germanMatch) {
+    const [, day, monthName, year] = germanMatch;
+    const month = GERMAN_MONTHS[monthName.toLowerCase()];
+    if (month) {
+      const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      return { date, time: "18:00" };
+    }
+  }
+
+  return null;
+}
+
 const createSchema = z.object({
   guest_name: z.string().trim().min(2).max(120),
   guest_email: z.string().trim().email().max(255),
