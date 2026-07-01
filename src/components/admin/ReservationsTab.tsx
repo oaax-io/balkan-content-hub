@@ -28,6 +28,7 @@ export function ReservationsTab() {
   const listFn = useServerFn(listReservations);
   const updFn = useServerFn(updateReservationStatus);
   const capListFn = useServerFn(listOccasionCapacities);
+  const noShowFn = useServerFn(chargeNoShowFee);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({ queryKey: ["reservations"], queryFn: () => listFn() });
