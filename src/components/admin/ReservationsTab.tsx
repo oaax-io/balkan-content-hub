@@ -174,12 +174,27 @@ export function ReservationsTab() {
           <Stat icon={Check} label="Bestätigt" value={totals.confirmed} hint="Insgesamt" />
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat icon={CalendarDays} label="Aktive Reservierungen" value={totals.reservations} hint="Bestätigt + offen" />
+          <Stat icon={Users} label="Personen gesamt" value={totals.persons} hint="Summe aller Gäste" />
+          <Stat icon={Sparkles} label="Offene Anfragen" value={totals.pending} hint="Noch zu bestätigen" accent={totals.pending > 0} />
+          <Stat icon={Check} label="Bestätigt" value={totals.confirmed} hint="Insgesamt" />
+        </div>
+
+        {/* Storno-Statistik */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Stat icon={TrendingUp} label="Storno-Einnahmen" value={feeRevenue} hint={`${chargedFees.length} belastete Gebühr(en)`} accent={feeRevenue > 0} currency />
+          <Stat icon={Ban} label="Stornierungen (kostenpflichtig)" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
+          <Stat icon={X} label="Stornierungen (kostenlos)" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
+        </div>
+
         <OccasionsPanel
           rows={perOccasion}
           onSaved={() => qc.invalidateQueries({ queryKey: ["occasion-capacities"] })}
           onFilterByOccasion={(name) => setOccasionFilter(name)}
         />
       </section>
+
 
       {/* ───────────── Filters ───────────── */}
       <section>
