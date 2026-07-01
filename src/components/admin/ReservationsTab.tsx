@@ -121,9 +121,18 @@ export function ReservationsTab() {
     <div className="space-y-8">
       {/* ───────────── Overview ───────────── */}
       <section className="space-y-4">
-        <header>
-          <h2 className="font-display text-3xl">Reservierungen</h2>
-          <p className="text-sm text-muted-foreground mt-1">Übersicht über alle aktiven Reservierungen und Anlässe.</p>
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-3xl">Reservierungen</h2>
+            <p className="text-sm text-muted-foreground mt-1">Übersicht über alle aktiven Reservierungen und Anlässe.</p>
+          </div>
+          <button
+            onClick={() => setEditorOpen(true)}
+            className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-card hover:bg-accent px-4 py-2 text-xs uppercase tracking-widest text-foreground transition-colors"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Formular bearbeiten
+          </button>
         </header>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
