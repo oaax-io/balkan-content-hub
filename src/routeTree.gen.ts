@@ -18,6 +18,7 @@ import { Route as BrunchRouteImport } from './routes/brunch'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReservationCancelTokenRouteImport } from './routes/reservation-cancel.$token'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const UeberUnsRoute = UeberUnsRouteImport.update({
@@ -64,6 +65,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReservationCancelTokenRoute = ReservationCancelTokenRouteImport.update({
+  id: '/reservation-cancel/$token',
+  path: '/reservation-cancel/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
+    | '/reservation-cancel/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
+    | '/reservation-cancel/$token'
   id:
     | '__root__'
     | '/'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/reservieren'
     | '/ueber-uns'
     | '/_authenticated/admin'
+    | '/reservation-cancel/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   KontaktRoute: typeof KontaktRoute
   ReservierenRoute: typeof ReservierenRoute
   UeberUnsRoute: typeof UeberUnsRoute
+  ReservationCancelTokenRoute: typeof ReservationCancelTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reservation-cancel/$token': {
+      id: '/reservation-cancel/$token'
+      path: '/reservation-cancel/$token'
+      fullPath: '/reservation-cancel/$token'
+      preLoaderRoute: typeof ReservationCancelTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -250,6 +270,7 @@ const rootRouteChildren: RootRouteChildren = {
   KontaktRoute: KontaktRoute,
   ReservierenRoute: ReservierenRoute,
   UeberUnsRoute: UeberUnsRoute,
+  ReservationCancelTokenRoute: ReservationCancelTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
