@@ -51,6 +51,7 @@ export function ReservationsTab() {
   const [filter, setFilter] = useState<string>("all");
   const [occasionFilter, setOccasionFilter] = useState<string>("all");
   const [busy, setBusy] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   async function setStatus(id: string, status: "confirmed" | "declined" | "pending" | "cancelled") {
     setBusy(id);
