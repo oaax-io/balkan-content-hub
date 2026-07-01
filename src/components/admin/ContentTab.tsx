@@ -95,6 +95,10 @@ export function ContentTab() {
   const usedKeys = useMemo(() => {
     const s = new Set<string>();
     for (const p of PAGES) for (const sec of p.sections) for (const k of sec.keys) s.add(k);
+    // Keys, die vom OccasionsEditor verwaltet werden, gelten als "verwendet"
+    s.add("reservation_occasions");
+    s.add("reservation_occasions_with_dates");
+    s.add("reservation_paid_occasions");
     return s;
   }, []);
 
