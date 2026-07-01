@@ -5,6 +5,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireAdmin } from "./admin.server";
 import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification } from "./email.server";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "./stripe.server";
+import { randomBytes } from "node:crypto";
+
+function generateSecureToken(bytes = 48): string {
+  return randomBytes(bytes).toString("base64url");
+}
 
 function isPaidOccasionServer(occasion: string): boolean {
   const s = (occasion || "").toLowerCase();
