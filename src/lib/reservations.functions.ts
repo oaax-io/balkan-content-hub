@@ -114,7 +114,7 @@ type SetupResult =
 export const createReservationSetupIntent = createServerFn({ method: "POST" })
   .inputValidator((input) => setupSchema.parse(input))
   .handler(async ({ data }): Promise<SetupResult> => {
-    if (!isPaidOccasionServer(data.occasion)) {
+    if (!(await isPaidOccasionServer(data.occasion))) {
       return { error: "Für diesen Anlass ist keine Zahlungsmethode nötig." };
     }
     try {
