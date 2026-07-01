@@ -1,10 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, useRef, useMemo } from "react";
-import { listSiteContent, updateSiteContent, uploadSiteImage } from "@/lib/admin.functions";
+import { useState, useRef, useMemo, useEffect } from "react";
+import { listSiteContent, updateSiteContent, updateSiteContentBulk, uploadSiteImage } from "@/lib/admin.functions";
 import { toast } from "sonner";
 import {
   Home, Coffee, UtensilsCrossed, PartyPopper, Users, CalendarDays, ChevronDown, ChevronRight,
+  Plus, Trash2, CreditCard, Calendar as CalendarIcon,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
