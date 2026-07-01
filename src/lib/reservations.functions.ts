@@ -70,6 +70,7 @@ const createSchema = z.object({
   reservation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).default("1970-01-01"),
   reservation_time: z.string().regex(/^\d{2}:\d{2}$/).default("00:00"),
   occasion: z.string().trim().max(120).default(""),
+  event_date: z.string().trim().max(200).default(""),
   event_date_label: z.string().trim().max(200).default(""),
   notes: z.string().trim().max(1000).default(""),
   // Stripe / Storno-Bedingungen (nur bei kostenpflichtigen Anlässen befüllt)
