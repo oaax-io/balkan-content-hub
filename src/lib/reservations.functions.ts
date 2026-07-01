@@ -98,14 +98,19 @@ export const createReservation = createServerFn({ method: "POST" })
     // Sicheres, nicht erratbares Storno-Token (256-bit)
     const cancellationToken = generateSecureToken(48);
 
+    // Event-Datum aus dem maschinenlesbaren Wert oder dem Anzeige-Label parsen
+    const parsedEvent = parseEventDateLabel(data.event_date) || parseEventDateLabel(data.event_date_label);
+    const reservationDate = parsedEvent?.date ?? data.reservation_date;
+    const reservationTime = parsedEvent?.time ?? data.reservation_time;
+
     const insertRow = {
       guest_name: data.guest_name,
       guest_email: data.guest_email,
       guest_phone: data.guest_phone,
       country_code: data.country_code,
       party_size: data.party_size,
-      reservation_date: data.reservation_date,
-      reservation_time: data.reservation_time,
+      reservation_date: reservationDate,
+      reservation_time: reservationTime,
       occasion: data.occasion,
       event_date_label: data.event_date_label,
       notes: data.notes,
