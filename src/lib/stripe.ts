@@ -22,8 +22,15 @@ export function getStripe(): Promise<Stripe | null> {
 }
 
 /** Kostenpflichtige Anlässe verlangen eine hinterlegte Zahlungsmethode. */
-export function isPaidOccasion(occasion: string | null | undefined): boolean {
+export function isPaidOccasion(
+  occasion: string | null | undefined,
+  paidList?: string[] | null,
+): boolean {
   if (!occasion) return false;
+  if (paidList && paidList.length > 0) {
+    return paidList.some((p) => p.trim().toLowerCase() === occasion.trim().toLowerCase());
+  }
+  // Fallback (falls Admin-Liste leer): heuristisch
   const s = occasion.toLowerCase();
   return s.includes("99.- pro person") || s.includes("dinner & dance");
 }
