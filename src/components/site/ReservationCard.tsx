@@ -271,9 +271,9 @@ export function ReservationCard({
       {showEventDates && (
         <Select label="Nächste Event-Daten *" name="event_date" required>
           <option value="">Bitte wählen</option>
-          {eventDates.map((d) => (
-            <option key={d} value={d}>
-              {d}
+          {parseEventDates(eventDates).map((d) => (
+            <option key={d.machineDate} value={d.machineDate}>
+              {d.displayLabel}
             </option>
           ))}
         </Select>
