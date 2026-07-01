@@ -512,3 +512,14 @@ function fmt(d: string) {
   try { return new Date(d + "T00:00:00").toLocaleDateString("de-CH", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }); }
   catch { return d; }
 }
+
+function daysUntilEvent(date: string, time: string | null | undefined): number {
+  try {
+    const event = new Date(`${date}T${(time || "00:00")}:00`);
+    const now = new Date();
+    // Ganze Kalendertage bis zum Event
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    return Math.round((startOfDay(event) - startOfDay(now)) / (1000 * 60 * 60 * 24));
+  } catch { return 0; }
+}
+
