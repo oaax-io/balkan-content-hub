@@ -61,6 +61,21 @@ export function ReservationsTab() {
     finally { setBusy(null); }
   }
 
+  async function chargeNoShow(id: string) {
+    if (!confirm("CHF 50 No-Show Gebühr wirklich belasten? Diese Aktion kann nicht rückgängig gemacht werden.")) return;
+    setBusy(id);
+    try {
+      const res = await noShowFn({ data: { id, environment: "sandbox" } });
+      if (res.ok) {
+        toast.success("CHF 50 belastet.");
+        qc.invalidateQueries({ queryKey: ["reservations"] });
+      } else {
+        toast.error(res.error);
+      }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setBusy(null); }
+  }
+
   if (isLoading) return <p className="text-muted-foreground">Lade …</p>;
 
   const all = data ?? [];
