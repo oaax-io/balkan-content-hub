@@ -13,7 +13,7 @@ import { SettingsTab } from "@/components/admin/SettingsTab";
 import { SeoTab } from "@/components/admin/SeoTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { toast } from "sonner";
-import logo from "@/assets/logo.webp";
+
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
@@ -76,7 +76,6 @@ function AdminShell() {
           <Sidebar className="border-r border-sidebar-border">
             <SidebarHeader className="border-b border-sidebar-border">
               <Link to="/" className="flex items-center gap-3 px-2 py-3">
-                <img src={logo} alt="Balkaneros" className="h-9 w-auto" />
                 <div className="leading-tight">
                   <div className="font-display text-base text-sidebar-foreground">Balkaneros</div>
                   <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Admin</div>
