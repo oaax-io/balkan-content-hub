@@ -83,7 +83,7 @@ export function ReservationCard({
         notes: String(fd.get("notes") ?? ""),
       };
 
-      if (isPaidOccasion(values.occasion)) {
+      if (isPaidOccasion(values.occasion, paidOccasions)) {
         if (!termsAccepted) {
           toast.error("Bitte akzeptiere die Stornierungsbedingungen.");
           setSubmitting(false);
