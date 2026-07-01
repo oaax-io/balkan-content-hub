@@ -7,11 +7,13 @@ import {
   listOccasionCapacities,
   setOccasionCapacity,
   chargeNoShowFee,
+  cancelReservation,
 } from "@/lib/reservations.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp } from "lucide-react";
 import { ReservationFormEditorDialog } from "./ReservationFormEditor";
+
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
@@ -30,7 +32,9 @@ export function ReservationsTab() {
   const updFn = useServerFn(updateReservationStatus);
   const capListFn = useServerFn(listOccasionCapacities);
   const noShowFn = useServerFn(chargeNoShowFee);
+  const cancelFn = useServerFn(cancelReservation);
   const qc = useQueryClient();
+
 
   const { data, isLoading } = useQuery({ queryKey: ["reservations"], queryFn: () => listFn() });
   const { data: capacities } = useQuery({ queryKey: ["occasion-capacities"], queryFn: () => capListFn() });
@@ -78,6 +82,25 @@ export function ReservationsTab() {
     finally { setBusy(null); }
   }
 
+  async function manualCancel(id: string, isPaid: boolean, daysUntil: number) {
+    const feeWarning = isPaid && daysUntil < 7
+      ? `\n\n⚠ Achtung: Anlass in ${daysUntil} Tag(en) — CHF 50 werden dem Gast belastet.`
+      : "";
+    const reason = window.prompt(`Reservation stornieren?${feeWarning}\n\nStorno-Grund (optional):`, "");
+    if (reason === null) return;
+    setBusy(id);
+    try {
+      const res = await cancelFn({ data: { id, reason: reason || undefined, environment: "sandbox" } });
+      if (res.ok) {
+        toast.success(res.fee_charged ? "Storniert · CHF 50 belastet" : "Storniert");
+        qc.invalidateQueries({ queryKey: ["reservations"] });
+      } else {
+        toast.error(res.error);
+      }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setBusy(null); }
+  }
+
   if (isLoading) return <p className="text-muted-foreground">Lade …</p>;
 
   const all = data ?? [];
@@ -112,6 +135,14 @@ export function ReservationsTab() {
     confirmed: all.filter((r) => r.status === "confirmed").length,
   };
 
+  // Storno-Statistik (nur tatsächlich belastete Gebühren zählen)
+  const chargedFees = all.filter((r) => r.cancellation_fee_charged_at);
+  const feeRevenue = chargedFees.reduce(
+    (s, r) => s + ((r.cancellation_fee_amount ?? 5000) / 100), 0);
+  const cancelledCount = all.filter((r) => r.status === "cancelled").length;
+  const cancelledFree = cancelledCount - chargedFees.length;
+
+
   const filtered = all
     .filter((r) => filter === "all" || r.status === filter)
     .filter((r) => occasionFilter === "all"
@@ -143,12 +174,27 @@ export function ReservationsTab() {
           <Stat icon={Check} label="Bestätigt" value={totals.confirmed} hint="Insgesamt" />
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat icon={CalendarDays} label="Aktive Reservierungen" value={totals.reservations} hint="Bestätigt + offen" />
+          <Stat icon={Users} label="Personen gesamt" value={totals.persons} hint="Summe aller Gäste" />
+          <Stat icon={Sparkles} label="Offene Anfragen" value={totals.pending} hint="Noch zu bestätigen" accent={totals.pending > 0} />
+          <Stat icon={Check} label="Bestätigt" value={totals.confirmed} hint="Insgesamt" />
+        </div>
+
+        {/* Storno-Statistik */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Stat icon={TrendingUp} label="Storno-Einnahmen" value={feeRevenue} hint={`${chargedFees.length} belastete Gebühr(en)`} accent={feeRevenue > 0} currency />
+          <Stat icon={Ban} label="Stornierungen (kostenpflichtig)" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
+          <Stat icon={X} label="Stornierungen (kostenlos)" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
+        </div>
+
         <OccasionsPanel
           rows={perOccasion}
           onSaved={() => qc.invalidateQueries({ queryKey: ["occasion-capacities"] })}
           onFilterByOccasion={(name) => setOccasionFilter(name)}
         />
       </section>
+
 
       {/* ───────────── Filters ───────────── */}
       <section>
@@ -180,7 +226,18 @@ export function ReservationsTab() {
           <p className="text-muted-foreground text-center py-12">Keine Reservierungen.</p>
         ) : (
           <ul className="space-y-3">
-            {filtered.map((r) => (
+            {filtered.map((r) => {
+              const daysUntil = daysUntilEvent(r.reservation_date, r.reservation_time);
+              const isPast = daysUntil < 0;
+              const isUpcoming = r.status !== "cancelled" && r.status !== "declined" && !isPast;
+              const daysTone = isPast
+                ? "bg-gray-100 text-gray-500 border-gray-200"
+                : daysUntil === 0
+                  ? "bg-red-50 text-red-700 border-red-200"
+                  : daysUntil < 7
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : "bg-emerald-50 text-emerald-700 border-emerald-200";
+              return (
               <li key={r.id} className="bg-card border border-border rounded-sm p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -189,12 +246,19 @@ export function ReservationsTab() {
                       <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${STATUS_STYLES[r.status]}`}>
                         {STATUS_LABEL[r.status]}
                       </span>
+                      {isUpcoming && (
+                        <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${daysTone}`}>
+                          <Clock className="w-3 h-3" />
+                          {daysUntil === 0 ? "Heute" : daysUntil === 1 ? "Morgen" : `noch ${daysUntil} Tage`}
+                        </span>
+                      )}
                       {r.occasion && (
                         <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border border-gold/40 text-gold bg-gold/5">
                           {r.occasion}
                         </span>
                       )}
                     </div>
+
                     <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-muted-foreground">
                       <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> {fmt(r.reservation_date)} · {r.reservation_time}</span>
                       <span className="flex items-center gap-2"><Users className="w-4 h-4" /> {r.party_size} Personen</span>
@@ -258,10 +322,18 @@ export function ReservationsTab() {
                         <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
                       </button>
                     )}
+                    {r.status !== "cancelled" && r.status !== "declined" && (
+                      <button onClick={() => manualCancel(r.id, !!r.is_paid_occasion, daysUntil)} disabled={busy === r.id}
+                        className="rounded-full border border-border bg-background hover:bg-accent text-foreground px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
+                        <Ban className="w-4 h-4" /> Stornieren
+                      </button>
+                    )}
                   </div>
                 </div>
               </li>
-            ))}
+              );
+            })}
+
           </ul>
         )}
       </section>
@@ -285,20 +357,24 @@ function PayBadge({ icon: Icon, tone, children }: {
   );
 }
 
-function Stat({ icon: Icon, label, value, hint, accent }: {
-  icon: typeof Users; label: string; value: number; hint: string; accent?: boolean;
+function Stat({ icon: Icon, label, value, hint, accent, currency }: {
+  icon: typeof Users; label: string; value: number; hint: string; accent?: boolean; currency?: boolean;
 }) {
+  const formatted = currency
+    ? `CHF ${value.toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : value.toLocaleString("de-CH");
   return (
     <div className="rounded-sm border border-border bg-card p-5">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs uppercase tracking-widest text-muted-foreground">{label}</span>
         <Icon className={`w-4 h-4 ${accent ? "text-gold" : "text-muted-foreground"}`} />
       </div>
-      <div className={`text-3xl font-display ${accent ? "text-gold" : ""}`}>{value.toLocaleString("de-CH")}</div>
+      <div className={`text-3xl font-display ${accent ? "text-gold" : ""}`}>{formatted}</div>
       <div className="text-xs text-muted-foreground mt-1">{hint}</div>
     </div>
   );
 }
+
 
 type OccRow = {
   name: string; reservations: number; persons: number;
@@ -436,3 +512,14 @@ function fmt(d: string) {
   try { return new Date(d + "T00:00:00").toLocaleDateString("de-CH", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }); }
   catch { return d; }
 }
+
+function daysUntilEvent(date: string, time: string | null | undefined): number {
+  try {
+    const event = new Date(`${date}T${(time || "00:00")}:00`);
+    const now = new Date();
+    // Ganze Kalendertage bis zum Event
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    return Math.round((startOfDay(event) - startOfDay(now)) / (1000 * 60 * 60 * 24));
+  } catch { return 0; }
+}
+
