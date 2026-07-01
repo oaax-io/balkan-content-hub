@@ -331,3 +331,91 @@ export const cancelReservation = createServerFn({ method: "POST" })
       return { ok: false, error: `Stripe-Belastung fehlgeschlagen: ${message}` };
     }
   });
+
+// ---- No-Show Gebühr (Admin) ----
+const noShowSchema = z.object({
+  id: z.string().uuid(),
+  environment: z.enum(["sandbox", "live"]).default("sandbox"),
+});
+
+type NoShowResult =
+  | { ok: true; payment_intent_id: string }
+  | { ok: false; error: string };
+
+export const chargeNoShowFee = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => noShowSchema.parse(i))
+  .handler(async ({ data, context }): Promise<NoShowResult> => {
+    await requireAdmin(context.userId);
+
+    const { data: r, error: loadErr } = await supabaseAdmin
+      .from("reservations")
+      .select("*")
+      .eq("id", data.id)
+      .single();
+    if (loadErr || !r) return { ok: false, error: loadErr?.message ?? "Reservation nicht gefunden" };
+
+    if (!r.is_paid_occasion) {
+      return { ok: false, error: "Nur kostenpflichtige Anlässe können belastet werden." };
+    }
+    if (r.cancellation_fee_charged_at || r.cancellation_fee_payment_intent_id) {
+      return { ok: false, error: "Für diese Reservation wurde bereits eine Gebühr belastet." };
+    }
+    if (!r.stripe_customer_id || !r.stripe_payment_method_id) {
+      return { ok: false, error: "Keine hinterlegte Zahlungsmethode gefunden." };
+    }
+
+    const amount = r.cancellation_fee_amount ?? 5000;
+    const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
+
+    try {
+      const stripe = createStripeClient(data.environment as StripeEnv);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency,
+        customer: r.stripe_customer_id,
+        payment_method: r.stripe_payment_method_id,
+        off_session: true,
+        confirm: true,
+        description: `Balkaneros No-Show Gebühr — ${r.occasion} (${r.guest_name})`,
+        metadata: {
+          reservation_id: r.id,
+          type: "no_show_fee",
+          occasion: r.occasion,
+        },
+      });
+
+      if (paymentIntent.status !== "succeeded" && paymentIntent.status !== "processing") {
+        await supabaseAdmin
+          .from("reservations")
+          .update({
+            cancellation_fee_charge_status: paymentIntent.status,
+            cancellation_fee_payment_intent_id: paymentIntent.id,
+          })
+          .eq("id", data.id);
+        return {
+          ok: false,
+          error: `Zahlung fehlgeschlagen (Status: ${paymentIntent.status}).`,
+        };
+      }
+
+      const { error: updErr } = await supabaseAdmin
+        .from("reservations")
+        .update({
+          cancellation_fee_charged_at: new Date().toISOString(),
+          cancellation_fee_payment_intent_id: paymentIntent.id,
+          cancellation_fee_charge_status: paymentIntent.status,
+        })
+        .eq("id", data.id);
+      if (updErr) return { ok: false, error: updErr.message };
+
+      return { ok: true, payment_intent_id: paymentIntent.id };
+    } catch (error) {
+      const message = getStripeErrorMessage(error);
+      await supabaseAdmin
+        .from("reservations")
+        .update({ cancellation_fee_charge_status: `failed: ${message.slice(0, 200)}` })
+        .eq("id", data.id);
+      return { ok: false, error: `Stripe-Belastung fehlgeschlagen: ${message}` };
+    }
+  });
