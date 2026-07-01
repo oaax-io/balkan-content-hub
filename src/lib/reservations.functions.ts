@@ -5,6 +5,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireAdmin } from "./admin.server";
 import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification } from "./email.server";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "./stripe.server";
+import { randomBytes } from "node:crypto";
+
+function generateSecureToken(bytes = 48): string {
+  return randomBytes(bytes).toString("base64url");
+}
 
 function isPaidOccasionServer(occasion: string): boolean {
   const s = (occasion || "").toLowerCase();
@@ -44,6 +49,9 @@ export const createReservation = createServerFn({ method: "POST" })
       }
     }
 
+    // Sicheres, nicht erratbares Storno-Token (256-bit)
+    const cancellationToken = generateSecureToken(48);
+
     const insertRow = {
       guest_name: data.guest_name,
       guest_email: data.guest_email,
@@ -62,6 +70,8 @@ export const createReservation = createServerFn({ method: "POST" })
       cancellation_terms_accepted: isPaid ? !!data.cancellation_terms_accepted : false,
       cancellation_terms_accepted_at:
         isPaid && data.cancellation_terms_accepted ? new Date().toISOString() : null,
+      cancellation_token: cancellationToken,
+      cancellation_token_expires_at: null,
     };
 
     const { data: row, error } = await supabaseAdmin
@@ -417,5 +427,193 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
         .update({ cancellation_fee_charge_status: `failed: ${message.slice(0, 200)}` })
         .eq("id", data.id);
       return { ok: false, error: `Stripe-Belastung fehlgeschlagen: ${message}` };
+    }
+  });
+
+// ==============================================================
+// Öffentliche Storno-Flow via Token (aus Bestätigungs-E-Mail)
+// Kein Auth nötig — der Token ist die Autorisierung.
+// ==============================================================
+
+type PublicReservationInfo = {
+  id: string;
+  guest_name: string;
+  reservation_date: string;
+  reservation_time: string;
+  party_size: number;
+  occasion: string;
+  event_date_label: string | null;
+  status: string;
+  is_paid_occasion: boolean;
+  fee_applies: boolean;
+  days_until: number;
+  already_cancelled: boolean;
+  fee_already_charged: boolean;
+  fee_amount: number;
+  fee_currency: string;
+};
+
+function computeFeeContext(r: {
+  reservation_date: string;
+  reservation_time: string | null;
+  is_paid_occasion: boolean | null;
+}) {
+  const eventDate = new Date(`${r.reservation_date}T${r.reservation_time || "00:00"}:00`);
+  const days_until = Math.floor((eventDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const fee_applies = !!r.is_paid_occasion && days_until < 7;
+  return { days_until, fee_applies };
+}
+
+const tokenSchema = z.object({ token: z.string().trim().min(20).max(200) });
+
+export const getReservationByToken = createServerFn({ method: "POST" })
+  .inputValidator((i) => tokenSchema.parse(i))
+  .handler(async ({ data }): Promise<{ ok: true; info: PublicReservationInfo } | { ok: false; error: string }> => {
+    const { data: r, error } = await supabaseAdmin
+      .from("reservations")
+      .select("*")
+      .eq("cancellation_token", data.token)
+      .maybeSingle();
+    if (error) return { ok: false, error: error.message };
+    if (!r) return { ok: false, error: "Ungültiger oder abgelaufener Storno-Link." };
+    if (r.cancellation_token_expires_at && new Date(r.cancellation_token_expires_at) < new Date()) {
+      return { ok: false, error: "Der Storno-Link ist abgelaufen." };
+    }
+    const { days_until, fee_applies } = computeFeeContext(r);
+    return {
+      ok: true,
+      info: {
+        id: r.id,
+        guest_name: r.guest_name,
+        reservation_date: r.reservation_date,
+        reservation_time: r.reservation_time,
+        party_size: r.party_size,
+        occasion: r.occasion ?? "",
+        event_date_label: r.event_date_label ?? null,
+        status: r.status,
+        is_paid_occasion: !!r.is_paid_occasion,
+        fee_applies,
+        days_until,
+        already_cancelled: r.status === "cancelled",
+        fee_already_charged: !!(r.cancellation_fee_charged_at || r.cancellation_fee_payment_intent_id),
+        fee_amount: r.cancellation_fee_amount ?? 5000,
+        fee_currency: (r.cancellation_fee_currency ?? "chf").toUpperCase(),
+      },
+    };
+  });
+
+const cancelByTokenSchema = z.object({
+  token: z.string().trim().min(20).max(200),
+  reason: z.string().trim().max(500).optional(),
+  environment: z.enum(["sandbox", "live"]).default("sandbox"),
+});
+
+type PublicCancelResult =
+  | { ok: true; fee_charged: boolean; days_until: number; payment_intent_id?: string }
+  | { ok: false; error: string };
+
+export const cancelReservationByToken = createServerFn({ method: "POST" })
+  .inputValidator((i) => cancelByTokenSchema.parse(i))
+  .handler(async ({ data }): Promise<PublicCancelResult> => {
+    const { data: r, error: loadErr } = await supabaseAdmin
+      .from("reservations")
+      .select("*")
+      .eq("cancellation_token", data.token)
+      .maybeSingle();
+    if (loadErr) return { ok: false, error: loadErr.message };
+    if (!r) return { ok: false, error: "Ungültiger Storno-Link." };
+    if (r.cancellation_token_expires_at && new Date(r.cancellation_token_expires_at) < new Date()) {
+      return { ok: false, error: "Der Storno-Link ist abgelaufen." };
+    }
+    if (r.status === "cancelled") {
+      return { ok: false, error: "Diese Reservation wurde bereits storniert." };
+    }
+
+    const { days_until, fee_applies } = computeFeeContext(r);
+
+    // Kostenlose Stornierung
+    if (!fee_applies) {
+      const { error: updErr } = await supabaseAdmin
+        .from("reservations")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+          cancellation_reason: data.reason ?? "Storniert via E-Mail-Link durch Gast",
+        })
+        .eq("id", r.id);
+      if (updErr) return { ok: false, error: updErr.message };
+      void sendReservationStatusUpdate({ ...r, status: "cancelled" }).catch((e) =>
+        console.error("cancel email failed", e),
+      );
+      return { ok: true, fee_charged: false, days_until };
+    }
+
+    // Kostenpflichtige Stornierung — Doppelbelastung verhindern
+    if (r.cancellation_fee_charged_at || r.cancellation_fee_payment_intent_id) {
+      return { ok: false, error: "Für diese Reservation wurde bereits eine Gebühr belastet." };
+    }
+    if (!r.stripe_customer_id || !r.stripe_payment_method_id) {
+      return { ok: false, error: "Keine hinterlegte Zahlungsmethode gefunden. Bitte kontaktieren Sie uns." };
+    }
+
+    const amount = r.cancellation_fee_amount ?? 5000;
+    const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
+
+    try {
+      const stripe = createStripeClient(data.environment as StripeEnv);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency,
+        customer: r.stripe_customer_id,
+        payment_method: r.stripe_payment_method_id,
+        off_session: true,
+        confirm: true,
+        description: `Balkaneros Storno-Gebühr — ${r.occasion} (${r.guest_name})`,
+        metadata: {
+          reservation_id: r.id,
+          type: "cancellation_fee_guest",
+          occasion: r.occasion ?? "",
+        },
+      });
+
+      if (paymentIntent.status !== "succeeded" && paymentIntent.status !== "processing") {
+        await supabaseAdmin
+          .from("reservations")
+          .update({
+            cancellation_fee_charge_status: paymentIntent.status,
+            cancellation_fee_payment_intent_id: paymentIntent.id,
+          })
+          .eq("id", r.id);
+        return {
+          ok: false,
+          error: `Zahlung fehlgeschlagen (Status: ${paymentIntent.status}). Reservation wurde nicht storniert.`,
+        };
+      }
+
+      const { error: updErr } = await supabaseAdmin
+        .from("reservations")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+          cancellation_reason: data.reason ?? "Storniert via E-Mail-Link durch Gast",
+          cancellation_fee_charged_at: new Date().toISOString(),
+          cancellation_fee_payment_intent_id: paymentIntent.id,
+          cancellation_fee_charge_status: paymentIntent.status,
+        })
+        .eq("id", r.id);
+      if (updErr) return { ok: false, error: updErr.message };
+
+      void sendReservationStatusUpdate({ ...r, status: "cancelled" }).catch((e) =>
+        console.error("cancel email failed", e),
+      );
+
+      return { ok: true, fee_charged: true, days_until, payment_intent_id: paymentIntent.id };
+    } catch (error) {
+      const message = getStripeErrorMessage(error);
+      await supabaseAdmin
+        .from("reservations")
+        .update({ cancellation_fee_charge_status: `failed: ${message.slice(0, 200)}` })
+        .eq("id", r.id);
+      return { ok: false, error: `Zahlung fehlgeschlagen: ${message}` };
     }
   });

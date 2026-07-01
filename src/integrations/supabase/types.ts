@@ -154,6 +154,8 @@ export type Database = {
           cancellation_reason: string | null
           cancellation_terms_accepted: boolean
           cancellation_terms_accepted_at: string | null
+          cancellation_token: string | null
+          cancellation_token_expires_at: string | null
           cancelled_at: string | null
           country_code: string
           created_at: string
@@ -184,6 +186,8 @@ export type Database = {
           cancellation_reason?: string | null
           cancellation_terms_accepted?: boolean
           cancellation_terms_accepted_at?: string | null
+          cancellation_token?: string | null
+          cancellation_token_expires_at?: string | null
           cancelled_at?: string | null
           country_code?: string
           created_at?: string
@@ -214,6 +218,8 @@ export type Database = {
           cancellation_reason?: string | null
           cancellation_terms_accepted?: boolean
           cancellation_terms_accepted_at?: string | null
+          cancellation_token?: string | null
+          cancellation_token_expires_at?: string | null
           cancelled_at?: string | null
           country_code?: string
           created_at?: string

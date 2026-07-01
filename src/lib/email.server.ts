@@ -13,7 +13,18 @@ type Reservation = {
   reservation_time: string;
   notes: string;
   status: string;
+  cancellation_token?: string | null;
+  is_paid_occasion?: boolean | null;
+  occasion?: string | null;
 };
+
+function getSiteBaseUrl(): string {
+  return (
+    process.env.SITE_URL ||
+    process.env.PUBLIC_SITE_URL ||
+    "https://balkaneros.oaase.com"
+  ).replace(/\/$/, "");
+}
 
 async function getContact() {
   const { data } = await supabaseAdmin.from("contact_info").select("*").eq("id", 1).single();
@@ -48,6 +59,9 @@ async function sendEmail(payload: { to: string; subject: string; html: string })
 export async function sendReservationConfirmation(r: Reservation) {
   const contact = await getContact();
   const restaurant = contact?.restaurant_name ?? "Balkaneros";
+  const cancelUrl = r.cancellation_token
+    ? `${getSiteBaseUrl()}/reservation-cancel/${r.cancellation_token}`
+    : null;
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;background:#0f0f0f;color:#f5f5f5;">
       <h2 style="color:#d4af37;font-family:Georgia,serif;">Hvala – wir haben Ihre Anfrage erhalten</h2>
@@ -57,8 +71,23 @@ export async function sendReservationConfirmation(r: Reservation) {
         <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>${fmtDate(r.reservation_date)}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Uhrzeit</td><td>${r.reservation_time}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Personen</td><td>${r.party_size}</td></tr>
+        ${r.occasion ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Anlass</td><td>${r.occasion}</td></tr>` : ""}
       </table>
       <p style="color:#aaa;font-size:13px;">Bei Fragen einfach auf diese E-Mail antworten.</p>
+      ${cancelUrl ? `
+      <hr style="border:none;border-top:1px solid #333;margin:24px 0;" />
+      <p style="font-size:12px;color:#aaa;line-height:1.5;">
+        Müssen Sie Ihre Reservation absagen? Nutzen Sie den folgenden Link:
+      </p>
+      <p style="margin:12px 0;">
+        <a href="${cancelUrl}" style="display:inline-block;padding:8px 16px;background:transparent;border:1px solid #d4af37;color:#d4af37;text-decoration:none;font-size:12px;letter-spacing:0.05em;border-radius:4px;">
+          Reservation stornieren
+        </a>
+      </p>
+      <p style="font-size:11px;color:#888;line-height:1.5;margin-top:12px;">
+        Kostenlose Stornierung ist bis 7 Tage vor dem Anlass möglich. Bei späterer Stornierung eines kostenpflichtigen Anlasses oder bei No-Show können CHF 50 belastet werden.
+      </p>
+      ` : ""}
       <p style="margin-top:24px;color:#d4af37;font-family:Georgia,serif;">— ${restaurant}</p>
     </div>`;
   await sendEmail({ to: r.guest_email, subject: `Reservierungsanfrage bei ${restaurant} erhalten`, html });
