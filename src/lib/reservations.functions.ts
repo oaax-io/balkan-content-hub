@@ -11,8 +11,18 @@ function generateSecureToken(bytes = 48): string {
   return randomBytes(bytes).toString("base64url");
 }
 
-function isPaidOccasionServer(occasion: string): boolean {
-  const s = (occasion || "").toLowerCase();
+async function loadPaidOccasions(): Promise<string[]> {
+  const { data } = await supabaseAdmin
+    .from("site_content").select("value").eq("key", "reservation_paid_occasions").maybeSingle();
+  return (data?.value || "")
+    .split("\n").map((s) => s.trim()).filter(Boolean);
+}
+
+async function isPaidOccasionServer(occasion: string): Promise<boolean> {
+  const list = await loadPaidOccasions();
+  const s = (occasion || "").trim().toLowerCase();
+  if (!s) return false;
+  if (list.length > 0) return list.some((p) => p.trim().toLowerCase() === s);
   return s.includes("99.- pro person") || s.includes("dinner & dance");
 }
 
@@ -37,7 +47,7 @@ const createSchema = z.object({
 export const createReservation = createServerFn({ method: "POST" })
   .inputValidator((input) => createSchema.parse(input))
   .handler(async ({ data }) => {
-    const isPaid = isPaidOccasionServer(data.occasion);
+    const isPaid = await isPaidOccasionServer(data.occasion);
 
     // Bei kostenpflichtigen Anlässen ist eine hinterlegte Zahlungsmethode + Zustimmung Pflicht.
     if (isPaid) {
@@ -104,7 +114,7 @@ type SetupResult =
 export const createReservationSetupIntent = createServerFn({ method: "POST" })
   .inputValidator((input) => setupSchema.parse(input))
   .handler(async ({ data }): Promise<SetupResult> => {
-    if (!isPaidOccasionServer(data.occasion)) {
+    if (!(await isPaidOccasionServer(data.occasion))) {
       return { error: "Für diesen Anlass ist keine Zahlungsmethode nötig." };
     }
     try {

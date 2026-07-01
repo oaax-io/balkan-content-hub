@@ -44,6 +44,10 @@ function Home() {
     .split("\n")
     .map((s) => s.trim())
     .filter(Boolean);
+  const paidOccasions = (content.reservation_paid_occasions || "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -60,6 +64,7 @@ function Home() {
           disclaimer={disclaimer}
           occasions={occasions}
           occasionsWithDates={occasionsWithDates}
+          paidOccasions={paidOccasions}
           variant="overlay"
         />
       </HeroSlider>

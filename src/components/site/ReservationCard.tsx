@@ -26,6 +26,7 @@ export interface ReservationCardProps {
   disclaimer?: string;
   occasions?: string[];
   occasionsWithDates?: string[];
+  paidOccasions?: string[];
   variant?: "overlay" | "page";
 }
 
@@ -45,6 +46,7 @@ export function ReservationCard({
   disclaimer,
   occasions,
   occasionsWithDates,
+  paidOccasions,
   variant = "overlay",
 }: ReservationCardProps) {
   const createFn = useServerFn(createReservation);
@@ -61,7 +63,7 @@ export function ReservationCard({
     values: FormValues;
   }>(null);
 
-  const paid = isPaidOccasion(occasion);
+  const paid = isPaidOccasion(occasion, paidOccasions);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -81,7 +83,7 @@ export function ReservationCard({
         notes: String(fd.get("notes") ?? ""),
       };
 
-      if (isPaidOccasion(values.occasion)) {
+      if (isPaidOccasion(values.occasion, paidOccasions)) {
         if (!termsAccepted) {
           toast.error("Bitte akzeptiere die Stornierungsbedingungen.");
           setSubmitting(false);

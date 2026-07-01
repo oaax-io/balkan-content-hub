@@ -1,10 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, useRef, useMemo } from "react";
-import { listSiteContent, updateSiteContent, uploadSiteImage } from "@/lib/admin.functions";
+import { useState, useRef, useMemo, useEffect } from "react";
+import { listSiteContent, updateSiteContent, updateSiteContentBulk, uploadSiteImage } from "@/lib/admin.functions";
 import { toast } from "sonner";
 import {
   Home, Coffee, UtensilsCrossed, PartyPopper, Users, CalendarDays, ChevronDown, ChevronRight,
+  Plus, Trash2, CreditCard, Calendar as CalendarIcon,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -74,7 +75,8 @@ const PAGES: Page[] = [
   {
     id: "reservation", label: "Reservierung", icon: CalendarDays,
     sections: [
-      { id: "form", title: "Formular-Optionen", keys: ["reservation_occasions", "reservation_event_dates", "reservation_occasions_with_dates", "reservation_disclaimer"] },
+      { id: "occasions", title: "Anlass-Optionen (Dropdown im Formular)", keys: ["__occasions_editor__"] },
+      { id: "form", title: "Weitere Formular-Texte", keys: ["reservation_event_dates", "reservation_disclaimer"] },
     ],
   },
 ];
@@ -93,6 +95,10 @@ export function ContentTab() {
   const usedKeys = useMemo(() => {
     const s = new Set<string>();
     for (const p of PAGES) for (const sec of p.sections) for (const k of sec.keys) s.add(k);
+    // Keys, die vom OccasionsEditor verwaltet werden, gelten als "verwendet"
+    s.add("reservation_occasions");
+    s.add("reservation_occasions_with_dates");
+    s.add("reservation_paid_occasions");
     return s;
   }, []);
 
@@ -127,6 +133,9 @@ export function ContentTab() {
             <h2 className="font-display text-2xl text-foreground">{page.label}</h2>
           </div>
           {page.sections.map((sec) => {
+            if (sec.keys[0] === "__occasions_editor__") {
+              return <OccasionsEditor key={sec.id} rowMap={rowMap} onSaved={refresh} />;
+            }
             const rows = sec.keys.map((k) => rowMap.get(k)).filter(Boolean) as Row[];
             if (!rows.length) return null;
             return <SectionBlock key={sec.id} title={sec.title} rows={rows} onSaved={refresh} pageId={page.id} secId={sec.id} />;
@@ -277,6 +286,145 @@ function ContentRow({ row, onSaved }: { row: Row; onSaved: () => void }) {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------- Strukturierter Anlass-Editor ----------
+type Occasion = { label: string; paid: boolean; hasDates: boolean };
+
+function parseList(v: string): string[] {
+  return (v || "").split("\n").map((s) => s.trim()).filter(Boolean);
+}
+
+function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSaved: () => void }) {
+  const bulkFn = useServerFn(updateSiteContentBulk);
+
+  const initial: Occasion[] = useMemo(() => {
+    const labels = parseList(rowMap.get("reservation_occasions")?.value ?? "");
+    const paid = new Set(parseList(rowMap.get("reservation_paid_occasions")?.value ?? "").map((s) => s.toLowerCase()));
+    const dates = new Set(parseList(rowMap.get("reservation_occasions_with_dates")?.value ?? "").map((s) => s.toLowerCase()));
+    return labels.map((label) => ({
+      label,
+      paid: paid.has(label.toLowerCase()),
+      hasDates: dates.has(label.toLowerCase()),
+    }));
+  }, [rowMap]);
+
+  const [items, setItems] = useState<Occasion[]>(initial);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { setItems(initial); }, [initial]);
+
+  const dirty = JSON.stringify(items) !== JSON.stringify(initial);
+
+  function update(i: number, patch: Partial<Occasion>) {
+    setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  }
+  function remove(i: number) {
+    setItems((prev) => prev.filter((_, idx) => idx !== i));
+  }
+  function add() {
+    setItems((prev) => [...prev, { label: "", paid: false, hasDates: false }]);
+  }
+  function move(i: number, dir: -1 | 1) {
+    setItems((prev) => {
+      const next = [...prev];
+      const j = i + dir;
+      if (j < 0 || j >= next.length) return prev;
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  }
+
+  async function save() {
+    const cleaned = items
+      .map((it) => ({ ...it, label: it.label.trim() }))
+      .filter((it) => it.label.length > 0);
+    // Dedupe by label (case-insensitive), keep first
+    const seen = new Set<string>();
+    const unique = cleaned.filter((it) => {
+      const k = it.label.toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+    const entries = [
+      { key: "reservation_occasions", value: unique.map((i) => i.label).join("\n") },
+      { key: "reservation_paid_occasions", value: unique.filter((i) => i.paid).map((i) => i.label).join("\n") },
+      { key: "reservation_occasions_with_dates", value: unique.filter((i) => i.hasDates).map((i) => i.label).join("\n") },
+    ];
+    setSaving(true);
+    try {
+      await bulkFn({ data: { entries } });
+      toast.success("Anlass-Optionen gespeichert");
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Speichern fehlgeschlagen");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="border border-border rounded-md bg-card overflow-hidden">
+      <div className="px-4 py-3 border-b border-border bg-accent/20">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-4 h-4 text-primary" />
+          <span className="font-medium text-foreground">Anlass-Optionen (Dropdown im Formular)</span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Verwalte die Auswahl im Reservierungsformular. Pro Anlass legst du fest, ob er <strong>kostenpflichtig</strong> ist
+          (Stripe-Zahlungsmethode + CHF 50 Storno-Bedingungen) und ob dazu <strong>Event-Daten</strong> zur Auswahl erscheinen.
+        </p>
+      </div>
+
+      <div className="p-4 space-y-2">
+        {items.length === 0 && (
+          <p className="text-sm text-muted-foreground italic">Noch keine Anlässe. Füge einen hinzu ↓</p>
+        )}
+        {items.map((it, i) => (
+          <div key={i} className="flex flex-col md:flex-row md:items-center gap-2 p-3 rounded-md border border-border bg-background">
+            <div className="flex flex-col text-muted-foreground text-xs">
+              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="disabled:opacity-30 hover:text-foreground">▲</button>
+              <button type="button" onClick={() => move(i, 1)} disabled={i === items.length - 1} className="disabled:opacity-30 hover:text-foreground">▼</button>
+            </div>
+            <input
+              value={it.label}
+              onChange={(e) => update(i, { label: e.target.value })}
+              placeholder="z.B. Dinner & Dance (99.- pro Person)"
+              className="flex-1 bg-background border border-border rounded-sm px-3 py-2 focus:border-primary outline-none text-sm"
+            />
+            <label className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border cursor-pointer select-none ${it.paid ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+              <input type="checkbox" className="sr-only" checked={it.paid} onChange={(e) => update(i, { paid: e.target.checked })} />
+              <CreditCard className="w-3.5 h-3.5" />
+              Kostenpflichtig
+            </label>
+            <label className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border cursor-pointer select-none ${it.hasDates ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+              <input type="checkbox" className="sr-only" checked={it.hasDates} onChange={(e) => update(i, { hasDates: e.target.checked })} />
+              <CalendarIcon className="w-3.5 h-3.5" />
+              Event-Daten
+            </label>
+            <button type="button" onClick={() => remove(i)} className="p-2 text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <button type="button" onClick={add}
+            className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest text-foreground hover:bg-accent">
+            <Plus className="w-3.5 h-3.5" /> Anlass hinzufügen
+          </button>
+          <button onClick={save} disabled={saving || !dirty}
+            className="rounded-full bg-primary px-5 py-2 text-xs uppercase tracking-widest text-primary-foreground disabled:opacity-50">
+            {saving ? "Speichere …" : "Änderungen speichern"}
+          </button>
+        </div>
+
+        <p className="text-[11px] text-muted-foreground pt-2">
+          Tipp: „Event-Daten" nutzt die Liste unter <em>Weitere Formular-Texte → reservation_event_dates</em>.
+        </p>
+      </div>
     </div>
   );
 }
