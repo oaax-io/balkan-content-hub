@@ -65,6 +65,51 @@ export type Database = {
         }
         Relationships: []
       }
+      email_settings: {
+        Row: {
+          enabled: boolean
+          from_email: string | null
+          from_name: string | null
+          id: number
+          provider: string
+          reply_to: string | null
+          smtp_host: string | null
+          smtp_password: string | null
+          smtp_port: number | null
+          smtp_secure: boolean
+          smtp_username: string | null
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          from_email?: string | null
+          from_name?: string | null
+          id?: number
+          provider?: string
+          reply_to?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_secure?: boolean
+          smtp_username?: string | null
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          from_email?: string | null
+          from_name?: string | null
+          id?: number
+          provider?: string
+          reply_to?: string | null
+          smtp_host?: string | null
+          smtp_password?: string | null
+          smtp_port?: number | null
+          smtp_secure?: boolean
+          smtp_username?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       occasion_capacities: {
         Row: {
           max_reservations: number

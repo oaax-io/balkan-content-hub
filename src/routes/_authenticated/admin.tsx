@@ -12,6 +12,7 @@ import { ReservationsTab } from "@/components/admin/ReservationsTab";
 import { SettingsTab } from "@/components/admin/SettingsTab";
 import { SeoTab } from "@/components/admin/SeoTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
+import { EmailTab } from "@/components/admin/EmailTab";
 import { toast } from "sonner";
 
 import {
@@ -19,14 +20,14 @@ import {
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarMenuBadge,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search, BarChart3 } from "lucide-react";
+import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search, BarChart3, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Balkaneros" }] }),
   component: Admin,
 });
 
-type Tab = "dashboard" | "reservations" | "content" | "contact" | "analytics" | "seo" | "settings";
+type Tab = "dashboard" | "reservations" | "content" | "contact" | "analytics" | "seo" | "email" | "settings";
 
 const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -35,6 +36,7 @@ const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "contact", label: "Kontakt & Zeiten", icon: MapPin },
   { key: "analytics", label: "Website Analytics", icon: BarChart3 },
   { key: "seo", label: "SEO Optimierung", icon: Search },
+  { key: "email", label: "E-Mail-Versand", icon: Mail },
   { key: "settings", label: "Einstellungen", icon: Settings },
 ];
 
@@ -45,6 +47,7 @@ const TITLES: Record<Tab, string> = {
   contact: "Kontakt & Öffnungszeiten",
   analytics: "Website Analytics",
   seo: "SEO Optimierung",
+  email: "E-Mail-Versand (SMTP)",
   settings: "Einstellungen",
 };
 
@@ -150,6 +153,7 @@ function AdminShell() {
                 {tab === "contact" && <ContactTab />}
                 {tab === "analytics" && <AnalyticsTab />}
                 {tab === "seo" && <SeoTab />}
+                {tab === "email" && <EmailTab />}
                 {tab === "settings" && <SettingsTab />}
               </div>
             </main>
