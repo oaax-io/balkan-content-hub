@@ -37,8 +37,18 @@ interface FormValues {
   guest_phone: string;
   party_size: number;
   occasion: string;
+  event_date: string;
   event_date_label: string;
   notes: string;
+}
+
+function parseEventDates(eventDates: string[]) {
+  return eventDates.map((raw) => {
+    const [machine, ...rest] = raw.split("|");
+    const machineDate = (machine || "").trim();
+    const displayLabel = rest.length > 0 ? rest.join("|").trim() : machineDate;
+    return { machineDate, displayLabel };
+  });
 }
 
 export function ReservationCard({
@@ -70,8 +80,11 @@ export function ReservationCard({
     setSubmitting(true);
     try {
       const fd = new FormData(e.currentTarget);
-      const partyRaw = String(fd.get("party_size") ?? "2");
+      const parsedDates = parseEventDates(eventDates);
+      const partyRaw = String(fd.get("party_size") ?? "1");
       const partyNum = parseInt(partyRaw, 10);
+      const eventDateMachine = String(fd.get("event_date") ?? "");
+      const selectedEvent = parsedDates.find((d) => d.machineDate === eventDateMachine);
       const values: FormValues = {
         guest_name: String(fd.get("name") ?? ""),
         guest_email: String(fd.get("email") ?? ""),
@@ -79,7 +92,8 @@ export function ReservationCard({
         guest_phone: String(fd.get("phone") ?? ""),
         party_size: Number.isFinite(partyNum) ? Math.max(1, Math.min(99, partyNum)) : 17,
         occasion: String(fd.get("occasion") ?? ""),
-        event_date_label: String(fd.get("event_date") ?? ""),
+        event_date: eventDateMachine,
+        event_date_label: selectedEvent?.displayLabel ?? eventDateMachine,
         notes: String(fd.get("notes") ?? ""),
       };
 
@@ -246,9 +260,9 @@ export function ReservationCard({
         <Input label="Telefon" name="phone" type="tel" maxLength={40} autoComplete="tel" inputMode="tel" />
       </div>
 
-      <Select label="Personen *" name="party_size" required defaultValue="2">
+      <Select label="Personen *" name="party_size" required defaultValue="1">
         {PARTY_SIZES.map((p, i) => (
-          <option key={p} value={i < 15 ? String(i + 2) : "17"}>
+          <option key={p} value={i < 16 ? String(i + 1) : "17"}>
             {p}
           </option>
         ))}
@@ -257,9 +271,9 @@ export function ReservationCard({
       {showEventDates && (
         <Select label="Nächste Event-Daten *" name="event_date" required>
           <option value="">Bitte wählen</option>
-          {eventDates.map((d) => (
-            <option key={d} value={d}>
-              {d}
+          {parseEventDates(eventDates).map((d) => (
+            <option key={d.machineDate} value={d.machineDate}>
+              {d.displayLabel}
             </option>
           ))}
         </Select>

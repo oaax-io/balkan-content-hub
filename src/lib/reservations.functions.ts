@@ -26,6 +26,41 @@ async function isPaidOccasionServer(occasion: string): Promise<boolean> {
   return s.includes("99.- pro person") || s.includes("dinner & dance");
 }
 
+const GERMAN_MONTHS: Record<string, number> = {
+  januar: 1, februar: 2, märz: 3, april: 4, mai: 5, juni: 6,
+  juli: 7, august: 8, september: 9, oktober: 10, november: 11, dezember: 12,
+};
+
+function parseEventDateLabel(label: string): { date: string; time: string } | null {
+  const raw = (label || "").trim();
+  if (!raw) return null;
+
+  // Bevorzugtes Format: "YYYY-MM-DD | Anzeige-Label" oder "YYYY-MM-DD HH:MM | Anzeige-Label"
+  const pipeIdx = raw.indexOf("|");
+  const machinePart = pipeIdx >= 0 ? raw.slice(0, pipeIdx).trim() : raw;
+
+  const isoMatch = machinePart.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2}))?$/);
+  if (isoMatch) {
+    const [, y, m, d, hh, mm] = isoMatch;
+    const date = `${y}-${m}-${d}`;
+    const time = hh && mm ? `${hh}:${mm}` : "18:00";
+    return { date, time };
+  }
+
+  // Bestehende deutsche Labels: "Samstag, 20. Juni 2026" oder "20. Juni 2026"
+  const germanMatch = raw.match(/(\d{1,2})\.\s*([A-Za-zäöüÄÖÜ]+)\s+(\d{4})/);
+  if (germanMatch) {
+    const [, day, monthName, year] = germanMatch;
+    const month = GERMAN_MONTHS[monthName.toLowerCase()];
+    if (month) {
+      const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      return { date, time: "18:00" };
+    }
+  }
+
+  return null;
+}
+
 const createSchema = z.object({
   guest_name: z.string().trim().min(2).max(120),
   guest_email: z.string().trim().email().max(255),
@@ -35,6 +70,7 @@ const createSchema = z.object({
   reservation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).default("1970-01-01"),
   reservation_time: z.string().regex(/^\d{2}:\d{2}$/).default("00:00"),
   occasion: z.string().trim().max(120).default(""),
+  event_date: z.string().trim().max(200).default(""),
   event_date_label: z.string().trim().max(200).default(""),
   notes: z.string().trim().max(1000).default(""),
   // Stripe / Storno-Bedingungen (nur bei kostenpflichtigen Anlässen befüllt)
@@ -62,14 +98,19 @@ export const createReservation = createServerFn({ method: "POST" })
     // Sicheres, nicht erratbares Storno-Token (256-bit)
     const cancellationToken = generateSecureToken(48);
 
+    // Event-Datum aus dem maschinenlesbaren Wert oder dem Anzeige-Label parsen
+    const parsedEvent = parseEventDateLabel(data.event_date) || parseEventDateLabel(data.event_date_label);
+    const reservationDate = parsedEvent?.date ?? data.reservation_date;
+    const reservationTime = parsedEvent?.time ?? data.reservation_time;
+
     const insertRow = {
       guest_name: data.guest_name,
       guest_email: data.guest_email,
       guest_phone: data.guest_phone,
       country_code: data.country_code,
       party_size: data.party_size,
-      reservation_date: data.reservation_date,
-      reservation_time: data.reservation_time,
+      reservation_date: reservationDate,
+      reservation_time: reservationTime,
       occasion: data.occasion,
       event_date_label: data.event_date_label,
       notes: data.notes,
