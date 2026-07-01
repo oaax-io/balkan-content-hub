@@ -37,8 +37,18 @@ interface FormValues {
   guest_phone: string;
   party_size: number;
   occasion: string;
+  event_date: string;
   event_date_label: string;
   notes: string;
+}
+
+function parseEventDates(eventDates: string[]) {
+  return eventDates.map((raw) => {
+    const [machine, ...rest] = raw.split("|");
+    const machineDate = (machine || "").trim();
+    const displayLabel = rest.length > 0 ? rest.join("|").trim() : machineDate;
+    return { machineDate, displayLabel };
+  });
 }
 
 export function ReservationCard({
