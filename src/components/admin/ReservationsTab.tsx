@@ -119,6 +119,7 @@ export function ReservationsTab() {
 
   return (
     <div className="space-y-8">
+      <ReservationFormEditorDialog open={editorOpen} onClose={() => setEditorOpen(false)} />
       {/* ───────────── Overview ───────────── */}
       <section className="space-y-4">
         <header className="flex items-start justify-between gap-4">
