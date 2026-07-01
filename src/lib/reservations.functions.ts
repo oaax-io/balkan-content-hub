@@ -47,7 +47,7 @@ const createSchema = z.object({
 export const createReservation = createServerFn({ method: "POST" })
   .inputValidator((input) => createSchema.parse(input))
   .handler(async ({ data }) => {
-    const isPaid = isPaidOccasionServer(data.occasion);
+    const isPaid = await isPaidOccasionServer(data.occasion);
 
     // Bei kostenpflichtigen Anlässen ist eine hinterlegte Zahlungsmethode + Zustimmung Pflicht.
     if (isPaid) {
