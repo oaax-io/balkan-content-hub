@@ -226,7 +226,18 @@ export function ReservationsTab() {
           <p className="text-muted-foreground text-center py-12">Keine Reservierungen.</p>
         ) : (
           <ul className="space-y-3">
-            {filtered.map((r) => (
+            {filtered.map((r) => {
+              const daysUntil = daysUntilEvent(r.reservation_date, r.reservation_time);
+              const isPast = daysUntil < 0;
+              const isUpcoming = r.status !== "cancelled" && r.status !== "declined" && !isPast;
+              const daysTone = isPast
+                ? "bg-gray-100 text-gray-500 border-gray-200"
+                : daysUntil === 0
+                  ? "bg-red-50 text-red-700 border-red-200"
+                  : daysUntil < 7
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : "bg-emerald-50 text-emerald-700 border-emerald-200";
+              return (
               <li key={r.id} className="bg-card border border-border rounded-sm p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -235,12 +246,19 @@ export function ReservationsTab() {
                       <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${STATUS_STYLES[r.status]}`}>
                         {STATUS_LABEL[r.status]}
                       </span>
+                      {isUpcoming && (
+                        <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${daysTone}`}>
+                          <Clock className="w-3 h-3" />
+                          {daysUntil === 0 ? "Heute" : daysUntil === 1 ? "Morgen" : `noch ${daysUntil} Tage`}
+                        </span>
+                      )}
                       {r.occasion && (
                         <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border border-gold/40 text-gold bg-gold/5">
                           {r.occasion}
                         </span>
                       )}
                     </div>
+
                     <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-muted-foreground">
                       <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> {fmt(r.reservation_date)} · {r.reservation_time}</span>
                       <span className="flex items-center gap-2"><Users className="w-4 h-4" /> {r.party_size} Personen</span>
