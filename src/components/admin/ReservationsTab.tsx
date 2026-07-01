@@ -257,6 +257,22 @@ export function ReservationsTab() {
   );
 }
 
+function PayBadge({ icon: Icon, tone, children }: {
+  icon: typeof Users; tone: "gold" | "green" | "red" | "gray"; children: React.ReactNode;
+}) {
+  const styles: Record<string, string> = {
+    gold: "border-gold/40 text-gold bg-gold/5",
+    green: "border-green-300 text-green-700 bg-green-50",
+    red: "border-red-300 text-red-700 bg-red-50",
+    gray: "border-border text-muted-foreground bg-muted/50",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles[tone]}`}>
+      <Icon className="w-3 h-3" /> {children}
+    </span>
+  );
+}
+
 function Stat({ icon: Icon, label, value, hint, accent }: {
   icon: typeof Users; label: string; value: number; hint: string; accent?: boolean;
 }) {
