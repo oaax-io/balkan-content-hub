@@ -135,6 +135,14 @@ export function ReservationsTab() {
     confirmed: all.filter((r) => r.status === "confirmed").length,
   };
 
+  // Storno-Statistik (nur tatsächlich belastete Gebühren zählen)
+  const chargedFees = all.filter((r) => r.cancellation_fee_charged_at);
+  const feeRevenue = chargedFees.reduce(
+    (s, r) => s + ((r.cancellation_fee_amount ?? 5000) / 100), 0);
+  const cancelledCount = all.filter((r) => r.status === "cancelled").length;
+  const cancelledFree = cancelledCount - chargedFees.length;
+
+
   const filtered = all
     .filter((r) => filter === "all" || r.status === filter)
     .filter((r) => occasionFilter === "all"
