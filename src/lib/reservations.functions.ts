@@ -44,6 +44,9 @@ export const createReservation = createServerFn({ method: "POST" })
       }
     }
 
+    // Sicheres, nicht erratbares Storno-Token (256-bit)
+    const cancellationToken = generateSecureToken(48);
+
     const insertRow = {
       guest_name: data.guest_name,
       guest_email: data.guest_email,
@@ -62,6 +65,8 @@ export const createReservation = createServerFn({ method: "POST" })
       cancellation_terms_accepted: isPaid ? !!data.cancellation_terms_accepted : false,
       cancellation_terms_accepted_at:
         isPaid && data.cancellation_terms_accepted ? new Date().toISOString() : null,
+      cancellation_token: cancellationToken,
+      cancellation_token_expires_at: null,
     };
 
     const { data: row, error } = await supabaseAdmin
