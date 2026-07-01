@@ -13,7 +13,18 @@ type Reservation = {
   reservation_time: string;
   notes: string;
   status: string;
+  cancellation_token?: string | null;
+  is_paid_occasion?: boolean | null;
+  occasion?: string | null;
 };
+
+function getSiteBaseUrl(): string {
+  return (
+    process.env.SITE_URL ||
+    process.env.PUBLIC_SITE_URL ||
+    "https://balkaneros.oaase.com"
+  ).replace(/\/$/, "");
+}
 
 async function getContact() {
   const { data } = await supabaseAdmin.from("contact_info").select("*").eq("id", 1).single();
