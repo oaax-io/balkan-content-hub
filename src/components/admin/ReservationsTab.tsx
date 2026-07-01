@@ -6,10 +6,11 @@ import {
   updateReservationStatus,
   listOccasionCapacities,
   setOccasionCapacity,
+  chargeNoShowFee,
 } from "@/lib/reservations.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign } from "lucide-react";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
@@ -27,6 +28,7 @@ export function ReservationsTab() {
   const listFn = useServerFn(listReservations);
   const updFn = useServerFn(updateReservationStatus);
   const capListFn = useServerFn(listOccasionCapacities);
+  const noShowFn = useServerFn(chargeNoShowFee);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({ queryKey: ["reservations"], queryFn: () => listFn() });
@@ -55,6 +57,21 @@ export function ReservationsTab() {
       await updFn({ data: { id, status } });
       toast.success(status === "confirmed" ? "Bestätigt – E-Mail an Gast gesendet" : `Status: ${STATUS_LABEL[status]}`);
       qc.invalidateQueries({ queryKey: ["reservations"] });
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setBusy(null); }
+  }
+
+  async function chargeNoShow(id: string) {
+    if (!confirm("CHF 50 No-Show Gebühr wirklich belasten? Diese Aktion kann nicht rückgängig gemacht werden.")) return;
+    setBusy(id);
+    try {
+      const res = await noShowFn({ data: { id, environment: "sandbox" } });
+      if (res.ok) {
+        toast.success("CHF 50 belastet.");
+        qc.invalidateQueries({ queryKey: ["reservations"] });
+      } else {
+        toast.error(res.error);
+      }
     } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
     finally { setBusy(null); }
   }
@@ -176,19 +193,60 @@ export function ReservationsTab() {
                       <p className="mt-2 text-xs text-muted-foreground">Anlass-Datum: <span className="text-foreground">{r.event_date_label}</span></p>
                     )}
                     {r.notes && <p className="mt-3 text-sm bg-background border border-border rounded-sm p-3 text-muted-foreground">{r.notes}</p>}
+
+                    {/* Stripe / Payment Info */}
+                    {(r.is_paid_occasion || r.stripe_payment_method_id) && (
+                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                        {r.is_paid_occasion && (
+                          <PayBadge icon={CircleDollarSign} tone="gold">Kostenpflichtig</PayBadge>
+                        )}
+                        {r.stripe_payment_method_id ? (
+                          <PayBadge icon={CreditCard} tone="green">Zahlungsmethode hinterlegt</PayBadge>
+                        ) : r.is_paid_occasion ? (
+                          <PayBadge icon={AlertTriangle} tone="red">Keine Zahlungsmethode</PayBadge>
+                        ) : null}
+                        {r.cancellation_terms_accepted && (
+                          <PayBadge icon={ShieldCheck} tone="green">Storno-Bedingungen akzeptiert</PayBadge>
+                        )}
+                        {r.cancellation_fee_charged_at ? (
+                          <PayBadge icon={Check} tone="green">
+                            CHF 50 belastet · {new Date(r.cancellation_fee_charged_at).toLocaleDateString("de-CH")}
+                          </PayBadge>
+                        ) : r.is_paid_occasion ? (
+                          <PayBadge icon={AlertTriangle} tone="gray">CHF 50 offen</PayBadge>
+                        ) : null}
+                        {r.cancellation_fee_payment_intent_id && (
+                          <span className="text-[10px] font-mono text-muted-foreground px-2 py-0.5 border border-border rounded">
+                            {r.cancellation_fee_payment_intent_id}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {r.status === "pending" && (
-                    <div className="flex gap-2">
-                      <button onClick={() => setStatus(r.id, "confirmed")} disabled={busy === r.id}
-                        className="rounded-full bg-green-600/90 hover:bg-green-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
-                        <Check className="w-4 h-4" /> Bestätigen
+                  <div className="flex flex-col items-end gap-2">
+                    {r.status === "pending" && (
+                      <div className="flex gap-2">
+                        <button onClick={() => setStatus(r.id, "confirmed")} disabled={busy === r.id}
+                          className="rounded-full bg-green-600/90 hover:bg-green-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
+                          <Check className="w-4 h-4" /> Bestätigen
+                        </button>
+                        <button onClick={() => setStatus(r.id, "declined")} disabled={busy === r.id}
+                          className="rounded-full bg-red-600/90 hover:bg-red-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
+                          <X className="w-4 h-4" /> Ablehnen
+                        </button>
+                      </div>
+                    )}
+                    {r.status === "confirmed"
+                      && r.is_paid_occasion
+                      && r.stripe_customer_id
+                      && r.stripe_payment_method_id
+                      && !r.cancellation_fee_charged_at && (
+                      <button onClick={() => chargeNoShow(r.id)} disabled={busy === r.id}
+                        className="rounded-full border border-red-300 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
+                        <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
                       </button>
-                      <button onClick={() => setStatus(r.id, "declined")} disabled={busy === r.id}
-                        className="rounded-full bg-red-600/90 hover:bg-red-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
-                        <X className="w-4 h-4" /> Ablehnen
-                      </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </li>
             ))}
@@ -196,6 +254,22 @@ export function ReservationsTab() {
         )}
       </section>
     </div>
+  );
+}
+
+function PayBadge({ icon: Icon, tone, children }: {
+  icon: typeof Users; tone: "gold" | "green" | "red" | "gray"; children: React.ReactNode;
+}) {
+  const styles: Record<string, string> = {
+    gold: "border-gold/40 text-gold bg-gold/5",
+    green: "border-green-300 text-green-700 bg-green-50",
+    red: "border-red-300 text-red-700 bg-red-50",
+    gray: "border-border text-muted-foreground bg-muted/50",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${styles[tone]}`}>
+      <Icon className="w-3 h-3" /> {children}
+    </span>
   );
 }
 
