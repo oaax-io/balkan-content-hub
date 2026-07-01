@@ -82,6 +82,25 @@ export function ReservationsTab() {
     finally { setBusy(null); }
   }
 
+  async function manualCancel(id: string, isPaid: boolean, daysUntil: number) {
+    const feeWarning = isPaid && daysUntil < 7
+      ? `\n\n⚠ Achtung: Anlass in ${daysUntil} Tag(en) — CHF 50 werden dem Gast belastet.`
+      : "";
+    const reason = window.prompt(`Reservation stornieren?${feeWarning}\n\nStorno-Grund (optional):`, "");
+    if (reason === null) return;
+    setBusy(id);
+    try {
+      const res = await cancelFn({ data: { id, reason: reason || undefined, environment: "sandbox" } });
+      if (res.ok) {
+        toast.success(res.fee_charged ? "Storniert · CHF 50 belastet" : "Storniert");
+        qc.invalidateQueries({ queryKey: ["reservations"] });
+      } else {
+        toast.error(res.error);
+      }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setBusy(null); }
+  }
+
   if (isLoading) return <p className="text-muted-foreground">Lade …</p>;
 
   const all = data ?? [];
