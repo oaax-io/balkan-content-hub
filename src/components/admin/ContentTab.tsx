@@ -133,6 +133,9 @@ export function ContentTab() {
             <h2 className="font-display text-2xl text-foreground">{page.label}</h2>
           </div>
           {page.sections.map((sec) => {
+            if (sec.keys[0] === "__occasions_editor__") {
+              return <OccasionsEditor key={sec.id} rowMap={rowMap} onSaved={refresh} />;
+            }
             const rows = sec.keys.map((k) => rowMap.get(k)).filter(Boolean) as Row[];
             if (!rows.length) return null;
             return <SectionBlock key={sec.id} title={sec.title} rows={rows} onSaved={refresh} pageId={page.id} secId={sec.id} />;
