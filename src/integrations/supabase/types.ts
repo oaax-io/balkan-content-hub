@@ -146,6 +146,15 @@ export type Database = {
       reservations: {
         Row: {
           admin_note: string
+          cancellation_fee_amount: number
+          cancellation_fee_charge_status: string | null
+          cancellation_fee_charged_at: string | null
+          cancellation_fee_currency: string
+          cancellation_fee_payment_intent_id: string | null
+          cancellation_reason: string | null
+          cancellation_terms_accepted: boolean
+          cancellation_terms_accepted_at: string | null
+          cancelled_at: string | null
           country_code: string
           created_at: string
           event_date_label: string
@@ -153,16 +162,29 @@ export type Database = {
           guest_name: string
           guest_phone: string
           id: string
+          is_paid_occasion: boolean
           notes: string
           occasion: string
           party_size: number
           reservation_date: string
           reservation_time: string
           status: Database["public"]["Enums"]["reservation_status"]
+          stripe_customer_id: string | null
+          stripe_payment_method_id: string | null
+          stripe_setup_intent_id: string | null
           updated_at: string
         }
         Insert: {
           admin_note?: string
+          cancellation_fee_amount?: number
+          cancellation_fee_charge_status?: string | null
+          cancellation_fee_charged_at?: string | null
+          cancellation_fee_currency?: string
+          cancellation_fee_payment_intent_id?: string | null
+          cancellation_reason?: string | null
+          cancellation_terms_accepted?: boolean
+          cancellation_terms_accepted_at?: string | null
+          cancelled_at?: string | null
           country_code?: string
           created_at?: string
           event_date_label?: string
@@ -170,16 +192,29 @@ export type Database = {
           guest_name: string
           guest_phone?: string
           id?: string
+          is_paid_occasion?: boolean
           notes?: string
           occasion?: string
           party_size: number
           reservation_date: string
           reservation_time: string
           status?: Database["public"]["Enums"]["reservation_status"]
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          stripe_setup_intent_id?: string | null
           updated_at?: string
         }
         Update: {
           admin_note?: string
+          cancellation_fee_amount?: number
+          cancellation_fee_charge_status?: string | null
+          cancellation_fee_charged_at?: string | null
+          cancellation_fee_currency?: string
+          cancellation_fee_payment_intent_id?: string | null
+          cancellation_reason?: string | null
+          cancellation_terms_accepted?: boolean
+          cancellation_terms_accepted_at?: string | null
+          cancelled_at?: string | null
           country_code?: string
           created_at?: string
           event_date_label?: string
@@ -187,12 +222,16 @@ export type Database = {
           guest_name?: string
           guest_phone?: string
           id?: string
+          is_paid_occasion?: boolean
           notes?: string
           occasion?: string
           party_size?: number
           reservation_date?: string
           reservation_time?: string
           status?: Database["public"]["Enums"]["reservation_status"]
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string | null
+          stripe_setup_intent_id?: string | null
           updated_at?: string
         }
         Relationships: []
