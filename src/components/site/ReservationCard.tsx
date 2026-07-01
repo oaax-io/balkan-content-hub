@@ -26,6 +26,7 @@ export interface ReservationCardProps {
   disclaimer?: string;
   occasions?: string[];
   occasionsWithDates?: string[];
+  paidOccasions?: string[];
   variant?: "overlay" | "page";
 }
 
