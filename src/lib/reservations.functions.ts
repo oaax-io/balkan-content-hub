@@ -192,3 +192,142 @@ export const setOccasionCapacity = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---- Storno / Cancellation ----
+const cancelSchema = z.object({
+  id: z.string().uuid(),
+  reason: z.string().trim().max(500).optional(),
+  environment: z.enum(["sandbox", "live"]).default("sandbox"),
+});
+
+type CancelResult =
+  | { ok: true; fee_charged: boolean; days_until: number; payment_intent_id?: string }
+  | { ok: false; error: string };
+
+export const cancelReservation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => cancelSchema.parse(i))
+  .handler(async ({ data, context }): Promise<CancelResult> => {
+    await requireAdmin(context.userId);
+
+    // 1) Reservation laden
+    const { data: r, error: loadErr } = await supabaseAdmin
+      .from("reservations")
+      .select("*")
+      .eq("id", data.id)
+      .single();
+    if (loadErr || !r) return { ok: false, error: loadErr?.message ?? "Reservation nicht gefunden" };
+
+    if (r.status === "cancelled") {
+      return { ok: false, error: "Reservation ist bereits storniert." };
+    }
+
+    // 2) Tage bis zum Anlass berechnen (Basis: reservation_date)
+    const eventDate = new Date(`${r.reservation_date}T${r.reservation_time || "00:00"}:00`);
+    const now = new Date();
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysUntil = Math.floor((eventDate.getTime() - now.getTime()) / msPerDay);
+
+    const isPaid = !!r.is_paid_occasion;
+    // Kostenpflichtige Gebühr nur bei kostenpflichtigem Anlass UND < 7 Tage vor Event
+    const feeApplies = isPaid && daysUntil < 7;
+
+    // 3) Kostenlose Stornierung
+    if (!feeApplies) {
+      const { error: updErr } = await supabaseAdmin
+        .from("reservations")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+          cancellation_reason: data.reason ?? null,
+        })
+        .eq("id", data.id);
+      if (updErr) return { ok: false, error: updErr.message };
+      void sendReservationStatusUpdate({ ...r, status: "cancelled" }).catch((e) =>
+        console.error("cancel email failed", e),
+      );
+      return { ok: true, fee_charged: false, days_until: daysUntil };
+    }
+
+    // 4) Kostenpflichtige Stornierung — Doppel-Belastung verhindern
+    if (r.cancellation_fee_charged_at || r.cancellation_fee_payment_intent_id) {
+      return { ok: false, error: "Für diese Reservation wurde bereits eine Gebühr belastet." };
+    }
+    if (!r.stripe_customer_id || !r.stripe_payment_method_id) {
+      return {
+        ok: false,
+        error: "Keine hinterlegte Zahlungsmethode gefunden. Stornierung nicht möglich.",
+      };
+    }
+
+    const amount = r.cancellation_fee_amount ?? 5000;
+    const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
+
+    // 5) Stripe PaymentIntent off_session erstellen und sofort bestätigen
+    try {
+      const stripe = createStripeClient(data.environment as StripeEnv);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency,
+        customer: r.stripe_customer_id,
+        payment_method: r.stripe_payment_method_id,
+        off_session: true,
+        confirm: true,
+        description: `Balkaneros Storno-Gebühr — ${r.occasion} (${r.guest_name})`,
+        metadata: {
+          reservation_id: r.id,
+          type: "cancellation_fee",
+          occasion: r.occasion,
+        },
+      });
+
+      if (paymentIntent.status !== "succeeded" && paymentIntent.status !== "processing") {
+        // Nicht als bezahlt markieren
+        const { error: updErr } = await supabaseAdmin
+          .from("reservations")
+          .update({
+            cancellation_fee_charge_status: paymentIntent.status,
+            cancellation_fee_payment_intent_id: paymentIntent.id,
+          })
+          .eq("id", data.id);
+        if (updErr) console.error(updErr.message);
+        return {
+          ok: false,
+          error: `Zahlung fehlgeschlagen (Status: ${paymentIntent.status}). Reservation wurde nicht storniert.`,
+        };
+      }
+
+      // 6) Erfolg speichern
+      const { error: updErr } = await supabaseAdmin
+        .from("reservations")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+          cancellation_reason: data.reason ?? null,
+          cancellation_fee_charged_at: new Date().toISOString(),
+          cancellation_fee_payment_intent_id: paymentIntent.id,
+          cancellation_fee_charge_status: paymentIntent.status,
+        })
+        .eq("id", data.id);
+      if (updErr) return { ok: false, error: updErr.message };
+
+      void sendReservationStatusUpdate({ ...r, status: "cancelled" }).catch((e) =>
+        console.error("cancel email failed", e),
+      );
+
+      return {
+        ok: true,
+        fee_charged: true,
+        days_until: daysUntil,
+        payment_intent_id: paymentIntent.id,
+      };
+    } catch (error) {
+      const message = getStripeErrorMessage(error);
+      // Fehlschlag im Log festhalten, aber nicht als bezahlt markieren
+      await supabaseAdmin
+        .from("reservations")
+        .update({ cancellation_fee_charge_status: `failed: ${message.slice(0, 200)}` })
+        .eq("id", data.id);
+      return { ok: false, error: `Stripe-Belastung fehlgeschlagen: ${message}` };
+    }
+  });
