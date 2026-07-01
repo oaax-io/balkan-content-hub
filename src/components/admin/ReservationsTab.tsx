@@ -322,10 +322,18 @@ export function ReservationsTab() {
                         <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
                       </button>
                     )}
+                    {r.status !== "cancelled" && r.status !== "declined" && (
+                      <button onClick={() => manualCancel(r.id, !!r.is_paid_occasion, daysUntil)} disabled={busy === r.id}
+                        className="rounded-full border border-border bg-background hover:bg-accent text-foreground px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
+                        <Ban className="w-4 h-4" /> Stornieren
+                      </button>
+                    )}
                   </div>
                 </div>
               </li>
-            ))}
+              );
+            })}
+
           </ul>
         )}
       </section>
