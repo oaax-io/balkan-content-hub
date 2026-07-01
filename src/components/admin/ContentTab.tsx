@@ -75,7 +75,8 @@ const PAGES: Page[] = [
   {
     id: "reservation", label: "Reservierung", icon: CalendarDays,
     sections: [
-      { id: "form", title: "Formular-Optionen", keys: ["reservation_occasions", "reservation_event_dates", "reservation_occasions_with_dates", "reservation_disclaimer"] },
+      { id: "occasions", title: "Anlass-Optionen (Dropdown im Formular)", keys: ["__occasions_editor__"] },
+      { id: "form", title: "Weitere Formular-Texte", keys: ["reservation_event_dates", "reservation_disclaimer"] },
     ],
   },
 ];
