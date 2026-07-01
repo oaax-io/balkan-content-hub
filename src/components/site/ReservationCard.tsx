@@ -80,8 +80,11 @@ export function ReservationCard({
     setSubmitting(true);
     try {
       const fd = new FormData(e.currentTarget);
-      const partyRaw = String(fd.get("party_size") ?? "2");
+      const parsedDates = parseEventDates(eventDates);
+      const partyRaw = String(fd.get("party_size") ?? "1");
       const partyNum = parseInt(partyRaw, 10);
+      const eventDateMachine = String(fd.get("event_date") ?? "");
+      const selectedEvent = parsedDates.find((d) => d.machineDate === eventDateMachine);
       const values: FormValues = {
         guest_name: String(fd.get("name") ?? ""),
         guest_email: String(fd.get("email") ?? ""),
@@ -89,7 +92,8 @@ export function ReservationCard({
         guest_phone: String(fd.get("phone") ?? ""),
         party_size: Number.isFinite(partyNum) ? Math.max(1, Math.min(99, partyNum)) : 17,
         occasion: String(fd.get("occasion") ?? ""),
-        event_date_label: String(fd.get("event_date") ?? ""),
+        event_date: eventDateMachine,
+        event_date_label: selectedEvent?.displayLabel ?? eventDateMachine,
         notes: String(fd.get("notes") ?? ""),
       };
 
