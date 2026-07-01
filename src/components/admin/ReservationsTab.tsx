@@ -331,20 +331,24 @@ function PayBadge({ icon: Icon, tone, children }: {
   );
 }
 
-function Stat({ icon: Icon, label, value, hint, accent }: {
-  icon: typeof Users; label: string; value: number; hint: string; accent?: boolean;
+function Stat({ icon: Icon, label, value, hint, accent, currency }: {
+  icon: typeof Users; label: string; value: number; hint: string; accent?: boolean; currency?: boolean;
 }) {
+  const formatted = currency
+    ? `CHF ${value.toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : value.toLocaleString("de-CH");
   return (
     <div className="rounded-sm border border-border bg-card p-5">
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs uppercase tracking-widest text-muted-foreground">{label}</span>
         <Icon className={`w-4 h-4 ${accent ? "text-gold" : "text-muted-foreground"}`} />
       </div>
-      <div className={`text-3xl font-display ${accent ? "text-gold" : ""}`}>{value.toLocaleString("de-CH")}</div>
+      <div className={`text-3xl font-display ${accent ? "text-gold" : ""}`}>{formatted}</div>
       <div className="text-xs text-muted-foreground mt-1">{hint}</div>
     </div>
   );
 }
+
 
 type OccRow = {
   name: string; reservations: number; persons: number;
