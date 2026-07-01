@@ -46,6 +46,7 @@ export function ReservationCard({
   disclaimer,
   occasions,
   occasionsWithDates,
+  paidOccasions,
   variant = "overlay",
 }: ReservationCardProps) {
   const createFn = useServerFn(createReservation);
@@ -62,7 +63,7 @@ export function ReservationCard({
     values: FormValues;
   }>(null);
 
-  const paid = isPaidOccasion(occasion);
+  const paid = isPaidOccasion(occasion, paidOccasions);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
