@@ -6,10 +6,11 @@ import {
   updateReservationStatus,
   listOccasionCapacities,
   setOccasionCapacity,
+  chargeNoShowFee,
 } from "@/lib/reservations.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign } from "lucide-react";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
