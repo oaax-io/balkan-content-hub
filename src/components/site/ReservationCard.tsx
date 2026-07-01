@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { createReservation } from "@/lib/reservations.functions";
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { createReservation, createReservationSetupIntent } from "@/lib/reservations.functions";
+import { getStripe, getStripeEnvironment, isPaidOccasion } from "@/lib/stripe";
 import { toast } from "sonner";
 
 const COUNTRY_CODES = [
@@ -27,6 +29,17 @@ export interface ReservationCardProps {
   variant?: "overlay" | "page";
 }
 
+interface FormValues {
+  guest_name: string;
+  guest_email: string;
+  country_code: string;
+  guest_phone: string;
+  party_size: number;
+  occasion: string;
+  event_date_label: string;
+  notes: string;
+}
+
 export function ReservationCard({
   eventDates,
   disclaimer,
@@ -35,9 +48,20 @@ export function ReservationCard({
   variant = "overlay",
 }: ReservationCardProps) {
   const createFn = useServerFn(createReservation);
+  const setupFn = useServerFn(createReservationSetupIntent);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [occasion, setOccasion] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Stripe stage
+  const [stripeStage, setStripeStage] = useState<null | {
+    clientSecret: string;
+    customerId: string;
+    values: FormValues;
+  }>(null);
+
+  const paid = isPaidOccasion(occasion);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,18 +70,38 @@ export function ReservationCard({
       const fd = new FormData(e.currentTarget);
       const partyRaw = String(fd.get("party_size") ?? "2");
       const partyNum = parseInt(partyRaw, 10);
-      await createFn({
-        data: {
-          guest_name: String(fd.get("name") ?? ""),
-          guest_email: String(fd.get("email") ?? ""),
-          country_code: String(fd.get("country_code") ?? ""),
-          guest_phone: String(fd.get("phone") ?? ""),
-          party_size: Number.isFinite(partyNum) ? Math.max(1, Math.min(99, partyNum)) : 17,
-          occasion: String(fd.get("occasion") ?? ""),
-          event_date_label: String(fd.get("event_date") ?? ""),
-          notes: String(fd.get("notes") ?? ""),
-        },
-      });
+      const values: FormValues = {
+        guest_name: String(fd.get("name") ?? ""),
+        guest_email: String(fd.get("email") ?? ""),
+        country_code: String(fd.get("country_code") ?? ""),
+        guest_phone: String(fd.get("phone") ?? ""),
+        party_size: Number.isFinite(partyNum) ? Math.max(1, Math.min(99, partyNum)) : 17,
+        occasion: String(fd.get("occasion") ?? ""),
+        event_date_label: String(fd.get("event_date") ?? ""),
+        notes: String(fd.get("notes") ?? ""),
+      };
+
+      if (isPaidOccasion(values.occasion)) {
+        if (!termsAccepted) {
+          toast.error("Bitte akzeptiere die Stornierungsbedingungen.");
+          setSubmitting(false);
+          return;
+        }
+        const result = await setupFn({
+          data: {
+            guest_name: values.guest_name,
+            guest_email: values.guest_email,
+            occasion: values.occasion,
+            environment: getStripeEnvironment(),
+          },
+        });
+        if ("error" in result) throw new Error(result.error);
+        setStripeStage({ clientSecret: result.client_secret, customerId: result.customer_id, values });
+        setSubmitting(false);
+        return;
+      }
+
+      await createFn({ data: values });
       setDone(true);
       toast.success("Anfrage gesendet! Wir melden uns per E-Mail.");
     } catch (err) {
@@ -67,12 +111,29 @@ export function ReservationCard({
     }
   }
 
+  async function onPaymentMethodReady(paymentMethodId: string, setupIntentId: string) {
+    if (!stripeStage) return;
+    try {
+      await createFn({
+        data: {
+          ...stripeStage.values,
+          stripe_customer_id: stripeStage.customerId,
+          stripe_payment_method_id: paymentMethodId,
+          stripe_setup_intent_id: setupIntentId,
+          cancellation_terms_accepted: true,
+        },
+      });
+      setDone(true);
+      toast.success("Reservation gesendet! Wir melden uns per E-Mail.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Speichern fehlgeschlagen");
+    }
+  }
+
   const wrapperBase =
     "bg-[#fdfbf7]/55 text-[#1a1a1a] border border-gold/40 rounded-2xl shadow-2xl backdrop-blur-xl";
   const wrapperClass =
-    variant === "overlay"
-      ? `${wrapperBase} p-5 sm:p-6`
-      : `${wrapperBase} p-6 sm:p-8`;
+    variant === "overlay" ? `${wrapperBase} p-5 sm:p-6` : `${wrapperBase} p-6 sm:p-8`;
 
   if (done) {
     return (
@@ -86,6 +147,36 @@ export function ReservationCard({
     );
   }
 
+  // Stage 2: Payment method entry
+  if (stripeStage) {
+    return (
+      <div className={wrapperClass}>
+        <div className="text-center pb-3">
+          <p className="text-[#8a6a14] tracking-[0.3em] uppercase text-[10px] mb-1 font-bold">
+            Zahlungsmethode hinterlegen
+          </p>
+          <h3 className="font-display text-xl text-[#1a1a1a]">
+            Es wird nichts abgebucht.
+          </h3>
+          <p className="text-xs text-[#2d2d2d] mt-2">
+            Für <strong>{stripeStage.values.occasion}</strong> hinterlegst du eine Karte als
+            Absicherung. Bei Stornierung weniger als 7 Tage vor dem Anlass können CHF 50 belastet werden.
+          </p>
+        </div>
+        <Elements
+          stripe={getStripe()}
+          options={{ clientSecret: stripeStage.clientSecret, appearance: { theme: "stripe" } }}
+        >
+          <PaymentMethodForm
+            email={stripeStage.values.guest_email}
+            name={stripeStage.values.guest_name}
+            onReady={onPaymentMethodReady}
+            onCancel={() => setStripeStage(null)}
+          />
+        </Elements>
+      </div>
+    );
+  }
 
   const occasionList =
     occasions && occasions.length > 0
@@ -114,7 +205,6 @@ export function ReservationCard({
           Wir freuen uns, dich bei uns verwöhnen zu dürfen.
         </h3>
       </div>
-
 
       <Select
         label="Was ist der Anlass deiner Reservation? *"
@@ -181,18 +271,108 @@ export function ReservationCard({
         placeholder="z.B. Allergien, Geburtstag, Sitzwünsche …"
       />
 
+      {paid && (
+        <label className="flex items-start gap-2 text-[12px] leading-snug text-[#1a1a1a] bg-white/70 border border-gold/40 rounded-lg p-3">
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="mt-0.5 accent-[#8a6a14]"
+          />
+          <span>
+            Ich akzeptiere, dass bei Stornierung weniger als <strong>7 Tage</strong> vor dem
+            Anlass oder bei Nichterscheinen eine Gebühr von <strong>CHF 50</strong> auf die
+            hinterlegte Zahlungsmethode belastet werden kann. Beim Reservieren wird{" "}
+            <strong>nichts abgebucht</strong>.
+          </span>
+        </label>
+      )}
+
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || (paid && !termsAccepted)}
         className="w-full rounded-full bg-gold px-6 py-3 text-sm font-bold uppercase tracking-widest text-[#0d0d0d] hover:bg-[#0d0d0d] hover:text-gold border border-gold active:scale-[0.99] transition disabled:opacity-50"
       >
-        {submitting ? "Wird gesendet …" : "Reservieren"}
+        {submitting ? "Wird gesendet …" : paid ? "Weiter zur Zahlungsmethode" : "Reservieren"}
       </button>
 
       {disclaimer && (
         <p className="text-[11px] leading-snug text-[#2d2d2d] text-center pt-1">{disclaimer}</p>
       )}
+    </form>
+  );
+}
 
+function PaymentMethodForm({
+  email,
+  name,
+  onReady,
+  onCancel,
+}: {
+  email: string;
+  name: string;
+  onReady: (paymentMethodId: string, setupIntentId: string) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setBusy(true);
+    try {
+      const result = await stripe.confirmSetup({
+        elements,
+        confirmParams: {
+          return_url: window.location.href,
+          payment_method_data: { billing_details: { email, name } },
+        },
+        redirect: "if_required",
+      });
+      if (result.error) {
+        toast.error(result.error.message ?? "Karte konnte nicht hinterlegt werden.");
+        setBusy(false);
+        return;
+      }
+      const si = result.setupIntent;
+      const pm = typeof si?.payment_method === "string" ? si.payment_method : si?.payment_method?.id;
+      if (!si || !pm) {
+        toast.error("Zahlungsmethode konnte nicht bestätigt werden.");
+        setBusy(false);
+        return;
+      }
+      await onReady(pm, si.id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Fehler beim Bestätigen");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <PaymentElement options={{ layout: "tabs" }} />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={busy}
+          className="flex-1 rounded-full border border-gold/50 px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#1a1a1a] hover:bg-white/60 transition disabled:opacity-50"
+        >
+          Zurück
+        </button>
+        <button
+          type="submit"
+          disabled={!stripe || busy}
+          className="flex-[2] rounded-full bg-gold px-6 py-3 text-sm font-bold uppercase tracking-widest text-[#0d0d0d] hover:bg-[#0d0d0d] hover:text-gold border border-gold transition disabled:opacity-50"
+        >
+          {busy ? "Wird bestätigt …" : "Reservation abschliessen"}
+        </button>
+      </div>
+      <p className="text-[11px] text-center text-[#2d2d2d]">
+        Es wird jetzt <strong>nichts abgebucht</strong>. Die Karte dient nur als Absicherung.
+      </p>
     </form>
   );
 }
@@ -237,4 +417,3 @@ function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { l
     </div>
   );
 }
-
