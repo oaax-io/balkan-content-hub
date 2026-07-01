@@ -45,6 +45,25 @@ export const updateSiteContent = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const bulkSchema = z.object({
+  entries: z.array(z.object({
+    key: z.string().min(1).max(80),
+    value: z.string().max(5000),
+  })).min(1).max(20),
+});
+export const updateSiteContentBulk = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => bulkSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.userId);
+    for (const e of data.entries) {
+      const { error } = await supabaseAdmin
+        .from("site_content").update({ value: e.value }).eq("key", e.key);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
 // ---- image upload (base64 data URL) ----
 const uploadSchema = z.object({
   key: z.string().min(1).max(80),
