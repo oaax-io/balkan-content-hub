@@ -64,16 +64,22 @@ async function sendEmail(payload: { to: string; subject: string; html: string })
         ? { user: s.smtp_username, pass: s.smtp_password ?? "" }
         : undefined,
     });
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: s.from_name ? `"${s.from_name}" <${s.from_email}>` : s.from_email,
       to: payload.to,
       replyTo: s.reply_to || undefined,
       subject: payload.subject,
       html: payload.html,
     });
-    console.log("[email sent]", payload.subject, "→", payload.to);
+    console.log("[email sent]", payload.subject, "→", payload.to, {
+      messageId: info.messageId,
+      accepted: info.accepted,
+      rejected: info.rejected,
+      response: info.response,
+    });
   } catch (err) {
     console.error("[email error]", err);
+    throw err;
   }
 }
 
