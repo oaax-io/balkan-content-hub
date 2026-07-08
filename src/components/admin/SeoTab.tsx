@@ -202,7 +202,7 @@ export function SeoTab() {
 
               <div className="mt-2 border border-border rounded-sm p-4 bg-background">
                 <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-2">Google Vorschau</div>
-                <div className="text-xs text-emerald-700">https://balkaneros.oaase.com{row.path === "/" ? "" : row.path}</div>
+                <div className="text-xs text-emerald-700">https://balkaneros.ch{row.path === "/" ? "" : row.path}</div>
                 <div className="text-blue-700 text-lg leading-snug truncate">{row.title || "(Kein Titel)"}</div>
                 <div className="text-sm text-muted-foreground line-clamp-2">{row.description || "(Keine Beschreibung)"}</div>
               </div>
@@ -297,12 +297,12 @@ function SiteOverview({
           </p>
         </div>
         <a
-          href="https://balkaneros.oaase.com"
+          href="https://balkaneros.ch"
           target="_blank"
           rel="noreferrer"
           className="text-xs text-muted-foreground underline truncate max-w-xs"
         >
-          balkaneros.oaase.com
+          balkaneros.ch
         </a>
       </div>
 
