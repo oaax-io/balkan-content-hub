@@ -115,6 +115,7 @@ export const createReservation = createServerFn({ method: "POST" })
       event_date_label: data.event_date_label,
       notes: data.notes,
       is_paid_occasion: isPaid,
+      status: "confirmed",
       stripe_customer_id: isPaid ? data.stripe_customer_id ?? null : null,
       stripe_payment_method_id: isPaid ? data.stripe_payment_method_id ?? null : null,
       stripe_setup_intent_id: isPaid ? data.stripe_setup_intent_id ?? null : null,
@@ -132,11 +133,10 @@ export const createReservation = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // Emails sequentiell abwarten — auf Cloudflare Workers wird
-    // "fire-and-forget" (void promise) nach dem Response-Return abgebrochen.
-    // SMTP-Fehler bewusst nicht schlucken, damit sie im Formular und in den Logs sichtbar sind.
-    await sendReservationConfirmation(row);
+    // Direkte Bestätigung – kein Admin-Approval nötig.
+    await sendReservationStatusUpdate(row);
     await sendAdminNotification(row);
+
 
     return { id: row.id };
   });
