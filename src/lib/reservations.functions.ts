@@ -604,6 +604,9 @@ export const cancelReservationByToken = createServerFn({ method: "POST" })
       try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
         console.error("cancel email failed", e);
       }
+      try { await sendAdminCancellationNotification({ ...r, status: "cancelled" }, false); } catch (e) {
+        console.error("admin cancel email failed", e);
+      }
       return { ok: true, fee_charged: false, days_until };
     }
 
