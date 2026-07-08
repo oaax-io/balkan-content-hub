@@ -271,8 +271,12 @@ export function ReservationCard({
       </Select>
 
       {showEventDates && (
-        <Select label="Nächste Event-Daten *" name="event_date" required>
-          <option value="">Bitte wählen</option>
+        <Select
+          label={dateRequired ? "Nächste Event-Daten *" : "Datum (optional)"}
+          name="event_date"
+          required={dateRequired}
+        >
+          <option value="">{dateRequired ? "Bitte wählen" : "Kein Datum"}</option>
           {parseEventDates(eventDates).map((d) => (
             <option key={d.machineDate} value={d.machineDate}>
               {d.displayLabel}
@@ -280,6 +284,7 @@ export function ReservationCard({
           ))}
         </Select>
       )}
+
 
       <Textarea
         label="Bemerkung (Allergien, Wünsche)"
