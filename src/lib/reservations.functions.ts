@@ -222,7 +222,7 @@ export const updateReservationStatus = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     if (data.status === "confirmed" || data.status === "declined") {
-      void sendReservationStatusUpdate(row).catch((e) => console.error("status email failed", e));
+      try { await sendReservationStatusUpdate(row); } catch (e) { console.error("status email failed", e); }
     }
     return { ok: true };
   });
