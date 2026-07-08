@@ -37,12 +37,21 @@ async function getSmtpSettings() {
 }
 
 function fmtDate(d: string) {
+  // Sentinel für "Datum offen" (nur Anfrage / kein Event-Datum ausgewählt)
+  if (!d || d === "1970-01-01") return "";
+  const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return d;
   try {
-    return new Date(d + "T00:00:00").toLocaleDateString("de-CH", {
-      weekday: "long", day: "2-digit", month: "long", year: "numeric",
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toLocaleDateString("de-CH", {
+      weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "UTC",
     });
   } catch { return d; }
 }
+
+function hasTime(t: string) {
+  return !!t && t !== "00:00";
+}
+
 
 async function sendEmail(payload: { to: string; subject: string; html: string }) {
   const s = await getSmtpSettings();
@@ -95,10 +104,11 @@ export async function sendReservationConfirmation(r: Reservation) {
       <p>Liebe/r ${r.guest_name},</p>
       <p>danke für Ihre Reservierungsanfrage bei <strong>${restaurant}</strong>. Wir melden uns in Kürze mit einer Bestätigung.</p>
       <table style="margin:16px 0;border-collapse:collapse;">
-        <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>${fmtDate(r.reservation_date)}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Uhrzeit</td><td>${r.reservation_time}</td></tr>
+        ${fmtDate(r.reservation_date) ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>${fmtDate(r.reservation_date)}</td></tr>` : `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>nach Absprache</td></tr>`}
+        ${hasTime(r.reservation_time) ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Uhrzeit</td><td>${r.reservation_time}</td></tr>` : ""}
         <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Personen</td><td>${r.party_size}</td></tr>
         ${r.occasion ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Anlass</td><td>${r.occasion}</td></tr>` : ""}
+
       </table>
       <p style="color:#aaa;font-size:13px;">Bei Fragen einfach auf diese E-Mail antworten.</p>
       ${cancelUrl ? `
@@ -124,16 +134,20 @@ export async function sendAdminNotification(r: Reservation) {
   const contact = await getContact();
   const to = contact?.notification_email || contact?.email;
   if (!to) return;
+  const dateStr = fmtDate(r.reservation_date) || "nach Absprache";
+  const timeStr = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:16px;">
       <h2 style="color:#111;">Neue Reservierungsanfrage</h2>
       <p><strong>${r.guest_name}</strong> &lt;${r.guest_email}&gt;</p>
       <p>Telefon: ${r.guest_phone || "—"}</p>
-      <p>${fmtDate(r.reservation_date)} um ${r.reservation_time} · ${r.party_size} Personen</p>
+      <p>${dateStr}${timeStr} · ${r.party_size} Personen${r.occasion ? ` · ${r.occasion}` : ""}</p>
+
       ${r.notes ? `<p style="background:#f6f6f6;padding:10px;border-radius:6px;">${r.notes}</p>` : ""}
       <p><a href="/admin">Im Admin öffnen →</a></p>
     </div>`;
-  await sendEmail({ to, subject: `Neue Reservierung: ${r.guest_name} (${fmtDate(r.reservation_date)})`, html });
+  const subjectDate = fmtDate(r.reservation_date);
+  await sendEmail({ to, subject: `Neue Reservierung: ${r.guest_name}${subjectDate ? ` (${subjectDate})` : r.occasion ? ` (${r.occasion})` : ""}`, html });
 }
 
 export async function sendReservationStatusUpdate(r: Reservation) {
@@ -143,9 +157,13 @@ export async function sendReservationStatusUpdate(r: Reservation) {
   const subject = confirmed
     ? `Ihre Reservierung bei ${restaurant} ist bestätigt`
     : `Ihre Reservierungsanfrage bei ${restaurant}`;
+  const dateStr = fmtDate(r.reservation_date) || "nach Absprache";
+  const timeStr = hasTime(r.reservation_time) ? ` um <strong>${r.reservation_time}</strong>` : "";
+  const timeStrPlain = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
   const body = confirmed
-    ? `Wir freuen uns auf Sie am <strong>${fmtDate(r.reservation_date)}</strong> um <strong>${r.reservation_time}</strong> (${r.party_size} Personen).`
-    : `leider können wir Ihre Anfrage für ${fmtDate(r.reservation_date)} um ${r.reservation_time} nicht annehmen. Wir würden uns trotzdem freuen, Sie an einem anderen Tag bei uns begrüssen zu dürfen.`;
+    ? `Wir freuen uns auf Sie am <strong>${dateStr}</strong>${timeStr} (${r.party_size} Personen).`
+    : `leider können wir Ihre Anfrage für ${dateStr}${timeStrPlain} nicht annehmen. Wir würden uns trotzdem freuen, Sie an einem anderen Tag bei uns begrüssen zu dürfen.`;
+
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;background:#0f0f0f;color:#f5f5f5;">
       <h2 style="color:#d4af37;font-family:Georgia,serif;">${confirmed ? "Reservierung bestätigt" : "Reservierungsanfrage"}</h2>
