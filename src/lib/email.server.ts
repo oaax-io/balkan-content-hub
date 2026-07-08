@@ -104,7 +104,7 @@ export async function sendReservationConfirmation(r: Reservation) {
       <p>Liebe/r ${r.guest_name},</p>
       <p>danke für Ihre Reservierungsanfrage bei <strong>${restaurant}</strong>. Wir melden uns in Kürze mit einer Bestätigung.</p>
       <table style="margin:16px 0;border-collapse:collapse;">
-        ${fmtDate(r.reservation_date) ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>${fmtDate(r.reservation_date)}</td></tr>` : `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>nach Absprache</td></tr>`}
+        ${fmtDate(r.reservation_date) ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>${fmtDate(r.reservation_date)}</td></tr>` : `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>Kein Datum</td></tr>`}
         ${hasTime(r.reservation_time) ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Uhrzeit</td><td>${r.reservation_time}</td></tr>` : ""}
         <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Personen</td><td>${r.party_size}</td></tr>
         ${r.occasion ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Anlass</td><td>${r.occasion}</td></tr>` : ""}
@@ -134,7 +134,7 @@ export async function sendAdminNotification(r: Reservation) {
   const contact = await getContact();
   const to = contact?.notification_email || contact?.email;
   if (!to) return;
-  const dateStr = fmtDate(r.reservation_date) || "nach Absprache";
+  const dateStr = fmtDate(r.reservation_date) || "Kein Datum";
   const timeStr = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:16px;">
@@ -157,7 +157,7 @@ export async function sendReservationStatusUpdate(r: Reservation) {
   const subject = confirmed
     ? `Ihre Reservierung bei ${restaurant} ist bestätigt`
     : `Ihre Reservierungsanfrage bei ${restaurant}`;
-  const dateStr = fmtDate(r.reservation_date) || "nach Absprache";
+  const dateStr = fmtDate(r.reservation_date) || "Kein Datum";
   const timeStr = hasTime(r.reservation_time) ? ` um <strong>${r.reservation_time}</strong>` : "";
   const timeStrPlain = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
   const body = confirmed

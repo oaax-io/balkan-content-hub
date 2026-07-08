@@ -209,7 +209,9 @@ export function ReservationCard({
       ? occasionsWithDates
       : ["Dinner & Dance (99.- pro Person)"];
 
-  const showEventDates = dateOccasions.includes(occasion) && eventDates.length > 0;
+  const dateRequired = dateOccasions.includes(occasion);
+  const showEventDates = !!occasion && eventDates.length > 0;
+
 
   return (
     <form onSubmit={onSubmit} className={`${wrapperClass} space-y-3`}>
@@ -269,8 +271,12 @@ export function ReservationCard({
       </Select>
 
       {showEventDates && (
-        <Select label="Nächste Event-Daten *" name="event_date" required>
-          <option value="">Bitte wählen</option>
+        <Select
+          label={dateRequired ? "Nächste Event-Daten *" : "Datum (optional)"}
+          name="event_date"
+          required={dateRequired}
+        >
+          <option value="">{dateRequired ? "Bitte wählen" : "Kein Datum"}</option>
           {parseEventDates(eventDates).map((d) => (
             <option key={d.machineDate} value={d.machineDate}>
               {d.displayLabel}
@@ -278,6 +284,7 @@ export function ReservationCard({
           ))}
         </Select>
       )}
+
 
       <Textarea
         label="Bemerkung (Allergien, Wünsche)"
