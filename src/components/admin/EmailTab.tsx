@@ -241,7 +241,54 @@ export function EmailTab() {
           </button>
         </div>
       </form>
+
+      <section className="bg-card border border-gold/50 rounded-sm p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <Send className="w-5 h-5 text-gold" />
+          <h3 className="font-display text-xl">Test-E-Mail versenden</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Sendet eine Beispiel-E-Mail mit Dummy-Daten an die angegebene Adresse,
+          damit du die Vorlagen im Postfach prüfen kannst. Der Versand nutzt die
+          gespeicherten SMTP-Einstellungen – E-Mail-Versand muss aktiviert sein.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="Empfänger-E-Mail">
+            <input
+              type="email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="test@example.com"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Vorlage">
+            <select
+              value={testTemplate}
+              onChange={(e) => setTestTemplate(e.target.value as typeof testTemplate)}
+              className={inputClass}
+            >
+              <option value="request_received">Reservierungsanfrage erhalten (Gast)</option>
+              <option value="confirmed">Reservierung bestätigt (Gast)</option>
+              <option value="declined">Reservierung abgelehnt (Gast)</option>
+              <option value="cancelled">Reservierung storniert (Gast)</option>
+              <option value="admin_notification">Admin-Benachrichtigung (neue Reservation)</option>
+            </select>
+          </Field>
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={sendTest}
+            disabled={testing}
+            className="rounded-full bg-gold px-6 py-2.5 text-xs uppercase tracking-widest text-gold-foreground disabled:opacity-50"
+          >
+            {testing ? "Sende …" : "Test-E-Mail senden"}
+          </button>
+        </div>
+      </section>
     </div>
+
   );
 }
 
