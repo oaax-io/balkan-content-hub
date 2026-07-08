@@ -157,6 +157,7 @@ function AdminShell() {
                 {tab === "analytics" && <AnalyticsTab />}
                 {tab === "seo" && <SeoTab />}
                 {tab === "email" && <EmailTab />}
+                {tab === "email_templates" && <EmailTemplatesTab />}
                 {tab === "settings" && <SettingsTab />}
               </div>
             </main>
