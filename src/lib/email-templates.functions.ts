@@ -73,24 +73,25 @@ export const upsertEmailTemplate = createServerFn({ method: "POST" })
     }
 
     // Insert (or if a row with same key+occasion exists, update it)
-    const { data: existing } = await context.supabase
-      .from("email_templates")
-      .select("id")
-      .eq("template_key", data.template_key)
-      .is("occasion", occasion === null ? null : (undefined as any))
-      .maybeSingle();
-
-    // The .is trick above only handles NULL; do explicit lookup:
-    let existingId: string | null = existing?.id ?? null;
-    if (!existingId && occasion !== null) {
-      const { data: e2 } = await context.supabase
+    let existingId: string | null = null;
+    if (occasion === null) {
+      const { data: e } = await context.supabase
+        .from("email_templates")
+        .select("id")
+        .eq("template_key", data.template_key)
+        .is("occasion", null)
+        .maybeSingle();
+      existingId = e?.id ?? null;
+    } else {
+      const { data: e } = await context.supabase
         .from("email_templates")
         .select("id")
         .eq("template_key", data.template_key)
         .eq("occasion", occasion)
         .maybeSingle();
-      existingId = e2?.id ?? null;
+      existingId = e?.id ?? null;
     }
+
 
     if (existingId) {
       const { error } = await context.supabase
