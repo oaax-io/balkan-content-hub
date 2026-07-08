@@ -110,6 +110,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          body_html: string
+          created_at: string
+          enabled: boolean
+          id: string
+          occasion: string | null
+          subject: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          occasion?: string | null
+          subject?: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          occasion?: string | null
+          subject?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       occasion_capacities: {
         Row: {
           max_reservations: number
