@@ -154,22 +154,34 @@ export async function sendReservationStatusUpdate(r: Reservation) {
   const contact = await getContact();
   const restaurant = contact?.restaurant_name ?? "Balkaneros";
   const confirmed = r.status === "confirmed";
-  const subject = confirmed
-    ? `Ihre Reservierung bei ${restaurant} ist bestätigt`
-    : `Ihre Reservierungsanfrage bei ${restaurant}`;
+  const cancelled = r.status === "cancelled";
+  const subject = cancelled
+    ? `Ihre Reservierung bei ${restaurant} wurde storniert`
+    : confirmed
+      ? `Ihre Reservierung bei ${restaurant} ist bestätigt`
+      : `Ihre Reservierungsanfrage bei ${restaurant}`;
   const dateStr = fmtDate(r.reservation_date) || "Kein Datum";
   const timeStr = hasTime(r.reservation_time) ? ` um <strong>${r.reservation_time}</strong>` : "";
   const timeStrPlain = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
-  const body = confirmed
-    ? `Wir freuen uns auf Sie am <strong>${dateStr}</strong>${timeStr} (${r.party_size} Personen).`
-    : `leider können wir Ihre Anfrage für ${dateStr}${timeStrPlain} nicht annehmen. Wir würden uns trotzdem freuen, Sie an einem anderen Tag bei uns begrüssen zu dürfen.`;
+  const dateLine = fmtDate(r.reservation_date)
+    ? `am <strong>${dateStr}</strong>${timeStr}`
+    : r.occasion
+      ? `für <strong>${r.occasion}</strong>`
+      : `Ihre Reservierung`;
+  const body = cancelled
+    ? `Ihre Reservierung ${dateLine} (${r.party_size} Personen) wurde storniert. Schade, dass es diesmal nicht geklappt hat – wir würden uns freuen, Sie bald wieder bei uns begrüssen zu dürfen.`
+    : confirmed
+      ? `Wir freuen uns auf Sie am <strong>${dateStr}</strong>${timeStr} (${r.party_size} Personen).`
+      : `leider können wir Ihre Anfrage für ${dateStr}${timeStrPlain} nicht annehmen. Wir würden uns trotzdem freuen, Sie an einem anderen Tag bei uns begrüssen zu dürfen.`;
 
+  const heading = cancelled ? "Reservierung storniert" : confirmed ? "Reservierung bestätigt" : "Reservierungsanfrage";
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;background:#0f0f0f;color:#f5f5f5;">
-      <h2 style="color:#d4af37;font-family:Georgia,serif;">${confirmed ? "Reservierung bestätigt" : "Reservierungsanfrage"}</h2>
+      <h2 style="color:#d4af37;font-family:Georgia,serif;">${heading}</h2>
       <p>Liebe/r ${r.guest_name},</p>
       <p>${body}</p>
       <p style="margin-top:24px;color:#d4af37;font-family:Georgia,serif;">— ${restaurant}</p>
     </div>`;
   await sendEmail({ to: r.guest_email, subject, html });
 }
+
