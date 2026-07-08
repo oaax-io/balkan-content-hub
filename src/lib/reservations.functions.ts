@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireAdmin } from "./admin.server";
-import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification } from "./email.server";
+import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification, sendAdminCancellationNotification } from "./email.server";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "./stripe.server";
 import { randomBytes } from "node:crypto";
 
