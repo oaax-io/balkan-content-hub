@@ -130,9 +130,9 @@ export async function sendReservationConfirmation(r: Reservation) {
   await sendEmail({ to: r.guest_email, subject: `Reservierungsanfrage bei ${restaurant} erhalten`, html });
 }
 
-export async function sendAdminNotification(r: Reservation) {
+export async function sendAdminNotification(r: Reservation, overrideTo?: string) {
   const contact = await getContact();
-  const to = contact?.notification_email || contact?.email;
+  const to = overrideTo || contact?.notification_email || contact?.email;
   if (!to) return;
   const dateStr = fmtDate(r.reservation_date) || "Kein Datum";
   const timeStr = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
