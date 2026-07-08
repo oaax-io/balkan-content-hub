@@ -21,14 +21,14 @@ import {
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarMenuBadge,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search, BarChart3, Mail } from "lucide-react";
+import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search, BarChart3, Mail, MailOpen } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Balkaneros" }] }),
   component: Admin,
 });
 
-type Tab = "dashboard" | "reservations" | "content" | "contact" | "analytics" | "seo" | "email" | "settings";
+type Tab = "dashboard" | "reservations" | "content" | "contact" | "analytics" | "seo" | "email" | "email_templates" | "settings";
 
 const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -38,6 +38,7 @@ const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "analytics", label: "Website Analytics", icon: BarChart3 },
   { key: "seo", label: "SEO Optimierung", icon: Search },
   { key: "email", label: "E-Mail-Versand", icon: Mail },
+  { key: "email_templates", label: "E-Mail-Templates", icon: MailOpen },
   { key: "settings", label: "Einstellungen", icon: Settings },
 ];
 
@@ -49,6 +50,7 @@ const TITLES: Record<Tab, string> = {
   analytics: "Website Analytics",
   seo: "SEO Optimierung",
   email: "E-Mail-Versand (SMTP)",
+  email_templates: "E-Mail-Templates",
   settings: "Einstellungen",
 };
 
