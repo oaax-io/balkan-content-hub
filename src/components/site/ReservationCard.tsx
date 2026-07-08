@@ -93,7 +93,9 @@ export function ReservationCard({
     setSubmitting(true);
     try {
       const fd = new FormData(e.currentTarget);
-      const parsedDates = parseEventDates(eventDates);
+      const occasionValue = String(fd.get("occasion") ?? "");
+      const parsedDates = parseEventDates(eventDates, occasionValue);
+
       const partyRaw = String(fd.get("party_size") ?? "1");
       const partyNum = parseInt(partyRaw, 10);
       const eventDateMachine = String(fd.get("event_date") ?? "");
