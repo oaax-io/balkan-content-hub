@@ -13,6 +13,7 @@ import { SettingsTab } from "@/components/admin/SettingsTab";
 import { SeoTab } from "@/components/admin/SeoTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { EmailTab } from "@/components/admin/EmailTab";
+import { EmailTemplatesTab } from "@/components/admin/EmailTemplatesTab";
 import { toast } from "sonner";
 
 import {
