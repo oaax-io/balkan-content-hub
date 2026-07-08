@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  sendReservationConfirmation,
+  sendReservationStatusUpdate,
+  sendAdminNotification,
+} from "./email.server";
+
 
 const SettingsSchema = z.object({
   provider: z.enum(["lovable", "smtp"]),
