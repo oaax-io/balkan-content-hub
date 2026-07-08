@@ -132,9 +132,10 @@ export const createReservation = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // Fire-and-forget emails (best effort)
-    void sendReservationConfirmation(row).catch((e) => console.error("confirmation email failed", e));
-    void sendAdminNotification(row).catch((e) => console.error("admin notification failed", e));
+    // Emails sequentiell abwarten — auf Cloudflare Workers wird
+    // "fire-and-forget" (void promise) nach dem Response-Return abgebrochen.
+    try { await sendReservationConfirmation(row); } catch (e) { console.error("confirmation email failed", e); }
+    try { await sendAdminNotification(row); } catch (e) { console.error("admin notification failed", e); }
 
     return { id: row.id };
   });
@@ -221,7 +222,7 @@ export const updateReservationStatus = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     if (data.status === "confirmed" || data.status === "declined") {
-      void sendReservationStatusUpdate(row).catch((e) => console.error("status email failed", e));
+      try { await sendReservationStatusUpdate(row); } catch (e) { console.error("status email failed", e); }
     }
     return { ok: true };
   });
@@ -304,9 +305,9 @@ export const cancelReservation = createServerFn({ method: "POST" })
         })
         .eq("id", data.id);
       if (updErr) return { ok: false, error: updErr.message };
-      void sendReservationStatusUpdate({ ...r, status: "cancelled" }).catch((e) =>
-        console.error("cancel email failed", e),
-      );
+      try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
+        console.error("cancel email failed", e);
+      }
       return { ok: true, fee_charged: false, days_until: daysUntil };
     }
 
@@ -372,9 +373,9 @@ export const cancelReservation = createServerFn({ method: "POST" })
         .eq("id", data.id);
       if (updErr) return { ok: false, error: updErr.message };
 
-      void sendReservationStatusUpdate({ ...r, status: "cancelled" }).catch((e) =>
-        console.error("cancel email failed", e),
-      );
+      try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
+        console.error("cancel email failed", e);
+      }
 
       return {
         ok: true,
@@ -593,9 +594,9 @@ export const cancelReservationByToken = createServerFn({ method: "POST" })
         })
         .eq("id", r.id);
       if (updErr) return { ok: false, error: updErr.message };
-      void sendReservationStatusUpdate({ ...r, status: "cancelled" }).catch((e) =>
-        console.error("cancel email failed", e),
-      );
+      try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
+        console.error("cancel email failed", e);
+      }
       return { ok: true, fee_charged: false, days_until };
     }
 
@@ -654,9 +655,9 @@ export const cancelReservationByToken = createServerFn({ method: "POST" })
         .eq("id", r.id);
       if (updErr) return { ok: false, error: updErr.message };
 
-      void sendReservationStatusUpdate({ ...r, status: "cancelled" }).catch((e) =>
-        console.error("cancel email failed", e),
-      );
+      try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
+        console.error("cancel email failed", e);
+      }
 
       return { ok: true, fee_charged: true, days_until, payment_intent_id: paymentIntent.id };
     } catch (error) {
