@@ -225,7 +225,8 @@ export function ReservationCard({
       : ["Dinner & Dance (99.- pro Person)"];
 
   const dateRequired = dateOccasions.includes(occasion);
-  const showEventDates = !!occasion && eventDates.length > 0;
+  const availableDates = parseEventDates(eventDates, occasion);
+  const showEventDates = !!occasion && availableDates.length > 0;
 
 
   return (
@@ -292,12 +293,13 @@ export function ReservationCard({
           required={dateRequired}
         >
           <option value="">{dateRequired ? "Bitte wählen" : "Kein Datum"}</option>
-          {parseEventDates(eventDates).map((d) => (
+          {availableDates.map((d) => (
             <option key={d.machineDate} value={d.machineDate}>
               {d.displayLabel}
             </option>
           ))}
         </Select>
+
       )}
 
 
