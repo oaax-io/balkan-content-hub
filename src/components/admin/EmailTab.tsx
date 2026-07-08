@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getEmailSettings, updateEmailSettings } from "@/lib/email-settings.functions";
+import { getEmailSettings, updateEmailSettings, sendTestEmail } from "@/lib/email-settings.functions";
 import { toast } from "sonner";
-import { Mail, Server, Info } from "lucide-react";
+import { Mail, Server, Info, Send } from "lucide-react";
+
 
 type Form = {
   smtp_host: string;
