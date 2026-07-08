@@ -150,6 +150,27 @@ export async function sendAdminNotification(r: Reservation, overrideTo?: string)
   await sendEmail({ to, subject: `Neue Reservierung: ${r.guest_name}${subjectDate ? ` (${subjectDate})` : r.occasion ? ` (${r.occasion})` : ""}`, html });
 }
 
+export async function sendAdminCancellationNotification(r: Reservation, feeCharged?: boolean) {
+  const contact = await getContact();
+  const to = contact?.notification_email || contact?.email;
+  if (!to) return;
+  const dateStr = fmtDate(r.reservation_date) || "Kein Datum";
+  const timeStr = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:16px;">
+      <h2 style="color:#111;">Reservierung storniert</h2>
+      <p><strong>${r.guest_name}</strong> &lt;${r.guest_email}&gt;</p>
+      <p>Telefon: ${r.guest_phone || "—"}</p>
+      <p>${dateStr}${timeStr} · ${r.party_size} Personen${r.occasion ? ` · ${r.occasion}` : ""}</p>
+      ${feeCharged ? `<p style="background:#fff4e5;padding:10px;border-radius:6px;color:#8a4b00;">Storno-Gebühr von CHF 50 wurde belastet.</p>` : ""}
+      ${r.notes ? `<p style="background:#f6f6f6;padding:10px;border-radius:6px;">${r.notes}</p>` : ""}
+      <p><a href="/admin">Im Admin öffnen →</a></p>
+    </div>`;
+  const subjectDate = fmtDate(r.reservation_date);
+  await sendEmail({ to, subject: `Stornierung: ${r.guest_name}${subjectDate ? ` (${subjectDate})` : r.occasion ? ` (${r.occasion})` : ""}`, html });
+}
+
+
 export async function sendReservationStatusUpdate(r: Reservation) {
   const contact = await getContact();
   const restaurant = contact?.restaurant_name ?? "Balkaneros";

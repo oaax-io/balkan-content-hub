@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireAdmin } from "./admin.server";
-import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification } from "./email.server";
+import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification, sendAdminCancellationNotification } from "./email.server";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "./stripe.server";
 import { randomBytes } from "node:crypto";
 
@@ -309,6 +309,9 @@ export const cancelReservation = createServerFn({ method: "POST" })
       try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
         console.error("cancel email failed", e);
       }
+      try { await sendAdminCancellationNotification({ ...r, status: "cancelled" }, false); } catch (e) {
+        console.error("admin cancel email failed", e);
+      }
       return { ok: true, fee_charged: false, days_until: daysUntil };
     }
 
@@ -376,6 +379,9 @@ export const cancelReservation = createServerFn({ method: "POST" })
 
       try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
         console.error("cancel email failed", e);
+      }
+      try { await sendAdminCancellationNotification({ ...r, status: "cancelled" }, true); } catch (e) {
+        console.error("admin cancel email failed", e);
       }
 
       return {
@@ -598,6 +604,9 @@ export const cancelReservationByToken = createServerFn({ method: "POST" })
       try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
         console.error("cancel email failed", e);
       }
+      try { await sendAdminCancellationNotification({ ...r, status: "cancelled" }, false); } catch (e) {
+        console.error("admin cancel email failed", e);
+      }
       return { ok: true, fee_charged: false, days_until };
     }
 
@@ -658,6 +667,9 @@ export const cancelReservationByToken = createServerFn({ method: "POST" })
 
       try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
         console.error("cancel email failed", e);
+      }
+      try { await sendAdminCancellationNotification({ ...r, status: "cancelled" }, true); } catch (e) {
+        console.error("admin cancel email failed", e);
       }
 
       return { ok: true, fee_charged: true, days_until, payment_intent_id: paymentIntent.id };
