@@ -66,13 +66,13 @@ export function ReservationFormEditor() {
   return (
     <div className="space-y-5">
       <OccasionsEditor rowMap={rowMap} onSaved={refresh} />
-      <TextField rowMap={rowMap} keyName="reservation_event_dates" onSaved={refresh}
-        help="Event-Daten (eine pro Zeile). Bevorzugtes Format: YYYY-MM-DD | Anzeige-Label, z.B. 2026-06-20 | Samstag, 20. Juni 2026. Auch deutsche Datumsangaben (z.B. Samstag, 20. Juni 2026) werden erkannt." isList />
+      <PerOccasionDatesEditor rowMap={rowMap} onSaved={refresh} />
       <TextField rowMap={rowMap} keyName="reservation_disclaimer" onSaved={refresh}
         help="Hinweistext unter dem Formular (z.B. Stornierungs-Bedingungen)." />
     </div>
   );
 }
+
 
 function TextField({
   rowMap, keyName, onSaved, help, isList,
