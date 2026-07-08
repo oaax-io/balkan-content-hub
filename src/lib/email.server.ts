@@ -146,7 +146,8 @@ export async function sendAdminNotification(r: Reservation) {
       ${r.notes ? `<p style="background:#f6f6f6;padding:10px;border-radius:6px;">${r.notes}</p>` : ""}
       <p><a href="/admin">Im Admin öffnen →</a></p>
     </div>`;
-  await sendEmail({ to, subject: `Neue Reservierung: ${r.guest_name} (${fmtDate(r.reservation_date)})`, html });
+  const subjectDate = fmtDate(r.reservation_date);
+  await sendEmail({ to, subject: `Neue Reservierung: ${r.guest_name}${subjectDate ? ` (${subjectDate})` : r.occasion ? ` (${r.occasion})` : ""}`, html });
 }
 
 export async function sendReservationStatusUpdate(r: Reservation) {
@@ -156,9 +157,13 @@ export async function sendReservationStatusUpdate(r: Reservation) {
   const subject = confirmed
     ? `Ihre Reservierung bei ${restaurant} ist bestätigt`
     : `Ihre Reservierungsanfrage bei ${restaurant}`;
+  const dateStr = fmtDate(r.reservation_date) || "nach Absprache";
+  const timeStr = hasTime(r.reservation_time) ? ` um <strong>${r.reservation_time}</strong>` : "";
+  const timeStrPlain = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
   const body = confirmed
-    ? `Wir freuen uns auf Sie am <strong>${fmtDate(r.reservation_date)}</strong> um <strong>${r.reservation_time}</strong> (${r.party_size} Personen).`
-    : `leider können wir Ihre Anfrage für ${fmtDate(r.reservation_date)} um ${r.reservation_time} nicht annehmen. Wir würden uns trotzdem freuen, Sie an einem anderen Tag bei uns begrüssen zu dürfen.`;
+    ? `Wir freuen uns auf Sie am <strong>${dateStr}</strong>${timeStr} (${r.party_size} Personen).`
+    : `leider können wir Ihre Anfrage für ${dateStr}${timeStrPlain} nicht annehmen. Wir würden uns trotzdem freuen, Sie an einem anderen Tag bei uns begrüssen zu dürfen.`;
+
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;background:#0f0f0f;color:#f5f5f5;">
       <h2 style="color:#d4af37;font-family:Georgia,serif;">${confirmed ? "Reservierung bestätigt" : "Reservierungsanfrage"}</h2>
