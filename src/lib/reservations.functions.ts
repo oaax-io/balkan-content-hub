@@ -305,9 +305,9 @@ export const cancelReservation = createServerFn({ method: "POST" })
         })
         .eq("id", data.id);
       if (updErr) return { ok: false, error: updErr.message };
-      void sendReservationStatusUpdate({ ...r, status: "cancelled" }).catch((e) =>
-        console.error("cancel email failed", e),
-      );
+      try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
+        console.error("cancel email failed", e);
+      }
       return { ok: true, fee_charged: false, days_until: daysUntil };
     }
 
