@@ -104,10 +104,11 @@ export async function sendReservationConfirmation(r: Reservation) {
       <p>Liebe/r ${r.guest_name},</p>
       <p>danke für Ihre Reservierungsanfrage bei <strong>${restaurant}</strong>. Wir melden uns in Kürze mit einer Bestätigung.</p>
       <table style="margin:16px 0;border-collapse:collapse;">
-        <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>${fmtDate(r.reservation_date)}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Uhrzeit</td><td>${r.reservation_time}</td></tr>
+        ${fmtDate(r.reservation_date) ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>${fmtDate(r.reservation_date)}</td></tr>` : `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Datum</td><td>nach Absprache</td></tr>`}
+        ${hasTime(r.reservation_time) ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Uhrzeit</td><td>${r.reservation_time}</td></tr>` : ""}
         <tr><td style="padding:4px 12px 4px 0;color:#aaa;">Personen</td><td>${r.party_size}</td></tr>
         ${r.occasion ? `<tr><td style="padding:4px 12px 4px 0;color:#aaa;">Anlass</td><td>${r.occasion}</td></tr>` : ""}
+
       </table>
       <p style="color:#aaa;font-size:13px;">Bei Fragen einfach auf diese E-Mail antworten.</p>
       ${cancelUrl ? `
