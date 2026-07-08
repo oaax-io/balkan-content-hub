@@ -42,14 +42,27 @@ interface FormValues {
   notes: string;
 }
 
-function parseEventDates(eventDates: string[]) {
-  return eventDates.map((raw) => {
-    const [machine, ...rest] = raw.split("|");
-    const machineDate = (machine || "").trim();
-    const displayLabel = rest.length > 0 ? rest.join("|").trim() : machineDate;
-    return { machineDate, displayLabel };
-  });
+function parseEventDates(eventDates: string[], occasion?: string) {
+  const occNorm = (occasion || "").trim().toLowerCase();
+  return eventDates
+    .map((raw) => {
+      const idx = raw.indexOf("::");
+      const forOcc = idx >= 0 ? raw.slice(0, idx).trim().toLowerCase() : "";
+      const rest = idx >= 0 ? raw.slice(idx + 2).trim() : raw.trim();
+      return { forOcc, rest };
+    })
+    // Wenn kein Anlass angegeben ist, alle zurückgeben; sonst nur die passenden
+    // (unprefixed Zeilen gelten als „für alle" und sind immer dabei)
+    .filter((d) => !occNorm || !d.forOcc || d.forOcc === occNorm)
+    .map((d) => {
+      const [machine, ...rest] = d.rest.split("|");
+      const machineDate = (machine || "").trim();
+      const displayLabel = rest.length > 0 ? rest.join("|").trim() : machineDate;
+      return { machineDate, displayLabel };
+    })
+    .filter((d) => d.machineDate.length > 0);
 }
+
 
 export function ReservationCard({
   eventDates,
