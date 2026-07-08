@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  sendReservationConfirmation,
+  sendReservationStatusUpdate,
+  sendAdminNotification,
+} from "./email.server";
+
 
 const SettingsSchema = z.object({
   provider: z.enum(["lovable", "smtp"]),
@@ -41,5 +47,53 @@ export const updateEmailSettings = createServerFn({ method: "POST" })
     };
     const { error } = await context.supabase.from("email_settings").update(payload).eq("id", 1);
     if (error) throw error;
+    return { ok: true };
+  });
+
+const TestSchema = z.object({
+  to: z.string().email(),
+  template: z.enum([
+    "request_received",
+    "confirmed",
+    "declined",
+    "cancelled",
+    "admin_notification",
+  ]),
+});
+
+export const sendTestEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => TestSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+
+    const sample = {
+      id: "test-" + Date.now(),
+      guest_name: "Max Muster",
+      guest_email: data.to,
+      guest_phone: "+41 79 000 00 00",
+      party_size: 4,
+      reservation_date: "2026-08-15",
+      reservation_time: "19:30",
+      notes: "Bitte einen Tisch am Fenster – dies ist eine Test-E-Mail.",
+      status: "pending",
+      cancellation_token: "test-token-1234567890abcdef",
+      is_paid_occasion: true,
+      occasion: "Silvester-Gala",
+    };
+
+    if (data.template === "request_received") {
+      await sendReservationConfirmation(sample);
+    } else if (data.template === "confirmed") {
+      await sendReservationStatusUpdate({ ...sample, status: "confirmed" });
+    } else if (data.template === "declined") {
+      await sendReservationStatusUpdate({ ...sample, status: "declined" });
+    } else if (data.template === "cancelled") {
+      await sendReservationStatusUpdate({ ...sample, status: "cancelled" });
+    } else if (data.template === "admin_notification") {
+      await sendAdminNotification(sample, data.to);
+    }
+
+
     return { ok: true };
   });
