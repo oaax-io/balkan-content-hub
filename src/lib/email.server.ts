@@ -134,12 +134,15 @@ export async function sendAdminNotification(r: Reservation) {
   const contact = await getContact();
   const to = contact?.notification_email || contact?.email;
   if (!to) return;
+  const dateStr = fmtDate(r.reservation_date) || "nach Absprache";
+  const timeStr = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:16px;">
       <h2 style="color:#111;">Neue Reservierungsanfrage</h2>
       <p><strong>${r.guest_name}</strong> &lt;${r.guest_email}&gt;</p>
       <p>Telefon: ${r.guest_phone || "—"}</p>
-      <p>${fmtDate(r.reservation_date)} um ${r.reservation_time} · ${r.party_size} Personen</p>
+      <p>${dateStr}${timeStr} · ${r.party_size} Personen${r.occasion ? ` · ${r.occasion}` : ""}</p>
+
       ${r.notes ? `<p style="background:#f6f6f6;padding:10px;border-radius:6px;">${r.notes}</p>` : ""}
       <p><a href="/admin">Im Admin öffnen →</a></p>
     </div>`;
