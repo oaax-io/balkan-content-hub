@@ -22,7 +22,7 @@ function getSiteBaseUrl(): string {
   return (
     process.env.SITE_URL ||
     process.env.PUBLIC_SITE_URL ||
-    "https://balkaneros.oaase.com"
+    "https://balkaneros.ch"
   ).replace(/\/$/, "");
 }
 

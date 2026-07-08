@@ -204,7 +204,7 @@ export const analyzeSeoPage = createServerFn({ method: "POST" })
   .inputValidator((i) => analyzeSchema.parse(i))
   .handler(async ({ data, context }) => {
     await requireAdmin(context.userId);
-    const base = "https://balkaneros.oaase.com";
+    const base = "https://balkaneros.ch";
     const url = base + (data.path === "/" ? "" : data.path);
     const started = Date.now();
     let html = "";
