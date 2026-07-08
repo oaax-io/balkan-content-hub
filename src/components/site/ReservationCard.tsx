@@ -209,7 +209,9 @@ export function ReservationCard({
       ? occasionsWithDates
       : ["Dinner & Dance (99.- pro Person)"];
 
-  const showEventDates = dateOccasions.includes(occasion) && eventDates.length > 0;
+  const dateRequired = dateOccasions.includes(occasion);
+  const showEventDates = !!occasion && eventDates.length > 0;
+
 
   return (
     <form onSubmit={onSubmit} className={`${wrapperClass} space-y-3`}>
