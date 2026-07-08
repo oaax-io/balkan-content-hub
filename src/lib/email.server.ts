@@ -37,12 +37,21 @@ async function getSmtpSettings() {
 }
 
 function fmtDate(d: string) {
+  // Sentinel für "Datum offen" (nur Anfrage / kein Event-Datum ausgewählt)
+  if (!d || d === "1970-01-01") return "";
+  const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return d;
   try {
-    return new Date(d + "T00:00:00").toLocaleDateString("de-CH", {
-      weekday: "long", day: "2-digit", month: "long", year: "numeric",
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toLocaleDateString("de-CH", {
+      weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "UTC",
     });
   } catch { return d; }
 }
+
+function hasTime(t: string) {
+  return !!t && t !== "00:00";
+}
+
 
 async function sendEmail(payload: { to: string; subject: string; html: string }) {
   const s = await getSmtpSettings();
