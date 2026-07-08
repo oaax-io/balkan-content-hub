@@ -91,17 +91,9 @@ export const sendTestEmail = createServerFn({ method: "POST" })
     } else if (data.template === "cancelled") {
       await sendReservationStatusUpdate({ ...sample, status: "cancelled" });
     } else if (data.template === "admin_notification") {
-      // Notification geht normalerweise an Admin-Adresse — hier temporär überschreiben,
-      // indem wir contact_info kurzzeitig nicht anfassen: sendAdminNotification liest
-      // contact.notification_email/email. Für den Test senden wir daher direkt.
-      const { sendReservationStatusUpdate: _unused } = await import("./email.server");
-      // Simpler: wir bauen ein Fake-Contact-Overlay nicht — stattdessen nutzen wir
-      // sendAdminNotification, aber temporär mit guest_email als Empfänger-Fallback:
-      // Da sendAdminNotification hart contact.email liest, senden wir stattdessen
-      // eine passende Test-Mail über sendReservationConfirmation-Pfad? Nein —
-      // wir wollen wirklich die Admin-Vorlage sehen. Also nutzen wir sie regulär.
-      await sendAdminNotification(sample);
+      await sendAdminNotification(sample, data.to);
     }
+
 
     return { ok: true };
   });
