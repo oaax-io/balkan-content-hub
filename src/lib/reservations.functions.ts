@@ -115,7 +115,7 @@ export const createReservation = createServerFn({ method: "POST" })
       event_date_label: data.event_date_label,
       notes: data.notes,
       is_paid_occasion: isPaid,
-      status: "confirmed",
+      status: "confirmed" as const,
       stripe_customer_id: isPaid ? data.stripe_customer_id ?? null : null,
       stripe_payment_method_id: isPaid ? data.stripe_payment_method_id ?? null : null,
       stripe_setup_intent_id: isPaid ? data.stripe_setup_intent_id ?? null : null,
