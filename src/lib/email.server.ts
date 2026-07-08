@@ -1,6 +1,6 @@
-// Email helpers. Uses Lovable Emails infrastructure once a domain is set up.
-// If no FROM address is configured, sends are silently skipped so the rest of
-// the flow keeps working in dev.
+// Email helpers. Sends via SMTP using credentials stored in `email_settings`.
+// If SMTP settings are missing or `enabled` is false, sends are skipped.
+import nodemailer from "nodemailer";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 type Reservation = {
@@ -31,6 +31,11 @@ async function getContact() {
   return data;
 }
 
+async function getSmtpSettings() {
+  const { data } = await supabaseAdmin.from("email_settings").select("*").eq("id", 1).maybeSingle();
+  return data;
+}
+
 function fmtDate(d: string) {
   try {
     return new Date(d + "T00:00:00").toLocaleDateString("de-CH", {
@@ -40,20 +45,36 @@ function fmtDate(d: string) {
 }
 
 async function sendEmail(payload: { to: string; subject: string; html: string }) {
-  // Use Lovable Emails transactional endpoint via direct fetch if available.
-  // This runs server-side. The endpoint /lovable/email/transactional/send is
-  // scaffolded once a domain is set up; until then we no-op.
-  const baseUrl = process.env.LOVABLE_EMAIL_FROM
-    ? `https://${process.env.SUPABASE_URL?.replace(/^https?:\/\//, "").replace(/\.supabase\.co.*/, "")}.lovable.app`
-    : null;
-  if (!baseUrl) {
-    console.log("[email skipped — no FROM configured]", payload.subject, "→", payload.to);
+  const s = await getSmtpSettings();
+  if (!s || !s.enabled) {
+    console.log("[email skipped — versand deaktiviert]", payload.subject, "→", payload.to);
     return;
   }
-  // Minimal Mailgun-style fallback would go here. We rely on the user wiring
-  // up Lovable Emails templates via the email-setup dialog; the templates we
-  // ship in src/lib/email-templates/* are what get rendered.
-  console.log("[email]", payload.subject, "→", payload.to);
+  if (!s.smtp_host || !s.smtp_port || !s.from_email) {
+    console.log("[email skipped — SMTP unvollständig konfiguriert]", payload.subject, "→", payload.to);
+    return;
+  }
+  try {
+    const transporter = nodemailer.createTransport({
+      host: s.smtp_host,
+      port: s.smtp_port,
+      secure: !!s.smtp_secure && s.smtp_port === 465,
+      requireTLS: !!s.smtp_secure && s.smtp_port !== 465,
+      auth: s.smtp_username
+        ? { user: s.smtp_username, pass: s.smtp_password ?? "" }
+        : undefined,
+    });
+    await transporter.sendMail({
+      from: s.from_name ? `"${s.from_name}" <${s.from_email}>` : s.from_email,
+      to: payload.to,
+      replyTo: s.reply_to || undefined,
+      subject: payload.subject,
+      html: payload.html,
+    });
+    console.log("[email sent]", payload.subject, "→", payload.to);
+  } catch (err) {
+    console.error("[email error]", err);
+  }
 }
 
 export async function sendReservationConfirmation(r: Reservation) {
