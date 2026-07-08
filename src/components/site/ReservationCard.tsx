@@ -42,14 +42,27 @@ interface FormValues {
   notes: string;
 }
 
-function parseEventDates(eventDates: string[]) {
-  return eventDates.map((raw) => {
-    const [machine, ...rest] = raw.split("|");
-    const machineDate = (machine || "").trim();
-    const displayLabel = rest.length > 0 ? rest.join("|").trim() : machineDate;
-    return { machineDate, displayLabel };
-  });
+function parseEventDates(eventDates: string[], occasion?: string) {
+  const occNorm = (occasion || "").trim().toLowerCase();
+  return eventDates
+    .map((raw) => {
+      const idx = raw.indexOf("::");
+      const forOcc = idx >= 0 ? raw.slice(0, idx).trim().toLowerCase() : "";
+      const rest = idx >= 0 ? raw.slice(idx + 2).trim() : raw.trim();
+      return { forOcc, rest };
+    })
+    // Wenn kein Anlass angegeben ist, alle zurückgeben; sonst nur die passenden
+    // (unprefixed Zeilen gelten als „für alle" und sind immer dabei)
+    .filter((d) => !occNorm || !d.forOcc || d.forOcc === occNorm)
+    .map((d) => {
+      const [machine, ...rest] = d.rest.split("|");
+      const machineDate = (machine || "").trim();
+      const displayLabel = rest.length > 0 ? rest.join("|").trim() : machineDate;
+      return { machineDate, displayLabel };
+    })
+    .filter((d) => d.machineDate.length > 0);
 }
+
 
 export function ReservationCard({
   eventDates,
@@ -80,7 +93,9 @@ export function ReservationCard({
     setSubmitting(true);
     try {
       const fd = new FormData(e.currentTarget);
-      const parsedDates = parseEventDates(eventDates);
+      const occasionValue = String(fd.get("occasion") ?? "");
+      const parsedDates = parseEventDates(eventDates, occasionValue);
+
       const partyRaw = String(fd.get("party_size") ?? "1");
       const partyNum = parseInt(partyRaw, 10);
       const eventDateMachine = String(fd.get("event_date") ?? "");
@@ -210,7 +225,8 @@ export function ReservationCard({
       : ["Dinner & Dance (99.- pro Person)"];
 
   const dateRequired = dateOccasions.includes(occasion);
-  const showEventDates = !!occasion && eventDates.length > 0;
+  const availableDates = parseEventDates(eventDates, occasion);
+  const showEventDates = !!occasion && availableDates.length > 0;
 
 
   return (
@@ -277,12 +293,13 @@ export function ReservationCard({
           required={dateRequired}
         >
           <option value="">{dateRequired ? "Bitte wählen" : "Kein Datum"}</option>
-          {parseEventDates(eventDates).map((d) => (
+          {availableDates.map((d) => (
             <option key={d.machineDate} value={d.machineDate}>
               {d.displayLabel}
             </option>
           ))}
         </Select>
+
       )}
 
 

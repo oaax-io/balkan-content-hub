@@ -66,13 +66,13 @@ export function ReservationFormEditor() {
   return (
     <div className="space-y-5">
       <OccasionsEditor rowMap={rowMap} onSaved={refresh} />
-      <TextField rowMap={rowMap} keyName="reservation_event_dates" onSaved={refresh}
-        help="Event-Daten (eine pro Zeile). Bevorzugtes Format: YYYY-MM-DD | Anzeige-Label, z.B. 2026-06-20 | Samstag, 20. Juni 2026. Auch deutsche Datumsangaben (z.B. Samstag, 20. Juni 2026) werden erkannt." isList />
+      <PerOccasionDatesEditor rowMap={rowMap} onSaved={refresh} />
       <TextField rowMap={rowMap} keyName="reservation_disclaimer" onSaved={refresh}
         help="Hinweistext unter dem Formular (z.B. Stornierungs-Bedingungen)." />
     </div>
   );
 }
+
 
 function TextField({
   rowMap, keyName, onSaved, help, isList,
@@ -229,3 +229,186 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
     </div>
   );
 }
+
+// ============================================================================
+// PerOccasionDatesEditor: Termine pro Anlass verwalten
+// ============================================================================
+type DateEntry = { date: string; label: string };
+
+function formatGermanDate(iso: string): string {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso;
+  try {
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    return d.toLocaleDateString("de-CH", {
+      weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "UTC",
+    });
+  } catch { return iso; }
+}
+
+function parseDatesByOccasion(raw: string): Map<string, DateEntry[]> {
+  const map = new Map<string, DateEntry[]>();
+  for (const line of (raw || "").split("\n").map((s) => s.trim()).filter(Boolean)) {
+    const sepIdx = line.indexOf("::");
+    const occKey = sepIdx >= 0 ? line.slice(0, sepIdx).trim() : "";
+    const rest = sepIdx >= 0 ? line.slice(sepIdx + 2).trim() : line.trim();
+    const [machine, ...labelParts] = rest.split("|");
+    const date = (machine || "").trim();
+    if (!date) continue;
+    const label = labelParts.length > 0 ? labelParts.join("|").trim() : formatGermanDate(date);
+    const arr = map.get(occKey) ?? [];
+    arr.push({ date, label });
+    map.set(occKey, arr);
+  }
+  return map;
+}
+
+function serializeDatesByOccasion(map: Map<string, DateEntry[]>): string {
+  const lines: string[] = [];
+  for (const [occ, entries] of map.entries()) {
+    for (const e of entries) {
+      if (!e.date) continue;
+      const label = e.label && e.label !== e.date ? ` | ${e.label}` : "";
+      lines.push(occ ? `${occ} :: ${e.date}${label}` : `${e.date}${label}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+function PerOccasionDatesEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSaved: () => void }) {
+  const updFn = useServerFn(updateSiteContent);
+  const occasions = useMemo(() => parseList(rowMap.get("reservation_occasions")?.value ?? ""), [rowMap]);
+  const withDates = useMemo(() => {
+    const set = new Set(parseList(rowMap.get("reservation_occasions_with_dates")?.value ?? "").map((s) => s.toLowerCase()));
+    return occasions.filter((o) => set.has(o.toLowerCase()));
+  }, [rowMap, occasions]);
+
+  const initialMap = useMemo(() => parseDatesByOccasion(rowMap.get("reservation_event_dates")?.value ?? ""), [rowMap]);
+  const [datesByOcc, setDatesByOcc] = useState<Map<string, DateEntry[]>>(initialMap);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { setDatesByOcc(initialMap); }, [initialMap]);
+
+  const currentSerialized = serializeDatesByOccasion(datesByOcc);
+  const initialSerialized = serializeDatesByOccasion(initialMap);
+  const dirty = currentSerialized !== initialSerialized;
+
+  const addDate = (occ: string) => {
+    setDatesByOcc((prev) => {
+      const next = new Map(prev);
+      next.set(occ, [...(next.get(occ) ?? []), { date: "", label: "" }]);
+      return next;
+    });
+  };
+  const updateEntry = (occ: string, idx: number, patch: Partial<DateEntry>) => {
+    setDatesByOcc((prev) => {
+      const next = new Map(prev);
+      const arr = [...(next.get(occ) ?? [])];
+      arr[idx] = { ...arr[idx], ...patch };
+      // Wenn Label leer & Datum vorhanden → Auto-Format
+      if (patch.date !== undefined && !arr[idx].label) {
+        arr[idx].label = formatGermanDate(arr[idx].date);
+      }
+      next.set(occ, arr);
+      return next;
+    });
+  };
+  const removeEntry = (occ: string, idx: number) => {
+    setDatesByOcc((prev) => {
+      const next = new Map(prev);
+      next.set(occ, (next.get(occ) ?? []).filter((_, i) => i !== idx));
+      return next;
+    });
+  };
+
+  async function save() {
+    setSaving(true);
+    try {
+      await updFn({ data: { key: "reservation_event_dates", value: currentSerialized } });
+      toast.success("Termine gespeichert");
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fehler beim Speichern");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (withDates.length === 0) {
+    return (
+      <div className="border border-border rounded-md bg-background p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <CalendarIcon className="w-4 h-4 text-primary" />
+          <span className="font-medium text-foreground">Termine pro Anlass</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Aktiviere oben bei mindestens einem Anlass „Event-Daten", um Termine zu hinterlegen.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-border rounded-md bg-background overflow-hidden">
+      <div className="px-4 py-3 border-b border-border bg-accent/20">
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="w-4 h-4 text-primary" />
+          <span className="font-medium text-foreground">Termine pro Anlass</span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          Für jeden Anlass mit aktivierten Event-Daten kannst du eigene Termine hinterlegen. Im Formular erscheinen nur die zum gewählten Anlass passenden Daten.
+        </p>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {withDates.map((occ) => {
+          const entries = datesByOcc.get(occ) ?? [];
+          return (
+            <div key={occ} className="rounded-md border border-border bg-card p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">{occ}</span>
+                <button type="button" onClick={() => addDate(occ)}
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                  <Plus className="w-3.5 h-3.5" /> Termin
+                </button>
+              </div>
+              {entries.length === 0 && (
+                <p className="text-xs text-muted-foreground italic">Noch keine Termine.</p>
+              )}
+              <div className="space-y-2">
+                {entries.map((e, i) => (
+                  <div key={i} className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="date"
+                      value={e.date}
+                      onChange={(ev) => updateEntry(occ, i, { date: ev.target.value })}
+                      className="bg-card border border-border rounded-sm px-3 py-2 text-sm focus:border-primary outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={e.label}
+                      placeholder="Anzeige-Label (z.B. Samstag, 20. Juni 2026)"
+                      onChange={(ev) => updateEntry(occ, i, { label: ev.target.value })}
+                      className="flex-1 bg-card border border-border rounded-sm px-3 py-2 text-sm focus:border-primary outline-none"
+                    />
+                    <button type="button" onClick={() => removeEntry(occ, i)}
+                      className="p-2 text-muted-foreground hover:text-destructive" title="Entfernen">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="flex justify-end pt-2">
+          <button onClick={save} disabled={saving || !dirty}
+            className="rounded-full bg-primary px-5 py-2 text-xs uppercase tracking-widest text-primary-foreground disabled:opacity-50">
+            {saving ? "Speichere …" : "Termine speichern"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
