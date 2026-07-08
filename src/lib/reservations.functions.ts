@@ -132,9 +132,10 @@ export const createReservation = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // Fire-and-forget emails (best effort)
-    void sendReservationConfirmation(row).catch((e) => console.error("confirmation email failed", e));
-    void sendAdminNotification(row).catch((e) => console.error("admin notification failed", e));
+    // Emails sequentiell abwarten — auf Cloudflare Workers wird
+    // "fire-and-forget" (void promise) nach dem Response-Return abgebrochen.
+    try { await sendReservationConfirmation(row); } catch (e) { console.error("confirmation email failed", e); }
+    try { await sendAdminNotification(row); } catch (e) { console.error("admin notification failed", e); }
 
     return { id: row.id };
   });
