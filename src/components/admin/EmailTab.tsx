@@ -33,9 +33,32 @@ const EMPTY: Form = {
 export function EmailTab() {
   const getFn = useServerFn(getEmailSettings);
   const saveFn = useServerFn(updateEmailSettings);
+  const testFn = useServerFn(sendTestEmail);
   const { data, refetch, isLoading } = useQuery({ queryKey: ["email-settings"], queryFn: () => getFn() });
   const [form, setForm] = useState<Form>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [testTemplate, setTestTemplate] = useState<
+    "request_received" | "confirmed" | "declined" | "cancelled" | "admin_notification"
+  >("confirmed");
+  const [testing, setTesting] = useState(false);
+
+  async function sendTest() {
+    if (!testEmail) {
+      toast.error("Bitte E-Mail-Adresse eingeben");
+      return;
+    }
+    setTesting(true);
+    try {
+      await testFn({ data: { to: testEmail, template: testTemplate } });
+      toast.success(`Test-E-Mail an ${testEmail} versendet`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Fehler beim Versand");
+    } finally {
+      setTesting(false);
+    }
+  }
+
 
   useEffect(() => {
     if (data) {
