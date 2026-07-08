@@ -19,6 +19,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReservationCancelTokenRouteImport } from './routes/reservation-cancel.$token'
+import { Route as ApiBootstrapAdminRouteImport } from './routes/api/bootstrap-admin'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const UeberUnsRoute = UeberUnsRouteImport.update({
@@ -70,6 +71,11 @@ const ReservationCancelTokenRoute = ReservationCancelTokenRouteImport.update({
   path: '/reservation-cancel/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBootstrapAdminRoute = ApiBootstrapAdminRouteImport.update({
+  id: '/api/bootstrap-admin',
+  path: '/api/bootstrap-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/api/bootstrap-admin': typeof ApiBootstrapAdminRoute
   '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
 }
 export interface FileRoutesByTo {
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/api/bootstrap-admin': typeof ApiBootstrapAdminRoute
   '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
 }
 export interface FileRoutesById {
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/api/bootstrap-admin': typeof ApiBootstrapAdminRoute
   '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
 }
 export interface FileRouteTypes {
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
+    | '/api/bootstrap-admin'
     | '/reservation-cancel/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
+    | '/api/bootstrap-admin'
     | '/reservation-cancel/$token'
   id:
     | '__root__'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/reservieren'
     | '/ueber-uns'
     | '/_authenticated/admin'
+    | '/api/bootstrap-admin'
     | '/reservation-cancel/$token'
   fileRoutesById: FileRoutesById
 }
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   KontaktRoute: typeof KontaktRoute
   ReservierenRoute: typeof ReservierenRoute
   UeberUnsRoute: typeof UeberUnsRoute
+  ApiBootstrapAdminRoute: typeof ApiBootstrapAdminRoute
   ReservationCancelTokenRoute: typeof ReservationCancelTokenRoute
 }
 
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReservationCancelTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/bootstrap-admin': {
+      id: '/api/bootstrap-admin'
+      path: '/api/bootstrap-admin'
+      fullPath: '/api/bootstrap-admin'
+      preLoaderRoute: typeof ApiBootstrapAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -270,18 +290,9 @@ const rootRouteChildren: RootRouteChildren = {
   KontaktRoute: KontaktRoute,
   ReservierenRoute: ReservierenRoute,
   UeberUnsRoute: UeberUnsRoute,
+  ApiBootstrapAdminRoute: ApiBootstrapAdminRoute,
   ReservationCancelTokenRoute: ReservationCancelTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
