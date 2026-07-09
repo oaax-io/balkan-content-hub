@@ -208,7 +208,15 @@ function TemplateGroup({
 
   return (
     <div className="mb-3">
-      <div className="px-2 pt-2 pb-1 text-xs font-semibold text-foreground/80">{label}</div>
+      <button
+        onClick={() => {
+          const standard = rows.find((r) => r.occasion === null);
+          if (standard) onSelect(standard.id);
+        }}
+        className="w-full text-left px-2 pt-2 pb-1 text-xs font-semibold text-foreground/80 hover:text-gold"
+      >
+        {label}
+      </button>
       <ul className="space-y-0.5">
         {rows.map((r) => (
           <li key={r.id}>
