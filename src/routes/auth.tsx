@@ -11,7 +11,6 @@ export const Route = createFileRoute("/auth")({
 
 function Auth() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,18 +29,8 @@ function Auth() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email, password,
-          options: { emailRedirectTo: `${window.location.origin}/admin` },
-        });
-        if (error) throw error;
-        toast.success("Account erstellt. Bitte einloggen.");
-        setMode("signin");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Fehler");
     } finally {
@@ -54,9 +43,9 @@ function Auth() {
       <div className="w-full max-w-md">
         <Link to="/" className="flex justify-center mb-8"><img src={logo} alt="Balkaneros" className="h-14" /></Link>
         <div className="bg-card border border-border rounded-sm p-8">
-          <h1 className="font-display text-3xl text-center mb-2">{mode === "signin" ? "Admin-Login" : "Admin registrieren"}</h1>
+          <h1 className="font-display text-3xl text-center mb-2">Admin-Login</h1>
           <p className="text-center text-muted-foreground text-sm mb-6">
-            {mode === "signin" ? "Melde dich an, um die Website zu verwalten." : "Erstmaliger Admin-Account."}
+            Melde dich an, um die Website zu verwalten.
           </p>
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
@@ -71,13 +60,9 @@ function Auth() {
             </div>
             <button type="submit" disabled={loading}
               className="w-full rounded-full bg-gold px-8 py-3 text-sm font-medium uppercase tracking-widest text-gold-foreground hover:opacity-90 disabled:opacity-50">
-              {loading ? "Bitte warten …" : mode === "signin" ? "Einloggen" : "Konto erstellen"}
+              {loading ? "Bitte warten …" : "Einloggen"}
             </button>
           </form>
-          <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            className="w-full mt-4 text-sm text-muted-foreground hover:text-gold">
-            {mode === "signin" ? "Noch kein Admin-Konto? Registrieren" : "Schon registriert? Einloggen"}
-          </button>
         </div>
         <p className="text-center text-xs text-muted-foreground mt-6">
           <Link to="/" className="hover:text-gold">← zurück zur Website</Link>
