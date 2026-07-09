@@ -111,22 +111,21 @@ export function buildTemplateVars(
   const cancelUrl = opts.cancelUrl ?? "";
 
   const stornoBlock = cancelUrl
-    ? `<hr style="border:none;border-top:1px solid #333;margin:24px 0;" />
-       <p style="font-size:12px;color:#aaa;line-height:1.5;">Müssen Sie Ihre Reservation absagen? Nutzen Sie den folgenden Link:</p>
-       <p style="margin:12px 0;">
-         <a href="${cancelUrl}" style="display:inline-block;padding:8px 16px;background:transparent;border:1px solid #d4af37;color:#d4af37;text-decoration:none;font-size:12px;letter-spacing:0.05em;border-radius:4px;">Reservation stornieren</a>
-       </p>
-       <p style="font-size:11px;color:#888;line-height:1.5;margin-top:12px;">
-         Kostenlose Stornierung ist bis 7 Tage vor dem Anlass möglich. Bei späterer Stornierung eines kostenpflichtigen Anlasses oder bei No-Show können CHF 50 belastet werden.
-       </p>`
+    ? `<div style="margin-top:28px;padding-top:24px;border-top:1px solid #262626;">
+         <div style="color:#d4af37;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;margin-bottom:12px;">Stornierung</div>
+         <p style="font-size:13px;color:#a8a29a;line-height:1.65;margin:0 0 14px;">Falls Sie nicht kommen können, stornieren Sie bitte über den folgenden Link:</p>
+         <p style="margin:0 0 14px;"><a href="${cancelUrl}" style="display:inline-block;padding:11px 24px;border:1px solid #d4af37;color:#d4af37;text-decoration:none;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;">Reservation stornieren</a></p>
+         <p style="font-size:11px;color:#7a736a;line-height:1.6;margin:0;">Kostenlose Stornierung bis 7 Tage vor dem Anlass. Bei späterer Stornierung eines kostenpflichtigen Anlasses oder bei No-Show können CHF 50 belastet werden.</p>
+       </div>`
     : "";
 
   const notesBlock = r.notes
-    ? `<p style="background:#f6f6f6;padding:10px;border-radius:6px;">${r.notes}</p>`
+    ? `<div style="margin-top:20px;padding:16px 18px;background:#1a1a1a;border-left:2px solid #d4af37;color:#c8c2b6;font-size:14px;line-height:1.6;">
+         <div style="color:#d4af37;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px;">Notiz vom Gast</div>${r.notes}</div>`
     : "";
 
   const feeBlock = opts.feeCharged
-    ? `<p style="background:#fff4e5;padding:10px;border-radius:6px;color:#8a4b00;">Storno-Gebühr von CHF 50 wurde belastet.</p>`
+    ? `<div style="margin-top:20px;padding:14px 18px;background:#2a1810;border-left:2px solid #d4af37;color:#e8b96a;font-size:13px;letter-spacing:0.02em;">Storno-Gebühr von <strong style="color:#f5d78c;">CHF 50</strong> wurde belastet.</div>`
     : "";
 
   return {
