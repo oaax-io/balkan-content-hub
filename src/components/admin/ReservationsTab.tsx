@@ -35,6 +35,7 @@ export function ReservationsTab() {
   const capListFn = useServerFn(listOccasionCapacities);
   const noShowFn = useServerFn(chargeNoShowFee);
   const cancelFn = useServerFn(cancelReservation);
+  const deleteFn = useServerFn(deleteReservation);
   const qc = useQueryClient();
 
 
