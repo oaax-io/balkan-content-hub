@@ -16,8 +16,9 @@ const COUNTRY_CODES = [
   { code: "+1", label: "+1" },
 ];
 
+// Reservierungen ab 2 Personen. Kleinere Gruppen bitte telefonisch anfragen.
 const PARTY_SIZES = [
-  ...Array.from({ length: 16 }, (_, i) => `${i + 1} Personen`),
+  ...Array.from({ length: 15 }, (_, i) => `${i + 2} Personen`), // 2 … 16
   "Mehr als 16 (Wir werden Sie kontaktieren)",
 ];
 
@@ -102,7 +103,7 @@ export function ReservationCard({
       const occasionValue = String(fd.get("occasion") ?? "");
       const parsedDates = parseEventDates(eventDates, occasionValue);
 
-      const partyRaw = String(fd.get("party_size") ?? "1");
+      const partyRaw = String(fd.get("party_size") ?? "2");
       const partyNum = parseInt(partyRaw, 10);
       const eventDateMachine = String(fd.get("event_date") ?? "");
       const selectedEvent = parsedDates.find((d) => d.machineDate === eventDateMachine);
@@ -111,7 +112,7 @@ export function ReservationCard({
         guest_email: String(fd.get("email") ?? ""),
         country_code: String(fd.get("country_code") ?? ""),
         guest_phone: String(fd.get("phone") ?? ""),
-        party_size: Number.isFinite(partyNum) ? Math.max(1, Math.min(99, partyNum)) : 17,
+        party_size: Number.isFinite(partyNum) ? Math.max(2, Math.min(99, partyNum)) : 17,
         occasion: String(fd.get("occasion") ?? ""),
         event_date: eventDateMachine,
         event_date_label: selectedEvent?.displayLabel ?? eventDateMachine,
@@ -284,9 +285,9 @@ export function ReservationCard({
         <Input label="Telefon" name="phone" type="tel" maxLength={40} autoComplete="tel" inputMode="tel" />
       </div>
 
-      <Select label="Personen *" name="party_size" required defaultValue="1">
+      <Select label="Personen *" name="party_size" required defaultValue="2">
         {PARTY_SIZES.map((p, i) => (
-          <option key={p} value={i < 16 ? String(i + 1) : "17"}>
+          <option key={p} value={i < 15 ? String(i + 2) : "17"}>
             {p}
           </option>
         ))}
