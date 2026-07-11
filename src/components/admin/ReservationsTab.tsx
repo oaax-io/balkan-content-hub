@@ -324,17 +324,21 @@ export function ReservationsTab() {
                       && r.stripe_customer_id
                       && r.stripe_payment_method_id
                       && !r.cancellation_fee_charged_at && (
-                      <button onClick={() => chargeNoShow(r.id)} disabled={busy === r.id}
+                      <button onClick={() => setNoShowTarget(r.id)} disabled={busy === r.id}
                         className="rounded-full border border-red-300 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
                         <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
                       </button>
                     )}
                     {r.status !== "cancelled" && r.status !== "declined" && (
-                      <button onClick={() => manualCancel(r.id, !!r.is_paid_occasion, daysUntil)} disabled={busy === r.id}
+                      <button onClick={() => setCancelTarget({ id: r.id, isPaid: !!r.is_paid_occasion, daysUntil })} disabled={busy === r.id}
                         className="rounded-full border border-border bg-background hover:bg-accent text-foreground px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
                         <Ban className="w-4 h-4" /> Stornieren
                       </button>
                     )}
+                    <button onClick={() => setDeleteTarget({ id: r.id, name: r.guest_name })} disabled={busy === r.id}
+                      className="rounded-full border border-destructive/40 text-destructive hover:bg-destructive/10 px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
+                      <Trash2 className="w-4 h-4" /> Löschen
+                    </button>
                   </div>
                 </div>
               </li>
