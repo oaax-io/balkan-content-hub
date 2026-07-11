@@ -76,9 +76,10 @@ const PAGES: Page[] = [
     id: "reservation", label: "Reservierung", icon: CalendarDays,
     sections: [
       { id: "occasions", title: "Anlass-Optionen (Dropdown im Formular)", keys: ["__occasions_editor__"] },
-      { id: "form", title: "Weitere Formular-Texte", keys: ["reservation_event_dates", "reservation_disclaimer"] },
+      { id: "form", title: "Weitere Formular-Texte", keys: ["reservation_disclaimer"] },
     ],
   },
+
 ];
 
 export function ContentTab() {
