@@ -682,3 +682,19 @@ export const cancelReservationByToken = createServerFn({ method: "POST" })
       return { ok: false, error: `Zahlung fehlgeschlagen: ${message}` };
     }
   });
+
+// ---- Reservation permanent löschen (Admin) ----
+const deleteSchema = z.object({ id: z.string().uuid() });
+
+export const deleteReservation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => deleteSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("reservations")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

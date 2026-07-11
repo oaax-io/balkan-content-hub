@@ -8,11 +8,13 @@ import {
   setOccasionCapacity,
   chargeNoShowFee,
   cancelReservation,
+  deleteReservation,
 } from "@/lib/reservations.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp, Trash2 } from "lucide-react";
 import { ReservationFormEditorDialog } from "./ReservationFormEditor";
+import { ConfirmDialog, PromptDialog } from "./InAppDialogs";
 
 
 const STATUS_STYLES: Record<string, string> = {
@@ -33,6 +35,7 @@ export function ReservationsTab() {
   const capListFn = useServerFn(listOccasionCapacities);
   const noShowFn = useServerFn(chargeNoShowFee);
   const cancelFn = useServerFn(cancelReservation);
+  const deleteFn = useServerFn(deleteReservation);
   const qc = useQueryClient();
 
 
@@ -57,6 +60,13 @@ export function ReservationsTab() {
   const [busy, setBusy] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
 
+  // In-App-Dialoge (ersetzen window.confirm / window.prompt)
+  const [noShowTarget, setNoShowTarget] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<
+    { id: string; isPaid: boolean; daysUntil: number } | null
+  >(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+
   async function setStatus(id: string, status: "confirmed" | "declined" | "pending" | "cancelled") {
     setBusy(id);
     try {
@@ -67,8 +77,7 @@ export function ReservationsTab() {
     finally { setBusy(null); }
   }
 
-  async function chargeNoShow(id: string) {
-    if (!confirm("CHF 50 No-Show Gebühr wirklich belasten? Diese Aktion kann nicht rückgängig gemacht werden.")) return;
+  async function doChargeNoShow(id: string) {
     setBusy(id);
     try {
       const res = await noShowFn({ data: { id, environment: "sandbox" } });
@@ -82,12 +91,7 @@ export function ReservationsTab() {
     finally { setBusy(null); }
   }
 
-  async function manualCancel(id: string, isPaid: boolean, daysUntil: number) {
-    const feeWarning = isPaid && daysUntil < 7
-      ? `\n\n⚠ Achtung: Anlass in ${daysUntil} Tag(en) — CHF 50 werden dem Gast belastet.`
-      : "";
-    const reason = window.prompt(`Reservation stornieren?${feeWarning}\n\nStorno-Grund (optional):`, "");
-    if (reason === null) return;
+  async function doCancel(id: string, reason: string) {
     setBusy(id);
     try {
       const res = await cancelFn({ data: { id, reason: reason || undefined, environment: "sandbox" } });
@@ -97,6 +101,16 @@ export function ReservationsTab() {
       } else {
         toast.error(res.error);
       }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setBusy(null); }
+  }
+
+  async function doDelete(id: string) {
+    setBusy(id);
+    try {
+      await deleteFn({ data: { id } });
+      toast.success("Reservation gelöscht");
+      qc.invalidateQueries({ queryKey: ["reservations"] });
     } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
     finally { setBusy(null); }
   }
@@ -151,6 +165,42 @@ export function ReservationsTab() {
   return (
     <div className="space-y-8">
       <ReservationFormEditorDialog open={editorOpen} onClose={() => setEditorOpen(false)} />
+
+      <ConfirmDialog
+        open={!!noShowTarget}
+        onOpenChange={(v) => !v && setNoShowTarget(null)}
+        title="CHF 50 No-Show Gebühr belasten?"
+        description="Diese Aktion kann nicht rückgängig gemacht werden."
+        confirmLabel="Belasten"
+        destructive
+        onConfirm={() => { if (noShowTarget) doChargeNoShow(noShowTarget); setNoShowTarget(null); }}
+      />
+
+      <PromptDialog
+        open={!!cancelTarget}
+        onOpenChange={(v) => !v && setCancelTarget(null)}
+        title="Reservation stornieren?"
+        description={
+          cancelTarget?.isPaid && cancelTarget.daysUntil < 7
+            ? `⚠ Achtung: Anlass in ${cancelTarget.daysUntil} Tag(en) — CHF 50 werden dem Gast belastet.`
+            : "Storno-Grund (optional):"
+        }
+        placeholder="Storno-Grund (optional)"
+        multiline
+        confirmLabel="Stornieren"
+        onSubmit={(reason) => { if (cancelTarget) doCancel(cancelTarget.id, reason); }}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => !v && setDeleteTarget(null)}
+        title="Reservation endgültig löschen?"
+        description={`Die Reservation von „${deleteTarget?.name ?? ""}" wird unwiderruflich aus der Datenbank entfernt.`}
+        confirmLabel="Löschen"
+        destructive
+        onConfirm={() => { if (deleteTarget) doDelete(deleteTarget.id); setDeleteTarget(null); }}
+      />
+
       {/* ───────────── Overview ───────────── */}
       <section className="space-y-4">
         <header className="flex items-start justify-between gap-4">
@@ -310,17 +360,21 @@ export function ReservationsTab() {
                       && r.stripe_customer_id
                       && r.stripe_payment_method_id
                       && !r.cancellation_fee_charged_at && (
-                      <button onClick={() => chargeNoShow(r.id)} disabled={busy === r.id}
+                      <button onClick={() => setNoShowTarget(r.id)} disabled={busy === r.id}
                         className="rounded-full border border-red-300 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
                         <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
                       </button>
                     )}
                     {r.status !== "cancelled" && r.status !== "declined" && (
-                      <button onClick={() => manualCancel(r.id, !!r.is_paid_occasion, daysUntil)} disabled={busy === r.id}
+                      <button onClick={() => setCancelTarget({ id: r.id, isPaid: !!r.is_paid_occasion, daysUntil })} disabled={busy === r.id}
                         className="rounded-full border border-border bg-background hover:bg-accent text-foreground px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
                         <Ban className="w-4 h-4" /> Stornieren
                       </button>
                     )}
+                    <button onClick={() => setDeleteTarget({ id: r.id, name: r.guest_name })} disabled={busy === r.id}
+                      className="rounded-full border border-destructive/40 text-destructive hover:bg-destructive/10 px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
+                      <Trash2 className="w-4 h-4" /> Löschen
+                    </button>
                   </div>
                 </div>
               </li>

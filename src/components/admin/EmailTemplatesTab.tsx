@@ -38,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog, PromptDialog } from "./InAppDialogs";
 
 type TplKey = EmailTemplateRow["template_key"];
 
@@ -283,6 +284,7 @@ function RichEditor({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
+  const [linkOpen, setLinkOpen] = useState(false);
 
   // Set initial HTML only once; avoid clobbering while user types.
   useEffect(() => {
@@ -305,11 +307,7 @@ function RichEditor({
     onChange(ref.current?.innerHTML ?? "");
   };
 
-  const insertLink = () => {
-    const url = prompt("Link-URL (z. B. https://…):");
-    if (!url) return;
-    exec("createLink", url);
-  };
+  const insertLink = () => setLinkOpen(true);
 
   const btn =
     "inline-flex items-center justify-center h-8 w-8 rounded text-muted-foreground hover:bg-muted hover:text-foreground";
@@ -387,6 +385,16 @@ function RichEditor({
         suppressContentEditableWarning
         onInput={() => onChange(ref.current?.innerHTML ?? "")}
         className="min-h-[320px] max-h-[520px] overflow-y-auto p-4 text-sm leading-relaxed focus:outline-none prose prose-sm max-w-none [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-blue-600 [&_a]:underline"
+      />
+      <PromptDialog
+        open={linkOpen}
+        onOpenChange={setLinkOpen}
+        title="Link einfügen"
+        description="Gib die vollständige URL ein (z. B. https://…)."
+        placeholder="https://…"
+        required
+        confirmLabel="Einfügen"
+        onSubmit={(url) => { if (url.trim()) exec("createLink", url.trim()); }}
       />
     </div>
   );
@@ -468,6 +476,7 @@ function TemplateEditor({
   const [body, setBody] = useState(initial.body_html);
   const [enabled, setEnabled] = useState(initial.enabled);
   const [fullscreen, setFullscreen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const isOverride = initial.occasion !== null;
   const { result: preview, loading: previewLoading } = useDebouncedPreview(
@@ -576,10 +585,7 @@ function TemplateEditor({
           </button>
           {isOverride && initial.id && (
             <button
-              onClick={() => {
-                if (confirm("Diesen Anlass-Override löschen? Standard-Vorlage wird wieder verwendet."))
-                  deleteMut.mutate();
-              }}
+              onClick={() => setConfirmDeleteOpen(true)}
               disabled={deleteMut.isPending}
               className="inline-flex items-center gap-1.5 rounded-full border border-destructive/50 text-destructive px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 ml-auto"
             >
@@ -611,6 +617,16 @@ function TemplateEditor({
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Anlass-Override löschen?"
+        description="Für diesen Anlass wird wieder die Standard-Vorlage verwendet."
+        confirmLabel="Löschen"
+        destructive
+        onConfirm={() => { setConfirmDeleteOpen(false); deleteMut.mutate(); }}
+      />
     </div>
   );
 }
