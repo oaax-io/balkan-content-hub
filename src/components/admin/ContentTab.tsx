@@ -100,6 +100,8 @@ export function ContentTab() {
     s.add("reservation_occasions");
     s.add("reservation_occasions_with_dates");
     s.add("reservation_paid_occasions");
+    s.add("reservation_event_dates");
+
     return s;
   }, []);
 
