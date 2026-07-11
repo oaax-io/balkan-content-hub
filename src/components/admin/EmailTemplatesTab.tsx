@@ -386,6 +386,16 @@ function RichEditor({
         onInput={() => onChange(ref.current?.innerHTML ?? "")}
         className="min-h-[320px] max-h-[520px] overflow-y-auto p-4 text-sm leading-relaxed focus:outline-none prose prose-sm max-w-none [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-blue-600 [&_a]:underline"
       />
+      <PromptDialog
+        open={linkOpen}
+        onOpenChange={setLinkOpen}
+        title="Link einfügen"
+        description="Gib die vollständige URL ein (z. B. https://…)."
+        placeholder="https://…"
+        required
+        confirmLabel="Einfügen"
+        onSubmit={(url) => { if (url.trim()) exec("createLink", url.trim()); }}
+      />
     </div>
   );
 }
