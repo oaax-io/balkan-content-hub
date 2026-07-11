@@ -60,6 +60,13 @@ export function ReservationsTab() {
   const [busy, setBusy] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
 
+  // In-App-Dialoge (ersetzen window.confirm / window.prompt)
+  const [noShowTarget, setNoShowTarget] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<
+    { id: string; isPaid: boolean; daysUntil: number } | null
+  >(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+
   async function setStatus(id: string, status: "confirmed" | "declined" | "pending" | "cancelled") {
     setBusy(id);
     try {
@@ -70,8 +77,7 @@ export function ReservationsTab() {
     finally { setBusy(null); }
   }
 
-  async function chargeNoShow(id: string) {
-    if (!confirm("CHF 50 No-Show Gebühr wirklich belasten? Diese Aktion kann nicht rückgängig gemacht werden.")) return;
+  async function doChargeNoShow(id: string) {
     setBusy(id);
     try {
       const res = await noShowFn({ data: { id, environment: "sandbox" } });
@@ -85,12 +91,7 @@ export function ReservationsTab() {
     finally { setBusy(null); }
   }
 
-  async function manualCancel(id: string, isPaid: boolean, daysUntil: number) {
-    const feeWarning = isPaid && daysUntil < 7
-      ? `\n\n⚠ Achtung: Anlass in ${daysUntil} Tag(en) — CHF 50 werden dem Gast belastet.`
-      : "";
-    const reason = window.prompt(`Reservation stornieren?${feeWarning}\n\nStorno-Grund (optional):`, "");
-    if (reason === null) return;
+  async function doCancel(id: string, reason: string) {
     setBusy(id);
     try {
       const res = await cancelFn({ data: { id, reason: reason || undefined, environment: "sandbox" } });
@@ -100,6 +101,16 @@ export function ReservationsTab() {
       } else {
         toast.error(res.error);
       }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setBusy(null); }
+  }
+
+  async function doDelete(id: string) {
+    setBusy(id);
+    try {
+      await deleteFn({ data: { id } });
+      toast.success("Reservation gelöscht");
+      qc.invalidateQueries({ queryKey: ["reservations"] });
     } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
     finally { setBusy(null); }
   }
