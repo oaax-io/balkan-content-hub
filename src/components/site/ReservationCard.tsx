@@ -103,7 +103,7 @@ export function ReservationCard({
       const occasionValue = String(fd.get("occasion") ?? "");
       const parsedDates = parseEventDates(eventDates, occasionValue);
 
-      const partyRaw = String(fd.get("party_size") ?? "1");
+      const partyRaw = String(fd.get("party_size") ?? "2");
       const partyNum = parseInt(partyRaw, 10);
       const eventDateMachine = String(fd.get("event_date") ?? "");
       const selectedEvent = parsedDates.find((d) => d.machineDate === eventDateMachine);
