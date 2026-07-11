@@ -43,7 +43,7 @@ function parseEventDateLabel(label: string): { date: string; time: string } | nu
   if (isoMatch) {
     const [, y, m, d, hh, mm] = isoMatch;
     const date = `${y}-${m}-${d}`;
-    const time = hh && mm ? `${hh}:${mm}` : "18:00";
+    const time = hh && mm ? `${hh}:${mm}` : "19:30";
     return { date, time };
   }
 
@@ -54,7 +54,7 @@ function parseEventDateLabel(label: string): { date: string; time: string } | nu
     const month = GERMAN_MONTHS[monthName.toLowerCase()];
     if (month) {
       const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-      return { date, time: "18:00" };
+      return { date, time: "19:30" };
     }
   }
 
