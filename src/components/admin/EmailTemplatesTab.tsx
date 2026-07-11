@@ -284,6 +284,7 @@ function RichEditor({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
+  const [linkOpen, setLinkOpen] = useState(false);
 
   // Set initial HTML only once; avoid clobbering while user types.
   useEffect(() => {
@@ -306,11 +307,7 @@ function RichEditor({
     onChange(ref.current?.innerHTML ?? "");
   };
 
-  const insertLink = () => {
-    const url = prompt("Link-URL (z. B. https://…):");
-    if (!url) return;
-    exec("createLink", url);
-  };
+  const insertLink = () => setLinkOpen(true);
 
   const btn =
     "inline-flex items-center justify-center h-8 w-8 rounded text-muted-foreground hover:bg-muted hover:text-foreground";
