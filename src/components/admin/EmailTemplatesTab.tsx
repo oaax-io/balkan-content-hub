@@ -476,6 +476,7 @@ function TemplateEditor({
   const [body, setBody] = useState(initial.body_html);
   const [enabled, setEnabled] = useState(initial.enabled);
   const [fullscreen, setFullscreen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const isOverride = initial.occasion !== null;
   const { result: preview, loading: previewLoading } = useDebouncedPreview(
