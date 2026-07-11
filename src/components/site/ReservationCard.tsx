@@ -293,7 +293,7 @@ export function ReservationCard({
         ))}
       </Select>
 
-      {showEventDates && (
+      {showEventDates ? (
         <Select
           label={dateRequired ? "Nächste Event-Daten *" : "Datum (optional)"}
           name="event_date"
@@ -306,8 +306,11 @@ export function ReservationCard({
             </option>
           ))}
         </Select>
-
-      )}
+      ) : occasion && dateRequired ? (
+        <div className="text-xs text-[#2d2d2d] bg-white/70 border border-gold/40 rounded-lg px-3 py-2">
+          Noch kein Datum bekannt für <strong>{occasion}</strong>. Wir melden uns bei dir.
+        </div>
+      ) : null}
 
 
       <Textarea
