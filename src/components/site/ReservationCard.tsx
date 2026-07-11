@@ -285,9 +285,9 @@ export function ReservationCard({
         <Input label="Telefon" name="phone" type="tel" maxLength={40} autoComplete="tel" inputMode="tel" />
       </div>
 
-      <Select label="Personen *" name="party_size" required defaultValue="1">
+      <Select label="Personen *" name="party_size" required defaultValue="2">
         {PARTY_SIZES.map((p, i) => (
-          <option key={p} value={i < 16 ? String(i + 1) : "17"}>
+          <option key={p} value={i < 15 ? String(i + 2) : "17"}>
             {p}
           </option>
         ))}
