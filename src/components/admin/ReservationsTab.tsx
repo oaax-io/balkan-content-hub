@@ -165,6 +165,42 @@ export function ReservationsTab() {
   return (
     <div className="space-y-8">
       <ReservationFormEditorDialog open={editorOpen} onClose={() => setEditorOpen(false)} />
+
+      <ConfirmDialog
+        open={!!noShowTarget}
+        onOpenChange={(v) => !v && setNoShowTarget(null)}
+        title="CHF 50 No-Show Gebühr belasten?"
+        description="Diese Aktion kann nicht rückgängig gemacht werden."
+        confirmLabel="Belasten"
+        destructive
+        onConfirm={() => { if (noShowTarget) doChargeNoShow(noShowTarget); setNoShowTarget(null); }}
+      />
+
+      <PromptDialog
+        open={!!cancelTarget}
+        onOpenChange={(v) => !v && setCancelTarget(null)}
+        title="Reservation stornieren?"
+        description={
+          cancelTarget?.isPaid && cancelTarget.daysUntil < 7
+            ? `⚠ Achtung: Anlass in ${cancelTarget.daysUntil} Tag(en) — CHF 50 werden dem Gast belastet.`
+            : "Storno-Grund (optional):"
+        }
+        placeholder="Storno-Grund (optional)"
+        multiline
+        confirmLabel="Stornieren"
+        onSubmit={(reason) => { if (cancelTarget) doCancel(cancelTarget.id, reason); }}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(v) => !v && setDeleteTarget(null)}
+        title="Reservation endgültig löschen?"
+        description={`Die Reservation von „${deleteTarget?.name ?? ""}" wird unwiderruflich aus der Datenbank entfernt.`}
+        confirmLabel="Löschen"
+        destructive
+        onConfirm={() => { if (deleteTarget) doDelete(deleteTarget.id); setDeleteTarget(null); }}
+      />
+
       {/* ───────────── Overview ───────────── */}
       <section className="space-y-4">
         <header className="flex items-start justify-between gap-4">
