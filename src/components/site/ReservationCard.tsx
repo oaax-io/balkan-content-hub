@@ -44,23 +44,29 @@ interface FormValues {
 
 function parseEventDates(eventDates: string[], occasion?: string) {
   const occNorm = (occasion || "").trim().toLowerCase();
-  return eventDates
+  const parsed = eventDates
     .map((raw) => {
       const idx = raw.indexOf("::");
       const forOcc = idx >= 0 ? raw.slice(0, idx).trim().toLowerCase() : "";
       const rest = idx >= 0 ? raw.slice(idx + 2).trim() : raw.trim();
       return { forOcc, rest };
     })
-    // Wenn kein Anlass angegeben ist, alle zurückgeben; sonst nur die passenden
-    // (unprefixed Zeilen gelten als „für alle" und sind immer dabei)
     .filter((d) => !occNorm || !d.forOcc || d.forOcc === occNorm)
     .map((d) => {
       const [machine, ...rest] = d.rest.split("|");
       const machineDate = (machine || "").trim();
       const displayLabel = rest.length > 0 ? rest.join("|").trim() : machineDate;
-      return { machineDate, displayLabel };
+      return { machineDate, displayLabel, scoped: d.forOcc.length > 0 };
     })
     .filter((d) => d.machineDate.length > 0);
+
+  // Duplikate nach Datum entfernen — anlass-spezifische Einträge haben Vorrang
+  const byDate = new Map<string, { machineDate: string; displayLabel: string; scoped: boolean }>();
+  for (const d of parsed) {
+    const existing = byDate.get(d.machineDate);
+    if (!existing || (d.scoped && !existing.scoped)) byDate.set(d.machineDate, d);
+  }
+  return Array.from(byDate.values()).map(({ machineDate, displayLabel }) => ({ machineDate, displayLabel }));
 }
 
 
