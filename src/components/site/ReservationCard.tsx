@@ -16,8 +16,9 @@ const COUNTRY_CODES = [
   { code: "+1", label: "+1" },
 ];
 
+// Reservierungen ab 2 Personen. Kleinere Gruppen bitte telefonisch anfragen.
 const PARTY_SIZES = [
-  ...Array.from({ length: 16 }, (_, i) => `${i + 1} Personen`),
+  ...Array.from({ length: 15 }, (_, i) => `${i + 2} Personen`), // 2 … 16
   "Mehr als 16 (Wir werden Sie kontaktieren)",
 ];
 
