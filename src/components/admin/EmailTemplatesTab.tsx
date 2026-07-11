@@ -617,6 +617,16 @@ function TemplateEditor({
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Anlass-Override löschen?"
+        description="Für diesen Anlass wird wieder die Standard-Vorlage verwendet."
+        confirmLabel="Löschen"
+        destructive
+        onConfirm={() => { setConfirmDeleteOpen(false); deleteMut.mutate(); }}
+      />
     </div>
   );
 }
