@@ -38,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog, PromptDialog } from "./InAppDialogs";
 
 type TplKey = EmailTemplateRow["template_key"];
 
