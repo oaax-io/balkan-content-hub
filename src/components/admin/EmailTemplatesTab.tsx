@@ -585,10 +585,7 @@ function TemplateEditor({
           </button>
           {isOverride && initial.id && (
             <button
-              onClick={() => {
-                if (confirm("Diesen Anlass-Override löschen? Standard-Vorlage wird wieder verwendet."))
-                  deleteMut.mutate();
-              }}
+              onClick={() => setConfirmDeleteOpen(true)}
               disabled={deleteMut.isPending}
               className="inline-flex items-center gap-1.5 rounded-full border border-destructive/50 text-destructive px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 ml-auto"
             >
