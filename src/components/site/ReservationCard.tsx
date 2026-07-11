@@ -112,7 +112,7 @@ export function ReservationCard({
         guest_email: String(fd.get("email") ?? ""),
         country_code: String(fd.get("country_code") ?? ""),
         guest_phone: String(fd.get("phone") ?? ""),
-        party_size: Number.isFinite(partyNum) ? Math.max(1, Math.min(99, partyNum)) : 17,
+        party_size: Number.isFinite(partyNum) ? Math.max(2, Math.min(99, partyNum)) : 17,
         occasion: String(fd.get("occasion") ?? ""),
         event_date: eventDateMachine,
         event_date_label: selectedEvent?.displayLabel ?? eventDateMachine,
