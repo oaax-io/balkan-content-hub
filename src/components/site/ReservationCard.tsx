@@ -198,7 +198,7 @@ export function ReservationCard({
           </h3>
           <p className="text-xs text-[#2d2d2d] mt-2">
             Für <strong>{stripeStage.values.occasion}</strong> hinterlegst du eine Karte als
-            Absicherung. Bei Stornierung weniger als 7 Tage vor dem Anlass können CHF 50 belastet werden.
+            Absicherung. Bei Stornierung weniger als 7 Tage vor dem Anlass können CHF 50 pro Person belastet werden.
           </p>
         </div>
         <Elements
