@@ -559,7 +559,7 @@ export const getReservationByToken = createServerFn({ method: "POST" })
         days_until,
         already_cancelled: r.status === "cancelled",
         fee_already_charged: !!(r.cancellation_fee_charged_at || r.cancellation_fee_payment_intent_id),
-        fee_amount: r.cancellation_fee_amount ?? 5000,
+        fee_amount: (r.cancellation_fee_amount ?? 5000) * Math.max(1, r.party_size ?? 1),
         fee_currency: (r.cancellation_fee_currency ?? "chf").toUpperCase(),
       },
     };
