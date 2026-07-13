@@ -68,7 +68,7 @@ export function ReservationFormEditor() {
       <OccasionsEditor rowMap={rowMap} onSaved={refresh} />
       <PerOccasionDatesEditor rowMap={rowMap} onSaved={refresh} />
       <TextField rowMap={rowMap} keyName="reservation_disclaimer" onSaved={refresh}
-        help="Hinweistext unter dem Formular (z.B. Stornierungs-Bedingungen)." />
+        help="Stornierungs-Hinweis für kostenpflichtige Anlässe (z.B. Dinner & Dance). Wird als Checkbox-Text im Reservationsformular angezeigt." />
     </div>
   );
 }
