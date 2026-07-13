@@ -115,7 +115,7 @@ export function buildTemplateVars(
          <div style="color:#d4af37;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;margin-bottom:12px;">Stornierung</div>
          <p style="font-size:13px;color:#a8a29a;line-height:1.65;margin:0 0 14px;">Falls Sie nicht kommen können, stornieren Sie bitte über den folgenden Link:</p>
          <p style="margin:0 0 14px;"><a href="${cancelUrl}" style="display:inline-block;padding:11px 24px;border:1px solid #d4af37;color:#d4af37;text-decoration:none;font-size:11px;letter-spacing:0.25em;text-transform:uppercase;">Reservation stornieren</a></p>
-         <p style="font-size:11px;color:#7a736a;line-height:1.6;margin:0;">Kostenlose Stornierung bis 7 Tage vor dem Anlass. Bei späterer Stornierung eines kostenpflichtigen Anlasses oder bei No-Show können CHF 50 belastet werden.</p>
+         <p style="font-size:11px;color:#7a736a;line-height:1.6;margin:0;">Kostenlose Stornierung bis 7 Tage vor dem Anlass. Bei späterer Stornierung eines kostenpflichtigen Anlasses oder bei No-Show können CHF 50 pro Person belastet werden.</p>
        </div>`
     : "";
 
@@ -124,8 +124,10 @@ export function buildTemplateVars(
          <div style="color:#d4af37;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px;">Notiz vom Gast</div>${r.notes}</div>`
     : "";
 
+  const feePartySize = Math.max(1, r.party_size ?? 1);
+  const feeTotal = 50 * feePartySize;
   const feeBlock = opts.feeCharged
-    ? `<div style="margin-top:20px;padding:14px 18px;background:#2a1810;border-left:2px solid #d4af37;color:#e8b96a;font-size:13px;letter-spacing:0.02em;">Storno-Gebühr von <strong style="color:#f5d78c;">CHF 50</strong> wurde belastet.</div>`
+    ? `<div style="margin-top:20px;padding:14px 18px;background:#2a1810;border-left:2px solid #d4af37;color:#e8b96a;font-size:13px;letter-spacing:0.02em;">Storno-Gebühr von <strong style="color:#f5d78c;">CHF ${feeTotal}</strong> (CHF 50 × ${feePartySize} Personen) wurde belastet.</div>`
     : "";
 
   return {

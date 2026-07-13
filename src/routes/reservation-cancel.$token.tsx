@@ -45,7 +45,7 @@ function CancelPage() {
           ok: true,
           feeCharged: res.fee_charged,
           message: res.fee_charged
-            ? `Ihre Reservation wurde storniert. Es wurde eine Gebühr von CHF 50 belastet.`
+            ? `Ihre Reservation wurde storniert. Eine Storno-Gebühr wurde belastet.`
             : `Ihre Reservation wurde kostenlos storniert. Vielen Dank für die frühzeitige Nachricht.`,
         });
       } else {
@@ -151,7 +151,7 @@ function CancelPage() {
                   <>
                     <p className="text-sm text-muted-foreground">
                       Sind Sie sicher? Diese Aktion kann nicht rückgängig gemacht werden
-                      {info.fee_applies ? " und CHF 50 werden belastet" : ""}.
+                      {info.fee_applies ? ` und CHF ${(info.fee_amount / 100).toFixed(2)} werden belastet` : ""}.
                     </p>
                     <div className="flex gap-3">
                       <button
@@ -160,7 +160,7 @@ function CancelPage() {
                         onClick={() => mutation.mutate()}
                         className="rounded-full bg-red-600 px-5 py-2.5 text-sm uppercase tracking-widest text-white hover:bg-red-700 disabled:opacity-60"
                       >
-                        {mutation.isPending ? "Wird storniert…" : (info.fee_applies ? "Ja, CHF 50 belasten & stornieren" : "Ja, jetzt stornieren")}
+                        {mutation.isPending ? "Wird storniert…" : (info.fee_applies ? `Ja, CHF ${(info.fee_amount / 100).toFixed(2)} belasten & stornieren` : "Ja, jetzt stornieren")}
                       </button>
                       <button
                         type="button"
@@ -178,7 +178,7 @@ function CancelPage() {
               <p className="mt-6 text-xs text-muted-foreground">
                 Kostenlose Stornierung ist bis 7 Tage vor dem Anlass möglich. Bei
                 späterer Stornierung eines kostenpflichtigen Anlasses oder bei
-                No-Show können CHF 50 belastet werden.
+                No-Show können CHF 50 pro Person belastet werden.
               </p>
             </>
           );
