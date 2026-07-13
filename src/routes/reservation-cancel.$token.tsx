@@ -151,7 +151,7 @@ function CancelPage() {
                   <>
                     <p className="text-sm text-muted-foreground">
                       Sind Sie sicher? Diese Aktion kann nicht rückgängig gemacht werden
-                      {info.fee_applies ? " und CHF 50 werden belastet" : ""}.
+                      {info.fee_applies ? ` und CHF ${(info.fee_amount / 100).toFixed(2)} werden belastet` : ""}.
                     </p>
                     <div className="flex gap-3">
                       <button
@@ -160,7 +160,7 @@ function CancelPage() {
                         onClick={() => mutation.mutate()}
                         className="rounded-full bg-red-600 px-5 py-2.5 text-sm uppercase tracking-widest text-white hover:bg-red-700 disabled:opacity-60"
                       >
-                        {mutation.isPending ? "Wird storniert…" : (info.fee_applies ? "Ja, CHF 50 belasten & stornieren" : "Ja, jetzt stornieren")}
+                        {mutation.isPending ? "Wird storniert…" : (info.fee_applies ? `Ja, CHF ${(info.fee_amount / 100).toFixed(2)} belasten & stornieren` : "Ja, jetzt stornieren")}
                       </button>
                       <button
                         type="button"
