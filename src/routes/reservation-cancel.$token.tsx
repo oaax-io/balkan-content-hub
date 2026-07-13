@@ -45,7 +45,7 @@ function CancelPage() {
           ok: true,
           feeCharged: res.fee_charged,
           message: res.fee_charged
-            ? `Ihre Reservation wurde storniert. Es wurde eine Gebühr von CHF 50 belastet.`
+            ? `Ihre Reservation wurde storniert. Eine Storno-Gebühr wurde belastet.`
             : `Ihre Reservation wurde kostenlos storniert. Vielen Dank für die frühzeitige Nachricht.`,
         });
       } else {
