@@ -335,7 +335,7 @@ export function ReservationCard({
             ) : (
               <>
                 Ich akzeptiere, dass bei Stornierung weniger als <strong>7 Tage</strong> vor dem
-                Anlass oder bei Nichterscheinen eine Gebühr von <strong>CHF 50</strong> auf die
+                Anlass oder bei Nichterscheinen eine Gebühr von <strong>CHF 50 pro Person</strong> auf die
                 hinterlegte Zahlungsmethode belastet werden kann. Beim Reservieren wird{" "}
                 <strong>nichts abgebucht</strong>.
               </>
