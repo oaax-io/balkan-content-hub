@@ -326,7 +326,9 @@ export const cancelReservation = createServerFn({ method: "POST" })
       };
     }
 
-    const amount = r.cancellation_fee_amount ?? 5000;
+    const perPerson = r.cancellation_fee_amount ?? 5000;
+    const partySize = Math.max(1, r.party_size ?? 1);
+    const amount = perPerson * partySize;
     const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
 
     // 5) Stripe PaymentIntent off_session erstellen und sofort bestätigen
