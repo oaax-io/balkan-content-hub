@@ -622,7 +622,9 @@ export const cancelReservationByToken = createServerFn({ method: "POST" })
       return { ok: false, error: "Keine hinterlegte Zahlungsmethode gefunden. Bitte kontaktieren Sie uns." };
     }
 
-    const amount = r.cancellation_fee_amount ?? 5000;
+    const perPerson = r.cancellation_fee_amount ?? 5000;
+    const partySize = Math.max(1, r.party_size ?? 1);
+    const amount = perPerson * partySize;
     const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
 
     try {
