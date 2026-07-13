@@ -178,7 +178,7 @@ function CancelPage() {
               <p className="mt-6 text-xs text-muted-foreground">
                 Kostenlose Stornierung ist bis 7 Tage vor dem Anlass möglich. Bei
                 späterer Stornierung eines kostenpflichtigen Anlasses oder bei
-                No-Show können CHF 50 belastet werden.
+                No-Show können CHF 50 pro Person belastet werden.
               </p>
             </>
           );
