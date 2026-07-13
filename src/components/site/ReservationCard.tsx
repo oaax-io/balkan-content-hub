@@ -329,11 +329,17 @@ export function ReservationCard({
             onChange={(e) => setTermsAccepted(e.target.checked)}
             className="mt-0.5 accent-[#8a6a14]"
           />
-          <span>
-            Ich akzeptiere, dass bei Stornierung weniger als <strong>7 Tage</strong> vor dem
-            Anlass oder bei Nichterscheinen eine Gebühr von <strong>CHF 50</strong> auf die
-            hinterlegte Zahlungsmethode belastet werden kann. Beim Reservieren wird{" "}
-            <strong>nichts abgebucht</strong>.
+          <span className="whitespace-pre-line">
+            {disclaimer && disclaimer.trim().length > 0 ? (
+              disclaimer
+            ) : (
+              <>
+                Ich akzeptiere, dass bei Stornierung weniger als <strong>7 Tage</strong> vor dem
+                Anlass oder bei Nichterscheinen eine Gebühr von <strong>CHF 50</strong> auf die
+                hinterlegte Zahlungsmethode belastet werden kann. Beim Reservieren wird{" "}
+                <strong>nichts abgebucht</strong>.
+              </>
+            )}
           </span>
         </label>
       )}
@@ -345,13 +351,10 @@ export function ReservationCard({
       >
         {submitting ? "Wird gesendet …" : paid ? "Weiter zur Zahlungsmethode" : "Reservieren"}
       </button>
-
-      {disclaimer && (
-        <p className="text-[11px] leading-snug text-[#2d2d2d] text-center pt-1">{disclaimer}</p>
-      )}
     </form>
   );
 }
+
 
 function PaymentMethodForm({
   email,
