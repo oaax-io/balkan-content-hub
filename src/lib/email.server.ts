@@ -124,8 +124,10 @@ export function buildTemplateVars(
          <div style="color:#d4af37;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px;">Notiz vom Gast</div>${r.notes}</div>`
     : "";
 
+  const feePartySize = Math.max(1, r.party_size ?? 1);
+  const feeTotal = 50 * feePartySize;
   const feeBlock = opts.feeCharged
-    ? `<div style="margin-top:20px;padding:14px 18px;background:#2a1810;border-left:2px solid #d4af37;color:#e8b96a;font-size:13px;letter-spacing:0.02em;">Storno-Gebühr von <strong style="color:#f5d78c;">CHF 50</strong> wurde belastet.</div>`
+    ? `<div style="margin-top:20px;padding:14px 18px;background:#2a1810;border-left:2px solid #d4af37;color:#e8b96a;font-size:13px;letter-spacing:0.02em;">Storno-Gebühr von <strong style="color:#f5d78c;">CHF ${feeTotal}</strong> (CHF 50 × ${feePartySize} Personen) wurde belastet.</div>`
     : "";
 
   return {
