@@ -26,7 +26,7 @@ export const createVoucherCheckout = createServerFn({ method: "POST" })
       environment: StripeEnv;
     }) => {
       const schema = z.object({
-        amountChf: z.number().int().min(20).max(1000),
+        amountChf: z.number().int().min(10).max(1000),
         recipientFirstName: z.string().trim().min(1).max(60),
         recipientLastName: z.string().trim().min(1).max(60),
         personalMessage: z.string().trim().max(400).optional(),
