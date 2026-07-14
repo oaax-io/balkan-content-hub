@@ -155,21 +155,24 @@ export function VouchersTab() {
 
       {editing && <EditDialog voucher={editing} onClose={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["vouchers"] }); }} />}
 
-      <Dialog open={!!previewUrl} onOpenChange={(o) => { if (!o) { if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null); } }}>
+      <Dialog open={!!preview} onOpenChange={(o) => { if (!o) { if (preview) URL.revokeObjectURL(preview.url); setPreview(null); } }}>
         <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden flex flex-col">
           <DialogTitle className="sr-only">Gutschein PDF Vorschau</DialogTitle>
           <DialogDescription className="sr-only">Beispiel-Gutschein zum Prüfen des Designs</DialogDescription>
-          {previewUrl && (
+          {preview && (
             <>
               <div className="flex items-center justify-between px-4 py-2 border-b bg-card">
                 <span className="text-xs uppercase tracking-widest text-gold">Gutschein Vorschau</span>
-                <a href={previewUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-gold underline">In neuem Tab öffnen</a>
+                <a href={preview.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-gold underline">In neuem Tab öffnen</a>
               </div>
-              <iframe src={previewUrl} className="w-full flex-1" title="Vorschau" />
+              <div className="flex-1 min-h-0">
+                <VoucherPdfPreview bytes={preview.bytes} />
+              </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+
 
     </div>
   );
