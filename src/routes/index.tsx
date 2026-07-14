@@ -9,6 +9,7 @@ import offerBrunch from "@/assets/offer-brunch.jpg";
 import offerDinner from "@/assets/offer-dinner.jpg";
 import offerEvents from "@/assets/offer-events.jpg";
 import lupStudios8 from "@/assets/lupstudios-8.png.asset.json";
+import luzPalokaj20 from "@/assets/luzpalokaj-photography-20.jpg.asset.json";
 
 import { buildSeoMeta } from "@/lib/seo-head";
 
