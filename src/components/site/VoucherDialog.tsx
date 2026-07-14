@@ -122,9 +122,11 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                           : "border-gold/25 hover:border-gold/60"
                       }`}
                       style={{
-                        backgroundImage:
-                          "radial-gradient(ellipse at top, rgba(212,175,55,0.15), transparent 60%), linear-gradient(160deg, #1a130a 0%, #0d0a05 100%)",
+                        backgroundImage: `linear-gradient(rgba(20,15,10,0.86), rgba(12,10,8,0.92)), url(${offerBrunch})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
                       }}
+
                     >
                       {/* Ornament corners */}
                       <span className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-gold/60" />
