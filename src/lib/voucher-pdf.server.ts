@@ -36,40 +36,93 @@ function fmtAmount(n: number): string {
   return `CHF ${n.toFixed(2).replace(".", "'").replace("'00", ".–")}`;
 }
 
-// A soft repeating "balkan" ornament pattern rendered with primitives.
+// Rich abstract Balkan-inspired ornament background (matches website vibe).
 function drawOrnamentBg(page: PDFPage, w: number, h: number) {
-  // Base
+  // Base warm dark
   page.drawRectangle({ x: 0, y: 0, width: w, height: h, color: BG });
-  // Diagonal shimmer
-  for (let i = -h; i < w; i += 60) {
+
+  // Radial warm glow center
+  for (let r = 340; r > 0; r -= 20) {
+    page.drawCircle({
+      x: w / 2,
+      y: h / 2,
+      size: r,
+      color: rgb(0.14, 0.10, 0.05),
+      opacity: 0.06,
+    });
+  }
+
+  // Diagonal shimmer lines
+  for (let i = -h; i < w; i += 42) {
     page.drawLine({
       start: { x: i, y: 0 },
       end: { x: i + h, y: h },
-      thickness: 0.4,
+      thickness: 0.3,
       color: BG_ACCENT,
-      opacity: 0.6,
+      opacity: 0.5,
     });
   }
+
+  // Large concentric gold rings (abstract, off-center)
+  const rings = [
+    { cx: -40, cy: h + 30, radii: [120, 160, 200, 250, 310] },
+    { cx: w + 40, cy: -30, radii: [120, 160, 200, 250, 310] },
+  ];
+  for (const { cx, cy, radii } of rings) {
+    for (const r of radii) {
+      page.drawCircle({
+        x: cx,
+        y: cy,
+        size: r,
+        borderColor: GOLD,
+        borderWidth: 0.5,
+        opacity: 0.09,
+      });
+    }
+  }
+
+  // Scattered ornamental dots (organic constellation)
+  const seed = [
+    [120, 470], [160, 500], [210, 460], [90, 420],
+    [W_MARGIN_LEFT_JITTER(700), 500], [760, 460], [700, 420], [800, 440],
+    [140, 120], [200, 90], [720, 100], [660, 130],
+  ];
+  for (const [x, y] of seed) {
+    page.drawCircle({ x, y, size: 1.2, color: GOLD, opacity: 0.55 });
+    page.drawCircle({ x, y, size: 4, borderColor: GOLD, borderWidth: 0.3, opacity: 0.35 });
+  }
+
   // Corner rosettes (stylised)
   const drawRosette = (cx: number, cy: number, r: number) => {
-    for (let k = 0; k < 8; k++) {
-      const a = (Math.PI * 2 * k) / 8;
+    for (let k = 0; k < 12; k++) {
+      const a = (Math.PI * 2 * k) / 12;
       page.drawCircle({
         x: cx + Math.cos(a) * r * 0.6,
         y: cy + Math.sin(a) * r * 0.6,
-        size: r * 0.35,
+        size: r * 0.28,
         borderColor: GOLD,
-        borderWidth: 0.4,
+        borderWidth: 0.35,
         opacity: 0.35,
       });
     }
-    page.drawCircle({ x: cx, y: cy, size: r * 0.25, color: GOLD, opacity: 0.55 });
+    page.drawCircle({ x: cx, y: cy, size: r * 0.22, color: GOLD, opacity: 0.5 });
+    page.drawCircle({ x: cx, y: cy, size: r * 0.55, borderColor: GOLD, borderWidth: 0.4, opacity: 0.4 });
   };
-  drawRosette(50, 50, 30);
-  drawRosette(w - 50, 50, 30);
-  drawRosette(50, h - 50, 30);
-  drawRosette(w - 50, h - 50, 30);
+  drawRosette(52, 52, 26);
+  drawRosette(w - 52, 52, 26);
+  drawRosette(52, h - 52, 26);
+  drawRosette(w - 52, h - 52, 26);
+
+  // Central vignette to keep text readable
+  page.drawRectangle({
+    x: 60, y: 60, width: w - 120, height: h - 120,
+    color: BG, opacity: 0.35,
+  });
 }
+
+// Small helper to keep TS happy (right-side scatter)
+function W_MARGIN_LEFT_JITTER(x: number) { return x; }
+
 
 function drawGoldFrame(page: PDFPage, w: number, h: number, inset = 24) {
   // Outer
@@ -135,8 +188,9 @@ export async function generateVoucherPdf(data: VoucherPdfData): Promise<Uint8Arr
   drawGoldFrame(page, W, H);
 
   // Brand wordmark
-  drawCenteredText(page, "B A L K A N E R O S", 540, fontRegular, 22, GOLD, W);
-  drawCenteredText(page, "•  E V E N T S  •", 520, fontLight, 8, MUTED, W);
+  drawCenteredText(page, "B A L K A N E R O S", 518, fontRegular, 22, GOLD, W);
+  drawCenteredText(page, "•  E V E N T S  •", 500, fontLight, 8, MUTED, W);
+
 
   // Title
   drawCenteredText(page, "GUTSCHEIN", 455, fontRegular, 44, CREAM, W);
