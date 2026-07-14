@@ -46,7 +46,7 @@ export function VouchersTab() {
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Voucher | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ bytes: Uint8Array; url: string } | null>(null);
 
   const filtered = (vouchers ?? []).filter((v) => {
     if (filter !== "all" && v.status !== filter) return false;
