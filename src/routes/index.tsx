@@ -29,7 +29,7 @@ function Home() {
   const { data } = useSuspenseQuery(publicDataQuery);
   const { content } = data;
 
-  const sliderImages = [content.slider_1, content.slider_2, content.slider_3, content.hero_image, lupStudios8.url].filter(Boolean) as string[];
+  const sliderImages = [content.slider_1, content.slider_2, content.slider_3, content.hero_image, lupStudios8.url, luzPalokaj20.url].filter(Boolean) as string[];
   const introImg = content.intro_image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80";
   const hostImg = content.host_image || "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&q=80";
   const galleries = [content.gallery_1, content.gallery_2, content.gallery_3].filter(Boolean);
