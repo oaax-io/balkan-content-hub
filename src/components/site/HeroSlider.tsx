@@ -33,8 +33,8 @@ export function HeroSlider({ images, eyebrow, title, subtitle, children }: HeroS
       ))}
       <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/45 to-black/85" />
 
-      {/* Voucher badge */}
-      <div className="absolute top-24 right-4 sm:top-28 sm:right-8 z-30">
+      {/* Voucher badge (desktop only) */}
+      <div className="hidden md:block absolute top-24 right-4 sm:top-28 sm:right-8 z-30">
         <VoucherBadge onClick={() => setVoucherOpen(true)} />
       </div>
       <VoucherDialog open={voucherOpen} onOpenChange={setVoucherOpen} />

@@ -129,7 +129,7 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
 
                     >
                       {/* Bestseller badge */}
-                      {v === 300 && (
+                      {v === 200 && (
                         <span className="absolute top-1.5 inset-x-0 z-10 mx-auto w-fit rounded-full bg-gold px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-black shadow">
                           Bestseller
                         </span>
