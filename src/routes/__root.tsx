@@ -98,6 +98,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    // Bei "Failed to fetch dynamically imported module" (alter Chunk nach Deploy)
+    // die Seite automatisch einmal neu laden.
+    void import("../lib/chunk-reload").then((m) => m.installChunkReload());
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <AuthSync />
