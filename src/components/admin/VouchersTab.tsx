@@ -69,14 +69,15 @@ export function VouchersTab() {
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       const blob = new Blob([bytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return url;
+      setPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev.url);
+        return { bytes, url };
       });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fehler");
     }
   }
+
 
 
   return (
