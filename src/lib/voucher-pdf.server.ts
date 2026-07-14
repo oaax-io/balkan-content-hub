@@ -188,8 +188,9 @@ export async function generateVoucherPdf(data: VoucherPdfData): Promise<Uint8Arr
   drawGoldFrame(page, W, H);
 
   // Brand wordmark
-  drawCenteredText(page, "B A L K A N E R O S", 540, fontRegular, 22, GOLD, W);
-  drawCenteredText(page, "•  E V E N T S  •", 520, fontLight, 8, MUTED, W);
+  drawCenteredText(page, "B A L K A N E R O S", 518, fontRegular, 22, GOLD, W);
+  drawCenteredText(page, "•  E V E N T S  •", 500, fontLight, 8, MUTED, W);
+
 
   // Title
   drawCenteredText(page, "GUTSCHEIN", 455, fontRegular, 44, CREAM, W);
