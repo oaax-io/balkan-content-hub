@@ -110,13 +110,13 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
           <div className="px-6 sm:px-8 py-6">
             {step === "amount" && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   {PRESETS.map((v) => (
                     <button
                       key={v}
                       type="button"
                       onClick={() => { setAmount(v); setCustomAmount(""); }}
-                      className={`group relative overflow-hidden rounded-sm border-2 aspect-[4/5] transition-all ${
+                      className={`group relative overflow-hidden rounded-sm border-2 aspect-[3/4] sm:aspect-[4/5] transition-all ${
                         amount === v && !customAmount
                           ? "border-gold shadow-[0_0_30px_-8px_rgba(212,175,55,0.6)]"
                           : "border-gold/25 hover:border-gold/60"
@@ -128,16 +128,22 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                       }}
 
                     >
+                      {/* Bestseller badge */}
+                      {v === 300 && (
+                        <span className="absolute top-1.5 inset-x-0 z-10 mx-auto w-fit rounded-full bg-gold px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-black shadow">
+                          Bestseller
+                        </span>
+                      )}
                       {/* Ornament corners */}
-                      <span className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-gold/60" />
-                      <span className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-gold/60" />
-                      <span className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-gold/60" />
-                      <span className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-gold/60" />
+                      <span className="absolute top-2 left-2 w-4 h-4 sm:w-6 sm:h-6 border-l-2 border-t-2 border-gold/60" />
+                      <span className="absolute top-2 right-2 w-4 h-4 sm:w-6 sm:h-6 border-r-2 border-t-2 border-gold/60" />
+                      <span className="absolute bottom-2 left-2 w-4 h-4 sm:w-6 sm:h-6 border-l-2 border-b-2 border-gold/60" />
+                      <span className="absolute bottom-2 right-2 w-4 h-4 sm:w-6 sm:h-6 border-r-2 border-b-2 border-gold/60" />
                       <div className="relative h-full flex flex-col items-center justify-center">
-                        <div className="text-gold text-[9px] tracking-[0.4em] mb-2">CHF</div>
-                        <div className="font-display text-4xl sm:text-5xl text-cream">{v}</div>
-                        <div className="mt-3 w-10 h-px bg-gold/60" />
-                        <div className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mt-3">Gutschein</div>
+                        <div className="text-gold text-[8px] sm:text-[9px] tracking-[0.4em] mb-1 sm:mb-2">CHF</div>
+                        <div className="font-display text-3xl sm:text-4xl md:text-5xl text-cream">{v}</div>
+                        <div className="mt-2 sm:mt-3 w-8 sm:w-10 h-px bg-gold/60" />
+                        <div className="text-[9px] sm:text-[10px] tracking-[0.3em] uppercase text-muted-foreground mt-2 sm:mt-3">Gutschein</div>
                       </div>
                     </button>
                   ))}
