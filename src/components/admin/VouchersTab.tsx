@@ -7,6 +7,8 @@ import {
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Eye, RefreshCw, Save, FileText } from "lucide-react";
+import { VoucherPdfPreview } from "./VoucherPdfPreview";
+
 
 type Voucher = {
   id: string;
