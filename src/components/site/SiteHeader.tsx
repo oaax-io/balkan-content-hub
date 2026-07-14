@@ -86,6 +86,15 @@ export function SiteHeader() {
             Kontakt
           </Link>
 
+          {/* Mobile voucher button */}
+          <button
+            type="button"
+            onClick={() => setVoucherOpen(true)}
+            className="md:hidden inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-[10px] font-medium uppercase tracking-widest text-gold-foreground hover:opacity-90 transition"
+          >
+            <Gift size={14} /> Gutscheine
+          </button>
+
           {/* Mobile Hamburger */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
