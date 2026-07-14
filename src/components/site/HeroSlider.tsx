@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { VoucherDialog, VoucherBadge } from "./VoucherDialog";
 
 export interface HeroSliderProps {
   images: string[];
@@ -11,6 +12,7 @@ export interface HeroSliderProps {
 export function HeroSlider({ images, eyebrow, title, subtitle, children }: HeroSliderProps) {
   const slides = images.length > 0 ? images : ["https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=80"];
   const [index, setIndex] = useState(0);
+  const [voucherOpen, setVoucherOpen] = useState(false);
 
   useEffect(() => {
     if (slides.length < 2) return;
