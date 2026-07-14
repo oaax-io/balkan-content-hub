@@ -134,19 +134,20 @@ export async function generateVoucherPdf(data: VoucherPdfData): Promise<Uint8Arr
   drawOrnamentBg(page, W, H);
   drawGoldFrame(page, W, H);
 
-  // Brand strip
-  drawCenteredText(page, "BALKANEROS", 520, fontRegular, 12, GOLD, W);
-  drawCenteredText(page, "•  R E S T A U R A N T  •", 505, fontLight, 8, MUTED, W);
+  // Brand wordmark
+  drawCenteredText(page, "B A L K A N E R O S", 540, fontRegular, 22, GOLD, W);
+  drawCenteredText(page, "•  R E S T A U R A N T  •", 520, fontLight, 8, MUTED, W);
 
   // Title
-  drawCenteredText(page, "GUTSCHEIN", 445, fontRegular, 46, CREAM, W);
+  drawCenteredText(page, "GUTSCHEIN", 455, fontRegular, 44, CREAM, W);
   // Divider
   page.drawLine({
-    start: { x: W / 2 - 60, y: 430 },
-    end: { x: W / 2 + 60, y: 430 },
+    start: { x: W / 2 - 60, y: 440 },
+    end: { x: W / 2 + 60, y: 440 },
     thickness: 0.8,
     color: GOLD,
   });
+
 
   // Amount
   drawCenteredText(page, fmtAmount(data.amountChf), 380, fontRegular, 40, GOLD, W);
