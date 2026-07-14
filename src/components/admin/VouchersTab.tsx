@@ -62,12 +62,20 @@ export function VouchersTab() {
   async function openPreview() {
     try {
       const res = await previewFn();
-      const url = `data:application/pdf;base64,${res.pdfBase64}`;
-      setPreviewUrl(url);
+      const bin = atob(res.pdfBase64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fehler");
     }
   }
+
 
   return (
     <div className="space-y-6">
@@ -144,13 +152,22 @@ export function VouchersTab() {
 
       {editing && <EditDialog voucher={editing} onClose={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["vouchers"] }); }} />}
 
-      <Dialog open={!!previewUrl} onOpenChange={(o) => !o && setPreviewUrl(null)}>
-        <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden">
+      <Dialog open={!!previewUrl} onOpenChange={(o) => { if (!o) { if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null); } }}>
+        <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden flex flex-col">
           <DialogTitle className="sr-only">Gutschein PDF Vorschau</DialogTitle>
           <DialogDescription className="sr-only">Beispiel-Gutschein zum Prüfen des Designs</DialogDescription>
-          {previewUrl && <iframe src={previewUrl} className="w-full h-full" title="Vorschau" />}
+          {previewUrl && (
+            <>
+              <div className="flex items-center justify-between px-4 py-2 border-b bg-card">
+                <span className="text-xs uppercase tracking-widest text-gold">Gutschein Vorschau</span>
+                <a href={previewUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-gold underline">In neuem Tab öffnen</a>
+              </div>
+              <iframe src={previewUrl} className="w-full flex-1" title="Vorschau" />
+            </>
+          )}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
