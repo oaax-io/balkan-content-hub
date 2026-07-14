@@ -140,13 +140,16 @@ export async function generateVoucherPdf(data: VoucherPdfData): Promise<Uint8Arr
 
   // Title
   drawCenteredText(page, "GUTSCHEIN", 455, fontRegular, 44, CREAM, W);
+  // Validity on one line under GUTSCHEIN
+  drawCenteredText(page, `Gültig bis ${fmtDate(data.expiresAt)}`, 432, fontLight, 10, GOLD, W);
   // Divider
   page.drawLine({
-    start: { x: W / 2 - 60, y: 440 },
-    end: { x: W / 2 + 60, y: 440 },
+    start: { x: W / 2 - 60, y: 420 },
+    end: { x: W / 2 + 60, y: 420 },
     thickness: 0.8,
     color: GOLD,
   });
+
 
 
   // Amount
@@ -205,11 +208,8 @@ export async function generateVoucherPdf(data: VoucherPdfData): Promise<Uint8Arr
     console.error("[voucher-pdf] qr error", e);
   }
 
-  // Dates
-  page.drawText("Ausgestellt", { x: 80, y: 108, size: 8, font: fontLight, color: MUTED });
-  page.drawText(fmtDate(data.issuedAt), { x: 80, y: 92, size: 11, font: fontRegular, color: CREAM });
-  page.drawText("Gültig bis", { x: 80, y: 72, size: 8, font: fontLight, color: MUTED });
-  page.drawText(fmtDate(data.expiresAt), { x: 80, y: 56, size: 11, font: fontRegular, color: GOLD });
+
+
 
   // Footer + terms
   const footer = data.footerText || "Einlösbar bei Balkaneros Events (Fine Moments GmbH). Nicht in bar auszahlbar. Teileinlösung möglich, Restbetrag wird auf dem Gutschein vermerkt. Übertragbar.";
