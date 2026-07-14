@@ -136,7 +136,7 @@ export async function generateVoucherPdf(data: VoucherPdfData): Promise<Uint8Arr
 
   // Brand wordmark
   drawCenteredText(page, "B A L K A N E R O S", 540, fontRegular, 22, GOLD, W);
-  drawCenteredText(page, "•  R E S T A U R A N T  •", 520, fontLight, 8, MUTED, W);
+  drawCenteredText(page, "•  E V E N T S  •", 520, fontLight, 8, MUTED, W);
 
   // Title
   drawCenteredText(page, "GUTSCHEIN", 455, fontRegular, 44, CREAM, W);
@@ -212,7 +212,7 @@ export async function generateVoucherPdf(data: VoucherPdfData): Promise<Uint8Arr
   page.drawText(fmtDate(data.expiresAt), { x: 80, y: 56, size: 11, font: fontRegular, color: GOLD });
 
   // Footer + terms
-  const footer = data.footerText || "Einlösbar für Veranstaltungen und Leistungen von Balkaneros Events (Fine Moments GmbH). Nicht in bar auszahlbar. Teileinlösung möglich, Restbetrag wird auf dem Gutschein vermerkt. Übertragbar.";
+  const footer = data.footerText || "Einlösbar bei Balkaneros Events (Fine Moments GmbH). Nicht in bar auszahlbar. Teileinlösung möglich, Restbetrag wird auf dem Gutschein vermerkt. Übertragbar.";
   const terms = data.termsText || "Gültig 2 Jahre ab Kaufdatum. Für Verlust, Diebstahl oder Missbrauch wird keine Haftung übernommen. Es gelten die AGB unter balkaneros.ch/agb.";
   const footerLines = wrapText(footer, fontLight, 8, 460);
   let fy = 88;

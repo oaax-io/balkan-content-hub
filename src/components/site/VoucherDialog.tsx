@@ -165,7 +165,7 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                   </div>
                   {!customValid && <p className="text-[11px] text-red-400 mt-1">Betrag muss zwischen 10 und 1000 liegen.</p>}
                   <p className="text-[10px] text-muted-foreground/80 mt-2 leading-relaxed">
-                    Der Gutschein ist nicht rückzahlbar und kann nicht gegen Bargeld eingelöst werden. Er ist ausschliesslich für Veranstaltungen von Balkaneros Events gültig. Die Gültigkeitsdauer beträgt 2 Jahre ab Kaufdatum.
+                    Der Gutschein ist nicht rückzahlbar und kann nicht gegen Bargeld eingelöst werden. Er ist ausschliesslich bei Balkaneros Events gültig. Die Gültigkeitsdauer beträgt 2 Jahre ab Kaufdatum.
                   </p>
                 </div>
 
