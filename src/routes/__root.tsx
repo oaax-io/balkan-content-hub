@@ -37,7 +37,38 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => { reportLovableError(error, { boundary: "tanstack_root_error_component" }); }, [error]);
+  const msg = (error?.message ?? "").toLowerCase();
+  const isChunkError =
+    msg.includes("failed to fetch dynamically imported module") ||
+    msg.includes("importing a module script failed") ||
+    msg.includes("error loading dynamically imported module") ||
+    msg.includes("chunkloaderror") ||
+    msg.includes("loading chunk");
+
+  useEffect(() => {
+    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    if (isChunkError && typeof window !== "undefined") {
+      const FLAG = "__chunk_reload_at";
+      try {
+        const last = Number(sessionStorage.getItem(FLAG) ?? "0");
+        if (Date.now() - last > 10_000) {
+          sessionStorage.setItem(FLAG, String(Date.now()));
+          window.location.reload();
+        }
+      } catch {
+        window.location.reload();
+      }
+    }
+  }, [error, isChunkError]);
+
+  if (isChunkError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <p className="text-sm text-muted-foreground">Aktualisiere …</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -98,6 +129,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    // Bei "Failed to fetch dynamically imported module" (alter Chunk nach Deploy)
+    // die Seite automatisch einmal neu laden.
+    void import("../lib/chunk-reload").then((m) => m.installChunkReload());
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <AuthSync />
