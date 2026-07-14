@@ -32,11 +32,11 @@ export function SiteHeader() {
           scrolled ? "py-3" : "py-5"
         }`}
       >
-        <Link to="/" className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3 shrink-0 min-w-0">
           <img
             src={logo}
             alt="Balkaneros"
-            className={`w-auto transition-all duration-300 ${scrolled ? "h-9" : "h-12"}`}
+            className={`w-auto h-auto max-h-9 sm:max-h-12 object-contain shrink-0 transition-all duration-300 ${scrolled ? "max-h-8 sm:max-h-10" : "max-h-9 sm:max-h-12"}`}
           />
         </Link>
 
@@ -90,9 +90,11 @@ export function SiteHeader() {
           <button
             type="button"
             onClick={() => setVoucherOpen(true)}
-            className="md:hidden inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-[10px] font-medium uppercase tracking-widest text-gold-foreground hover:opacity-90 transition"
+            className="md:hidden relative flex items-center justify-center w-10 h-10 rounded-full bg-gold text-gold-foreground hover:opacity-90 transition"
+            aria-label="Gutscheine"
           >
-            <Gift size={14} /> Gutscheine
+            <span className="absolute inset-0 rounded-full bg-gold/50 animate-ping" />
+            <Gift size={18} className="relative" />
           </button>
 
           {/* Mobile Hamburger */}
