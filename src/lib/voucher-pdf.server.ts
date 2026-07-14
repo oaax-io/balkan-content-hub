@@ -212,8 +212,8 @@ export async function generateVoucherPdf(data: VoucherPdfData): Promise<Uint8Arr
   page.drawText(fmtDate(data.expiresAt), { x: 80, y: 56, size: 11, font: fontRegular, color: GOLD });
 
   // Footer + terms
-  const footer = data.footerText || "Einlösbar für alle Speisen und Getränke im Restaurant Balkaneros.";
-  const terms = data.termsText || "Gültig 2 Jahre ab Ausstellungsdatum. Verlust wird nicht ersetzt.";
+  const footer = data.footerText || "Einlösbar für Veranstaltungen und Leistungen von Balkaneros Events (Fine Moments GmbH). Nicht in bar auszahlbar. Teileinlösung möglich, Restbetrag wird auf dem Gutschein vermerkt. Übertragbar.";
+  const terms = data.termsText || "Gültig 2 Jahre ab Kaufdatum. Für Verlust, Diebstahl oder Missbrauch wird keine Haftung übernommen. Es gelten die AGB unter balkaneros.ch/agb.";
   const footerLines = wrapText(footer, fontLight, 8, 460);
   let fy = 88;
   for (const l of footerLines.slice(0, 2)) {
