@@ -79,6 +79,12 @@ const PAGES: Page[] = [
       { id: "form", title: "Weitere Formular-Texte", keys: ["reservation_disclaimer"] },
     ],
   },
+  {
+    id: "vouchers", label: "Gutscheine", icon: CreditCard,
+    sections: [
+      { id: "pdf", title: "Text auf dem Gutschein-PDF", keys: ["voucher_pdf_footer", "voucher_pdf_terms"] },
+    ],
+  },
 
 ];
 
