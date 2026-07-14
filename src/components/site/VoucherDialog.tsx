@@ -209,6 +209,13 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                   </div>
                 </div>
 
+                {formError && (
+                  <div role="alert" className="flex items-start gap-2 rounded-sm border border-red-500/40 bg-red-500/10 px-3 py-2.5 text-[12px] text-red-300">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{formError}</span>
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setStep("amount")}
                     className="flex-1 rounded-full border border-gold/40 text-cream py-3 uppercase tracking-[0.25em] text-xs hover:bg-gold/10">
@@ -221,6 +228,7 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                 </div>
               </div>
             )}
+
 
             {step === "checkout" && clientSecret && (
               <div className="min-h-[500px]">
