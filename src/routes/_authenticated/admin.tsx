@@ -14,6 +14,7 @@ import { SeoTab } from "@/components/admin/SeoTab";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { EmailTab } from "@/components/admin/EmailTab";
 import { EmailTemplatesTab } from "@/components/admin/EmailTemplatesTab";
+import { VouchersTab } from "@/components/admin/VouchersTab";
 import { toast } from "sonner";
 
 import {
@@ -21,18 +22,19 @@ import {
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarMenuBadge,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search, BarChart3, Mail, MailOpen } from "lucide-react";
+import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search, BarChart3, Mail, MailOpen, Gift } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Balkaneros" }] }),
   component: Admin,
 });
 
-type Tab = "dashboard" | "reservations" | "content" | "contact" | "analytics" | "seo" | "email" | "email_templates" | "settings";
+type Tab = "dashboard" | "reservations" | "vouchers" | "content" | "contact" | "analytics" | "seo" | "email" | "email_templates" | "settings";
 
 const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "reservations", label: "Reservierungen", icon: CalendarDays },
+  { key: "vouchers", label: "Gutscheine", icon: Gift },
   { key: "content", label: "Inhalte & Bilder", icon: FileText },
   { key: "contact", label: "Kontakt & Zeiten", icon: MapPin },
   { key: "analytics", label: "Website Analytics", icon: BarChart3 },
@@ -45,6 +47,7 @@ const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
 const TITLES: Record<Tab, string> = {
   dashboard: "Dashboard",
   reservations: "Reservierungen",
+  vouchers: "Gutscheine",
   content: "Inhalte & Bilder",
   contact: "Kontakt & Öffnungszeiten",
   analytics: "Website Analytics",
@@ -152,6 +155,7 @@ function AdminShell() {
               <div className="mx-auto max-w-6xl">
                 {tab === "dashboard" && <DashboardTab onNavigate={(t) => setTab(t as Tab)} />}
                 {tab === "reservations" && <ReservationsTab />}
+                {tab === "vouchers" && <VouchersTab />}
                 {tab === "content" && <ContentTab />}
                 {tab === "contact" && <ContactTab />}
                 {tab === "analytics" && <AnalyticsTab />}

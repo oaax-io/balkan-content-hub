@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { VoucherDialog, VoucherBadge } from "./VoucherDialog";
 
 export interface HeroSliderProps {
   images: string[];
@@ -11,6 +12,7 @@ export interface HeroSliderProps {
 export function HeroSlider({ images, eyebrow, title, subtitle, children }: HeroSliderProps) {
   const slides = images.length > 0 ? images : ["https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=80"];
   const [index, setIndex] = useState(0);
+  const [voucherOpen, setVoucherOpen] = useState(false);
 
   useEffect(() => {
     if (slides.length < 2) return;
@@ -30,6 +32,12 @@ export function HeroSlider({ images, eyebrow, title, subtitle, children }: HeroS
         />
       ))}
       <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/45 to-black/85" />
+
+      {/* Voucher badge */}
+      <div className="absolute top-24 right-4 sm:top-28 sm:right-8 z-30">
+        <VoucherBadge onClick={() => setVoucherOpen(true)} />
+      </div>
+      <VoucherDialog open={voucherOpen} onOpenChange={setVoucherOpen} />
 
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 pt-28 sm:pt-32 pb-10 min-h-[100svh] flex flex-col lg:grid lg:grid-cols-[1.2fr_minmax(320px,440px)] gap-8 lg:gap-12 items-center">

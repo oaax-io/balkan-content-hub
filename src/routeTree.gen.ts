@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UeberUnsRouteImport } from './routes/ueber-uns'
 import { Route as ReservierenRouteImport } from './routes/reservieren'
 import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as GutscheinDankeRouteImport } from './routes/gutschein-danke'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as DinnerRouteImport } from './routes/dinner'
 import { Route as BrunchRouteImport } from './routes/brunch'
@@ -20,6 +21,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReservationCancelTokenRouteImport } from './routes/reservation-cancel.$token'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const UeberUnsRoute = UeberUnsRouteImport.update({
   id: '/ueber-uns',
@@ -34,6 +36,11 @@ const ReservierenRoute = ReservierenRouteImport.update({
 const KontaktRoute = KontaktRouteImport.update({
   id: '/kontakt',
   path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GutscheinDankeRoute = GutscheinDankeRouteImport.update({
+  id: '/gutschein-danke',
+  path: '/gutschein-danke',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -75,6 +82,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,11 +95,13 @@ export interface FileRoutesByFullPath {
   '/brunch': typeof BrunchRoute
   '/dinner': typeof DinnerRoute
   '/events': typeof EventsRoute
+  '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,11 +109,13 @@ export interface FileRoutesByTo {
   '/brunch': typeof BrunchRoute
   '/dinner': typeof DinnerRoute
   '/events': typeof EventsRoute
+  '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -108,11 +125,13 @@ export interface FileRoutesById {
   '/brunch': typeof BrunchRoute
   '/dinner': typeof DinnerRoute
   '/events': typeof EventsRoute
+  '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -122,11 +141,13 @@ export interface FileRouteTypes {
     | '/brunch'
     | '/dinner'
     | '/events'
+    | '/gutschein-danke'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
     | '/reservation-cancel/$token'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -134,11 +155,13 @@ export interface FileRouteTypes {
     | '/brunch'
     | '/dinner'
     | '/events'
+    | '/gutschein-danke'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
     | '/reservation-cancel/$token'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -147,11 +170,13 @@ export interface FileRouteTypes {
     | '/brunch'
     | '/dinner'
     | '/events'
+    | '/gutschein-danke'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
     | '/_authenticated/admin'
     | '/reservation-cancel/$token'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -161,10 +186,12 @@ export interface RootRouteChildren {
   BrunchRoute: typeof BrunchRoute
   DinnerRoute: typeof DinnerRoute
   EventsRoute: typeof EventsRoute
+  GutscheinDankeRoute: typeof GutscheinDankeRoute
   KontaktRoute: typeof KontaktRoute
   ReservierenRoute: typeof ReservierenRoute
   UeberUnsRoute: typeof UeberUnsRoute
   ReservationCancelTokenRoute: typeof ReservationCancelTokenRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -188,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/kontakt'
       fullPath: '/kontakt'
       preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gutschein-danke': {
+      id: '/gutschein-danke'
+      path: '/gutschein-danke'
+      fullPath: '/gutschein-danke'
+      preLoaderRoute: typeof GutscheinDankeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -246,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,10 +308,12 @@ const rootRouteChildren: RootRouteChildren = {
   BrunchRoute: BrunchRoute,
   DinnerRoute: DinnerRoute,
   EventsRoute: EventsRoute,
+  GutscheinDankeRoute: GutscheinDankeRoute,
   KontaktRoute: KontaktRoute,
   ReservierenRoute: ReservierenRoute,
   UeberUnsRoute: UeberUnsRoute,
   ReservationCancelTokenRoute: ReservationCancelTokenRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
