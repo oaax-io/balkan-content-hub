@@ -159,6 +159,9 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-1">CHF 20 – 1000</p>
                   {!customValid && <p className="text-[11px] text-red-400 mt-1">Betrag muss zwischen 20 und 1000 liegen.</p>}
+                  <p className="text-[10px] text-muted-foreground/80 mt-2 leading-relaxed">
+                    Der Gutschein ist nicht rückzahlbar, nicht in bar ablösbar und kann nur im Restaurant Balkaneros eingelöst werden. Gültig 2 Jahre ab Kauf.
+                  </p>
                 </div>
 
                 <button
