@@ -7,6 +7,8 @@ import {
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Eye, RefreshCw, Save, FileText } from "lucide-react";
+import { VoucherPdfPreview } from "./VoucherPdfPreview";
+
 
 type Voucher = {
   id: string;
@@ -44,7 +46,7 @@ export function VouchersTab() {
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Voucher | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ bytes: Uint8Array; url: string } | null>(null);
 
   const filtered = (vouchers ?? []).filter((v) => {
     if (filter !== "all" && v.status !== filter) return false;
@@ -67,14 +69,15 @@ export function VouchersTab() {
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       const blob = new Blob([bytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return url;
+      setPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev.url);
+        return { bytes, url };
       });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fehler");
     }
   }
+
 
 
   return (
@@ -152,21 +155,24 @@ export function VouchersTab() {
 
       {editing && <EditDialog voucher={editing} onClose={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["vouchers"] }); }} />}
 
-      <Dialog open={!!previewUrl} onOpenChange={(o) => { if (!o) { if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null); } }}>
+      <Dialog open={!!preview} onOpenChange={(o) => { if (!o) { if (preview) URL.revokeObjectURL(preview.url); setPreview(null); } }}>
         <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden flex flex-col">
           <DialogTitle className="sr-only">Gutschein PDF Vorschau</DialogTitle>
           <DialogDescription className="sr-only">Beispiel-Gutschein zum Prüfen des Designs</DialogDescription>
-          {previewUrl && (
+          {preview && (
             <>
               <div className="flex items-center justify-between px-4 py-2 border-b bg-card">
                 <span className="text-xs uppercase tracking-widest text-gold">Gutschein Vorschau</span>
-                <a href={previewUrl} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-gold underline">In neuem Tab öffnen</a>
+                <a href={preview.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground hover:text-gold underline">In neuem Tab öffnen</a>
               </div>
-              <iframe src={previewUrl} className="w-full flex-1" title="Vorschau" />
+              <div className="flex-1 min-h-0">
+                <VoucherPdfPreview bytes={preview.bytes} />
+              </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+
 
     </div>
   );
