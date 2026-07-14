@@ -4,10 +4,11 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe
 import { createVoucherCheckout } from "@/lib/vouchers.functions";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Gift, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import { Gift, ArrowLeft, AlertCircle } from "lucide-react";
+import offerBrunch from "@/assets/offer-brunch.jpg";
 
 const PRESETS = [100, 200, 300];
+
 
 export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const [step, setStep] = useState<"amount" | "details" | "checkout">("amount");
@@ -20,6 +21,7 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
   const [buyerEmail, setBuyerEmail] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const createFn = useServerFn(createVoucherCheckout);
 
@@ -33,6 +35,7 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     setBuyerName("");
     setBuyerEmail("");
     setClientSecret(null);
+    setFormError(null);
   }
 
   function close(o: boolean) {
@@ -44,16 +47,17 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
   const customValid = !customAmount || (Number(customAmount) >= 20 && Number(customAmount) <= 1000);
 
   async function submit() {
+    setFormError(null);
     if (!recipientFirstName.trim() || !recipientLastName.trim()) {
-      toast.error("Bitte Vor- und Nachname des Beschenkten eingeben.");
+      setFormError("Bitte Vor- und Nachname des Beschenkten eingeben.");
       return;
     }
     if (!buyerName.trim() || !buyerEmail.trim()) {
-      toast.error("Bitte Ihren Namen und Ihre E-Mail eingeben.");
+      setFormError("Bitte Ihren Namen und Ihre E-Mail eingeben.");
       return;
     }
     if (!effectiveAmount || effectiveAmount < 20 || effectiveAmount > 1000) {
-      toast.error("Betrag zwischen CHF 20 und CHF 1000.");
+      setFormError("Betrag muss zwischen CHF 20 und CHF 1000 liegen.");
       return;
     }
     setSubmitting(true);
@@ -73,17 +77,18 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
         },
       });
       if (result.error || !result.clientSecret) {
-        toast.error(result.error || "Fehler beim Erstellen der Zahlung.");
+        setFormError(result.error || "Fehler beim Erstellen der Zahlung.");
         return;
       }
       setClientSecret(result.clientSecret);
       setStep("checkout");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Fehler");
+      setFormError(e instanceof Error ? e.message : "Unerwarteter Fehler.");
     } finally {
       setSubmitting(false);
     }
   }
+
 
   return (
     <Dialog open={open} onOpenChange={close}>
@@ -117,9 +122,11 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                           : "border-gold/25 hover:border-gold/60"
                       }`}
                       style={{
-                        backgroundImage:
-                          "radial-gradient(ellipse at top, rgba(212,175,55,0.15), transparent 60%), linear-gradient(160deg, #1a130a 0%, #0d0a05 100%)",
+                        backgroundImage: `linear-gradient(rgba(20,15,10,0.86), rgba(12,10,8,0.92)), url(${offerBrunch})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
                       }}
+
                     >
                       {/* Ornament corners */}
                       <span className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-gold/60" />
@@ -202,6 +209,13 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                   </div>
                 </div>
 
+                {formError && (
+                  <div role="alert" className="flex items-start gap-2 rounded-sm border border-red-500/40 bg-red-500/10 px-3 py-2.5 text-[12px] text-red-300">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{formError}</span>
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setStep("amount")}
                     className="flex-1 rounded-full border border-gold/40 text-cream py-3 uppercase tracking-[0.25em] text-xs hover:bg-gold/10">
@@ -214,6 +228,7 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                 </div>
               </div>
             )}
+
 
             {step === "checkout" && clientSecret && (
               <div className="min-h-[500px]">
