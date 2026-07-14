@@ -1,13 +1,16 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Instagram, Facebook, Youtube, Menu, X } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import { Instagram, Facebook, Youtube, Menu, Gift } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { VoucherDialog } from "@/components/site/VoucherDialog";
 import logo from "@/assets/logo.webp";
 
 
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [voucherOpen, setVoucherOpen] = useState(false);
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -95,13 +98,8 @@ export function SiteHeader() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] bg-background border-l border-gold/20 p-6">
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center mb-8">
                   <img src={logo} alt="Balkaneros" className="h-8 w-auto" />
-                  <SheetClose asChild>
-                    <button className="p-2 rounded-full text-foreground/80 hover:text-gold hover:bg-gold/10 transition" aria-label="Menü schliessen">
-                      <X size={24} />
-                    </button>
-                  </SheetClose>
                 </div>
                 <nav className="flex flex-col gap-4 text-sm tracking-widest uppercase">
                   <Link to="/" activeOptions={{ exact: true }} onClick={() => setOpen(false)} className="py-2 hover:text-gold transition-colors" activeProps={{ className: "text-gold py-2" }}>Home</Link>
@@ -111,6 +109,13 @@ export function SiteHeader() {
                   <Link to="/ueber-uns" onClick={() => setOpen(false)} className="py-2 hover:text-gold transition-colors" activeProps={{ className: "text-gold py-2" }}>Über uns</Link>
                   <Link to="/kontakt" onClick={() => setOpen(false)} className="py-2 hover:text-gold transition-colors" activeProps={{ className: "text-gold py-2" }}>Kontakt</Link>
                 </nav>
+                <button
+                  type="button"
+                  onClick={() => { setOpen(false); setVoucherOpen(true); }}
+                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-gold px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-gold-foreground hover:opacity-90 transition"
+                >
+                  <Gift size={16} /> Gutscheine
+                </button>
                 <div className="mt-auto flex items-center gap-3 pt-6 border-t border-gold/10">
                   <a href="https://www.instagram.com/balkaneros.ch" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="p-2 rounded-full text-foreground/80 hover:text-gold hover:bg-gold/10 transition">
                     <Instagram size={20} />
@@ -125,7 +130,9 @@ export function SiteHeader() {
               </div>
             </SheetContent>
           </Sheet>
+          <VoucherDialog open={voucherOpen} onOpenChange={setVoucherOpen} />
         </div>
+
       </div>
     </header>
   );
