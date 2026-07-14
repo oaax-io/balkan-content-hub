@@ -4,10 +4,11 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe
 import { createVoucherCheckout } from "@/lib/vouchers.functions";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Gift, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import { Gift, ArrowLeft, AlertCircle } from "lucide-react";
+import offerBrunch from "@/assets/offer-brunch.jpg";
 
 const PRESETS = [100, 200, 300];
+
 
 export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const [step, setStep] = useState<"amount" | "details" | "checkout">("amount");
