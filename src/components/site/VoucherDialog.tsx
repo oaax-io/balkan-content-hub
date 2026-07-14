@@ -44,7 +44,7 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
   }
 
   const effectiveAmount = customAmount ? Number(customAmount) : amount;
-  const customValid = !customAmount || (Number(customAmount) >= 20 && Number(customAmount) <= 1000);
+  const customValid = !customAmount || (Number(customAmount) >= 10 && Number(customAmount) <= 1000);
 
   async function submit() {
     setFormError(null);
@@ -56,8 +56,8 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
       setFormError("Bitte Ihren Namen und Ihre E-Mail eingeben.");
       return;
     }
-    if (!effectiveAmount || effectiveAmount < 20 || effectiveAmount > 1000) {
-      setFormError("Betrag muss zwischen CHF 20 und CHF 1000 liegen.");
+    if (!effectiveAmount || effectiveAmount < 10 || effectiveAmount > 1000) {
+      setFormError("Betrag muss zwischen CHF 10 und CHF 1000 liegen.");
       return;
     }
     setSubmitting(true);
@@ -149,24 +149,23 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                     <span className="text-muted-foreground text-sm">CHF</span>
                     <input
                       type="number"
-                      min={20}
+                      min={10}
                       max={1000}
                       value={customAmount}
                       onChange={(e) => setCustomAmount(e.target.value)}
-                      placeholder="z.B. 150"
+                      placeholder="CHF 10 - 1000"
                       className="flex-1 bg-black/30 border border-gold/30 rounded-sm px-3 py-2.5 text-cream focus:border-gold focus:outline-none"
                     />
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-1">CHF 20 – 1000</p>
-                  {!customValid && <p className="text-[11px] text-red-400 mt-1">Betrag muss zwischen 20 und 1000 liegen.</p>}
+                  {!customValid && <p className="text-[11px] text-red-400 mt-1">Betrag muss zwischen 10 und 1000 liegen.</p>}
                   <p className="text-[10px] text-muted-foreground/80 mt-2 leading-relaxed">
-                    Der Gutschein ist nicht rückzahlbar, nicht in bar ablösbar und kann nur im Restaurant Balkaneros eingelöst werden. Gültig 2 Jahre ab Kauf.
+                    Der Gutschein ist nicht rückzahlbar und kann nicht gegen Bargeld eingelöst werden. Er ist ausschliesslich für Veranstaltungen von Balkaneros Events gültig. Die Gültigkeitsdauer beträgt 2 Jahre ab Kaufdatum.
                   </p>
                 </div>
 
                 <button
                   type="button"
-                  disabled={!customValid || !effectiveAmount || effectiveAmount < 20}
+                  disabled={!customValid || !effectiveAmount || effectiveAmount < 10}
                   onClick={() => setStep("details")}
                   className="w-full rounded-full bg-gold text-gold-foreground py-3 uppercase tracking-[0.25em] text-xs disabled:opacity-40 hover:bg-gold/90 transition"
                 >
