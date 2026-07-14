@@ -16,10 +16,15 @@ export const Route = createFileRoute("/gutschein-danke")({
 function Page() {
   const { session_id } = Route.useSearch();
   const fn = useServerFn(getVoucherBySessionId);
-  const { data, isLoading } = useQuery({
+  type Result = Awaited<ReturnType<typeof fn>>;
+  const { data, isLoading } = useQuery<Result>({
     queryKey: ["voucher-return", session_id],
-    queryFn: () => (session_id ? fn({ data: { sessionId: session_id } }) : Promise.resolve({ found: false as const })),
-    refetchInterval: (q) => (q.state.data && "found" in q.state.data && q.state.data.found && q.state.data.voucher?.status === "paid" ? false : 3000),
+    queryFn: () => (session_id ? fn({ data: { sessionId: session_id } }) : Promise.resolve({ found: false } as Result)),
+    refetchInterval: (q) => {
+      const d = q.state.data;
+      if (d && d.found && d.voucher?.status === "paid") return false;
+      return 3000;
+    },
     enabled: !!session_id,
   });
 

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UeberUnsRouteImport } from './routes/ueber-uns'
 import { Route as ReservierenRouteImport } from './routes/reservieren'
 import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as GutscheinDankeRouteImport } from './routes/gutschein-danke'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as DinnerRouteImport } from './routes/dinner'
 import { Route as BrunchRouteImport } from './routes/brunch'
@@ -35,6 +36,11 @@ const ReservierenRoute = ReservierenRouteImport.update({
 const KontaktRoute = KontaktRouteImport.update({
   id: '/kontakt',
   path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GutscheinDankeRoute = GutscheinDankeRouteImport.update({
+  id: '/gutschein-danke',
+  path: '/gutschein-danke',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/brunch': typeof BrunchRoute
   '/dinner': typeof DinnerRoute
   '/events': typeof EventsRoute
+  '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/brunch': typeof BrunchRoute
   '/dinner': typeof DinnerRoute
   '/events': typeof EventsRoute
+  '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/brunch': typeof BrunchRoute
   '/dinner': typeof DinnerRoute
   '/events': typeof EventsRoute
+  '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/brunch'
     | '/dinner'
     | '/events'
+    | '/gutschein-danke'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/brunch'
     | '/dinner'
     | '/events'
+    | '/gutschein-danke'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/brunch'
     | '/dinner'
     | '/events'
+    | '/gutschein-danke'
     | '/kontakt'
     | '/reservieren'
     | '/ueber-uns'
@@ -174,6 +186,7 @@ export interface RootRouteChildren {
   BrunchRoute: typeof BrunchRoute
   DinnerRoute: typeof DinnerRoute
   EventsRoute: typeof EventsRoute
+  GutscheinDankeRoute: typeof GutscheinDankeRoute
   KontaktRoute: typeof KontaktRoute
   ReservierenRoute: typeof ReservierenRoute
   UeberUnsRoute: typeof UeberUnsRoute
@@ -202,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/kontakt'
       fullPath: '/kontakt'
       preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gutschein-danke': {
+      id: '/gutschein-danke'
+      path: '/gutschein-danke'
+      fullPath: '/gutschein-danke'
+      preLoaderRoute: typeof GutscheinDankeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -288,6 +308,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrunchRoute: BrunchRoute,
   DinnerRoute: DinnerRoute,
   EventsRoute: EventsRoute,
+  GutscheinDankeRoute: GutscheinDankeRoute,
   KontaktRoute: KontaktRoute,
   ReservierenRoute: ReservierenRoute,
   UeberUnsRoute: UeberUnsRoute,
