@@ -398,6 +398,75 @@ export type Database = {
         }
         Relationships: []
       }
+      vouchers: {
+        Row: {
+          amount_chf: number
+          buyer_email: string
+          buyer_name: string
+          created_at: string
+          email_sent_at: string | null
+          expires_at: string | null
+          id: string
+          internal_note: string | null
+          issued_at: string | null
+          pdf_path: string | null
+          personal_message: string | null
+          recipient_first_name: string
+          recipient_last_name: string
+          redeemed_at: string | null
+          redeemed_note: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          voucher_code: string
+        }
+        Insert: {
+          amount_chf: number
+          buyer_email: string
+          buyer_name: string
+          created_at?: string
+          email_sent_at?: string | null
+          expires_at?: string | null
+          id?: string
+          internal_note?: string | null
+          issued_at?: string | null
+          pdf_path?: string | null
+          personal_message?: string | null
+          recipient_first_name: string
+          recipient_last_name: string
+          redeemed_at?: string | null
+          redeemed_note?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          voucher_code: string
+        }
+        Update: {
+          amount_chf?: number
+          buyer_email?: string
+          buyer_name?: string
+          created_at?: string
+          email_sent_at?: string | null
+          expires_at?: string | null
+          id?: string
+          internal_note?: string | null
+          issued_at?: string | null
+          pdf_path?: string | null
+          personal_message?: string | null
+          recipient_first_name?: string
+          recipient_last_name?: string
+          redeemed_at?: string | null
+          redeemed_note?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          voucher_code?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
