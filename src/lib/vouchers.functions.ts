@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type Stripe from "stripe";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireAdmin } from "./admin.server";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "./stripe.server";
@@ -74,7 +73,8 @@ export const createVoucherCheckout = createServerFn({ method: "POST" })
 
       // Use preset lookup_key when it matches; else use price_data
       const presetKey = VOUCHER_PRESETS[data.amountChf];
-      let lineItem: Stripe.Checkout.SessionCreateParams.LineItem;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let lineItem: any;
       if (presetKey) {
         const prices = await stripe.prices.list({ lookup_keys: [presetKey] });
         if (!prices.data.length) throw new Error("Price not found");
