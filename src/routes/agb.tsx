@@ -52,10 +52,12 @@ function AGB() {
                 durch Balkaneros als verbindlich.
               </p>
               <p className="mb-2">
-                Bei bestimmten Anlässen (z. B. Dinner-Events, Silvester, spezielle Themenabende)
-                behalten wir uns vor, im Voraus eine Anzahlung oder die vollständige Bezahlung
-                der Plätze zu verlangen. Die Reservation wird in diesem Fall erst mit Zahlungseingang
-                definitiv.
+                Für kostenpflichtige Anlässe (z. B. Dinner-Events, Silvester, spezielle Themenabende,
+                Private Bookings) ist für die verbindliche Reservation das Hinterlegen einer gültigen
+                Zahlungsmethode erforderlich. Es wird beim Reservieren <strong>keine Anzahlung</strong> und
+                <strong>kein Ticketpreis</strong> abgebucht; die Karte dient ausschliesslich als Absicherung für
+                Storno- und No-Show-Gebühren. Bei regulären Tischreservationen ist keine hinterlegte
+                Zahlungsmethode nötig.
               </p>
               <p>
                 Der reservierte Tisch steht ab der gebuchten Zeit für maximal 15 Minuten zur
@@ -67,21 +69,18 @@ function AGB() {
             <section>
               <h2 className="font-display text-2xl mb-3 text-gold">3. Stornierung & Umbuchung</h2>
               <p className="mb-2">
-                Kostenlose Stornierungen von regulären Tischreservationen sind bis 24 Stunden
-                vor dem reservierten Zeitpunkt möglich. Für kurzfristigere Absagen oder
-                Nichterscheinen («No-Show») behalten wir uns vor, eine Ausfallentschädigung
-                von CHF 30.– pro Person in Rechnung zu stellen.
-              </p>
-              <p className="mb-2">
-                Für kostenpflichtige Veranstaltungen (Dinner-Events, Silvester, Themenanlässe,
-                Private Bookings) gelten folgende Stornierungsfristen ab dem Veranstaltungsdatum:
+                Für kostenpflichtige Anlässe gilt folgende Stornierungsregelung ab dem
+                Veranstaltungsdatum:
               </p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>Stornierung bis 30 Tage vorher: kostenlos bzw. volle Rückerstattung</li>
-                <li>Stornierung 29 – 14 Tage vorher: 50 % des Rechnungsbetrags</li>
-                <li>Stornierung 13 – 3 Tage vorher: 80 % des Rechnungsbetrags</li>
-                <li>Stornierung ab 2 Tagen vorher oder No-Show: 100 % des Rechnungsbetrags</li>
+                <li>Stornierung <strong>mehr als 7 Tage</strong> vor dem Anlass: kostenlos</li>
+                <li>Stornierung <strong>7 Tage oder weniger</strong> vor dem Anlass oder Nichterscheinen («No-Show»): es wird eine Gebühr von <strong>CHF 50 pro Person</strong> auf die hinterlegte Zahlungsmethode belastet</li>
               </ul>
+              <p className="mt-2">
+                Reguläre Tischreservationen (nicht kostenpflichtige Anlässe) können für gewöhnlich
+                kostenlos storniert werden. Für kurzfristige Absagen oder No-Show behalten wir uns
+                vor, eine angemessene Ausfallentschädigung in Rechnung zu stellen.
+              </p>
               <p className="mt-2">
                 Eine Umbuchung auf ein anderes Datum ist auf Anfrage und nach Verfügbarkeit
                 möglich; bereits geleistete Zahlungen können angerechnet werden.
