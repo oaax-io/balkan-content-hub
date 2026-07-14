@@ -129,8 +129,10 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
 
       {/* Copyright */}
       <div className="bg-[oklch(0.93_0.015_80)] border-t border-[oklch(0.85_0.02_75)]">
-        <div className="mx-auto max-w-7xl px-6 py-5 text-center text-xs text-[oklch(0.4_0.01_60)]">
+        <div className="mx-auto max-w-7xl px-6 py-5 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center text-xs text-[oklch(0.4_0.01_60)]">
           <p>© {new Date().getFullYear()} Fine Moments GmbH. Alle Rechte vorbehalten.</p>
+          <span className="hidden sm:inline">·</span>
+          <a href="/agb" className="hover:text-gold transition-colors">AGB</a>
         </div>
       </div>
     </footer>
