@@ -21,6 +21,7 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
   const [buyerEmail, setBuyerEmail] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const createFn = useServerFn(createVoucherCheckout);
 
@@ -34,6 +35,7 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     setBuyerName("");
     setBuyerEmail("");
     setClientSecret(null);
+    setFormError(null);
   }
 
   function close(o: boolean) {
@@ -45,16 +47,17 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
   const customValid = !customAmount || (Number(customAmount) >= 20 && Number(customAmount) <= 1000);
 
   async function submit() {
+    setFormError(null);
     if (!recipientFirstName.trim() || !recipientLastName.trim()) {
-      toast.error("Bitte Vor- und Nachname des Beschenkten eingeben.");
+      setFormError("Bitte Vor- und Nachname des Beschenkten eingeben.");
       return;
     }
     if (!buyerName.trim() || !buyerEmail.trim()) {
-      toast.error("Bitte Ihren Namen und Ihre E-Mail eingeben.");
+      setFormError("Bitte Ihren Namen und Ihre E-Mail eingeben.");
       return;
     }
     if (!effectiveAmount || effectiveAmount < 20 || effectiveAmount > 1000) {
-      toast.error("Betrag zwischen CHF 20 und CHF 1000.");
+      setFormError("Betrag muss zwischen CHF 20 und CHF 1000 liegen.");
       return;
     }
     setSubmitting(true);
@@ -74,17 +77,18 @@ export function VoucherDialog({ open, onOpenChange }: { open: boolean; onOpenCha
         },
       });
       if (result.error || !result.clientSecret) {
-        toast.error(result.error || "Fehler beim Erstellen der Zahlung.");
+        setFormError(result.error || "Fehler beim Erstellen der Zahlung.");
         return;
       }
       setClientSecret(result.clientSecret);
       setStep("checkout");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Fehler");
+      setFormError(e instanceof Error ? e.message : "Unerwarteter Fehler.");
     } finally {
       setSubmitting(false);
     }
   }
+
 
   return (
     <Dialog open={open} onOpenChange={close}>
