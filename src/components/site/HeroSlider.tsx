@@ -33,6 +33,12 @@ export function HeroSlider({ images, eyebrow, title, subtitle, children }: HeroS
       ))}
       <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/45 to-black/85" />
 
+      {/* Voucher badge */}
+      <div className="absolute top-24 right-4 sm:top-28 sm:right-8 z-30">
+        <VoucherBadge onClick={() => setVoucherOpen(true)} />
+      </div>
+      <VoucherDialog open={voucherOpen} onOpenChange={setVoucherOpen} />
+
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 pt-28 sm:pt-32 pb-10 min-h-[100svh] flex flex-col lg:grid lg:grid-cols-[1.2fr_minmax(320px,440px)] gap-8 lg:gap-12 items-center">
         <div className="text-center lg:text-left max-w-2xl">
