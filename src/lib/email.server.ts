@@ -250,8 +250,9 @@ async function renderAndSend(
 ) {
   const tpl = await loadTemplate(key, r.occasion);
   const vars = buildTemplateVars(r, extras);
+  const meta = { templateKey: key, reservationId: r.id ?? null };
   if (!tpl) {
-    await sendEmail({ to, subject: renderTemplate(extras.fallback.subject, vars), html: renderTemplate(extras.fallback.html, vars) });
+    await sendEmail({ to, subject: renderTemplate(extras.fallback.subject, vars), html: renderTemplate(extras.fallback.html, vars), ...meta });
     return;
   }
   if (!tpl.enabled) {
@@ -262,8 +263,10 @@ async function renderAndSend(
     to,
     subject: renderTemplate(tpl.subject || extras.fallback.subject, vars),
     html: renderTemplate(tpl.body_html || extras.fallback.html, vars),
+    ...meta,
   });
 }
+
 
 // ---------------------------------------------------------------------------
 // Public API — same names as before so callers don't need to change.
