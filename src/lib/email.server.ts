@@ -215,13 +215,23 @@ async function sendEmail(payload: {
       requireTLS: !!s.smtp_secure && s.smtp_port !== 465,
       auth: s.smtp_username ? { user: s.smtp_username, pass: s.smtp_password ?? "" } : undefined,
     });
+    const fromDomain = (s.from_email.split("@")[1] || "balkaneros.ch").trim();
     const info = await transporter.sendMail({
       from: s.from_name ? `"${s.from_name}" <${s.from_email}>` : s.from_email,
       to: payload.to,
       replyTo: s.reply_to || undefined,
       subject: payload.subject,
       html: payload.html,
+      // Plain-Text-Alternative: HTML-only Mails werden von Spamfiltern abgestraft.
+      text: htmlToText(payload.html),
+      envelope: { from: s.from_email, to: payload.to },
+      messageId: `<${crypto.randomUUID()}@${fromDomain}>`,
+      headers: {
+        "Auto-Submitted": "auto-generated",
+        "X-Entity-Ref-ID": payload.reservationId ?? crypto.randomUUID(),
+      },
     });
+
     console.log("[email sent]", payload.subject, "→", payload.to, {
       messageId: info.messageId,
       accepted: info.accepted,
