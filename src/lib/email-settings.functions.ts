@@ -97,3 +97,17 @@ export const sendTestEmail = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+// Versand-Protokoll (nur Admin): letzte 100 Einträge.
+export const listMailLog = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("mail_log")
+      .select("id,recipient,subject,template_key,status,error_message,created_at")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return data ?? [];
+  });

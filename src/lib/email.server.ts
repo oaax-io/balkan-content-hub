@@ -161,14 +161,50 @@ export function renderTemplate(template: string, vars: Record<string, string>): 
   );
 }
 
-async function sendEmail(payload: { to: string; subject: string; html: string }) {
+async function logMail(entry: {
+  recipient: string;
+  subject: string;
+  template_key?: string;
+  status: string;
+  error_message?: string | null;
+  reservation_id?: string | null;
+}) {
+  try {
+    await supabaseAdmin.from("mail_log").insert({
+      recipient: entry.recipient,
+      subject: entry.subject,
+      template_key: entry.template_key ?? "",
+      status: entry.status,
+      error_message: entry.error_message ?? null,
+      reservation_id: /^[0-9a-f-]{36}$/i.test(entry.reservation_id ?? "") ? entry.reservation_id : null,
+    });
+  } catch (e) {
+    console.error("[mail_log insert failed]", e);
+  }
+}
+
+async function sendEmail(payload: {
+  to: string;
+  subject: string;
+  html: string;
+  templateKey?: string;
+  reservationId?: string | null;
+}) {
   const s = await getSmtpSettings();
+  const logBase = {
+    recipient: payload.to,
+    subject: payload.subject,
+    template_key: payload.templateKey ?? "",
+    reservation_id: payload.reservationId ?? null,
+  };
   if (!s || !s.enabled) {
     console.log("[email skipped — versand deaktiviert]", payload.subject, "→", payload.to);
+    await logMail({ ...logBase, status: "skipped", error_message: "Versand deaktiviert" });
     return;
   }
   if (!s.smtp_host || !s.smtp_port || !s.from_email) {
     console.log("[email skipped — SMTP unvollständig konfiguriert]", payload.subject, "→", payload.to);
+    await logMail({ ...logBase, status: "skipped", error_message: "SMTP unvollständig konfiguriert" });
     return;
   }
   try {
@@ -192,11 +228,19 @@ async function sendEmail(payload: { to: string; subject: string; html: string })
       rejected: info.rejected,
       response: info.response,
     });
-  } catch (err) {
+    const rejected = (info.rejected ?? []).length > 0;
+    await logMail({
+      ...logBase,
+      status: rejected ? "rejected" : "sent",
+      error_message: rejected ? `Abgelehnt: ${info.rejected.join(", ")}` : info.response ?? null,
+    });
+  } catch (err: any) {
     console.error("[email error]", err);
+    await logMail({ ...logBase, status: "error", error_message: err?.message ?? String(err) });
     throw err;
   }
 }
+
 
 async function renderAndSend(
   key: TemplateKey,
@@ -206,8 +250,9 @@ async function renderAndSend(
 ) {
   const tpl = await loadTemplate(key, r.occasion);
   const vars = buildTemplateVars(r, extras);
+  const meta = { templateKey: key, reservationId: r.id ?? null };
   if (!tpl) {
-    await sendEmail({ to, subject: renderTemplate(extras.fallback.subject, vars), html: renderTemplate(extras.fallback.html, vars) });
+    await sendEmail({ to, subject: renderTemplate(extras.fallback.subject, vars), html: renderTemplate(extras.fallback.html, vars), ...meta });
     return;
   }
   if (!tpl.enabled) {
@@ -218,8 +263,10 @@ async function renderAndSend(
     to,
     subject: renderTemplate(tpl.subject || extras.fallback.subject, vars),
     html: renderTemplate(tpl.body_html || extras.fallback.html, vars),
+    ...meta,
   });
 }
+
 
 // ---------------------------------------------------------------------------
 // Public API — same names as before so callers don't need to change.

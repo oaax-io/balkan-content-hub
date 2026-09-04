@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { getEmailSettings, updateEmailSettings, sendTestEmail } from "@/lib/email-settings.functions";
+import { getEmailSettings, updateEmailSettings, sendTestEmail, listMailLog } from "@/lib/email-settings.functions";
 import { toast } from "sonner";
 import { Mail, Server, Info, Send } from "lucide-react";
 
@@ -287,8 +287,72 @@ export function EmailTab() {
           </button>
         </div>
       </section>
+
+      <MailLogSection />
     </div>
 
+  );
+}
+
+function MailLogSection() {
+  const logFn = useServerFn(listMailLog);
+  const { data: rows, isLoading, refetch } = useQuery({ queryKey: ["mail-log"], queryFn: () => logFn() });
+
+  const statusStyle = (s: string) =>
+    s === "sent"
+      ? "text-emerald-400"
+      : s === "skipped"
+        ? "text-muted-foreground"
+        : "text-red-400";
+
+  return (
+    <section className="rounded-sm border border-border bg-card p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm uppercase tracking-widest text-gold">Versand-Protokoll</h3>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="rounded-full border border-border px-4 py-1.5 text-[11px] uppercase tracking-widest"
+        >
+          Aktualisieren
+        </button>
+      </div>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Lade …</p>
+      ) : !rows || rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Noch keine Einträge.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="text-muted-foreground uppercase tracking-widest">
+              <tr>
+                <th className="py-2 pr-4 font-normal">Zeit</th>
+                <th className="py-2 pr-4 font-normal">Empfänger</th>
+                <th className="py-2 pr-4 font-normal">Betreff</th>
+                <th className="py-2 pr-4 font-normal">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r: any) => (
+                <tr key={r.id} className="border-t border-border/60 align-top">
+                  <td className="py-2 pr-4 whitespace-nowrap text-muted-foreground">
+                    {new Date(r.created_at).toLocaleString("de-CH")}
+                  </td>
+                  <td className="py-2 pr-4">{r.recipient}</td>
+                  <td className="py-2 pr-4">{r.subject}</td>
+                  <td className={`py-2 pr-4 ${statusStyle(r.status)}`}>
+                    {r.status}
+                    {r.status !== "sent" && r.error_message ? (
+                      <div className="text-[11px] text-muted-foreground">{r.error_message}</div>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
