@@ -161,6 +161,24 @@ export function renderTemplate(template: string, vars: Record<string, string>): 
   );
 }
 
+/** Sehr einfache HTML→Text-Umwandlung für die Plain-Text-Alternative. */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<head[\s\S]*?<\/head>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|tr|h1|h2|h3|li)>/gi, "\n")
+    .replace(/<a [^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, "$2 ($1)")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n")
+    .split("\n").map((l) => l.trim()).join("\n")
+    .trim();
+}
+
 async function logMail(entry: {
   recipient: string;
   subject: string;
