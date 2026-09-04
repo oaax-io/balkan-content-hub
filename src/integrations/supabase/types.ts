@@ -143,6 +143,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mail_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          recipient: string
+          reservation_id: string | null
+          status: string
+          subject: string
+          template_key: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipient: string
+          reservation_id?: string | null
+          status?: string
+          subject?: string
+          template_key?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          recipient?: string
+          reservation_id?: string | null
+          status?: string
+          subject?: string
+          template_key?: string
+        }
+        Relationships: []
+      }
       occasion_capacities: {
         Row: {
           max_reservations: number
