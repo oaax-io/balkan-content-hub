@@ -134,8 +134,18 @@ export const createReservation = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Direkte Bestätigung – kein Admin-Approval nötig.
-    await sendReservationStatusUpdate(row);
-    await sendAdminNotification(row);
+    // Fehler beim Mailversand dürfen die Reservation nicht scheitern lassen;
+    // sie werden in `mail_log` protokolliert.
+    try {
+      await sendReservationStatusUpdate(row);
+    } catch (e) {
+      console.error("[reservation] Bestätigungsmail an Gast fehlgeschlagen", e);
+    }
+    try {
+      await sendAdminNotification(row);
+    } catch (e) {
+      console.error("[reservation] Admin-Benachrichtigung fehlgeschlagen", e);
+    }
 
 
     return { id: row.id };

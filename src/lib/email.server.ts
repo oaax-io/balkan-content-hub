@@ -176,7 +176,7 @@ async function logMail(entry: {
       template_key: entry.template_key ?? "",
       status: entry.status,
       error_message: entry.error_message ?? null,
-      reservation_id: entry.reservation_id ?? null,
+      reservation_id: /^[0-9a-f-]{36}$/i.test(entry.reservation_id ?? "") ? entry.reservation_id : null,
     });
   } catch (e) {
     console.error("[mail_log insert failed]", e);
