@@ -161,6 +161,8 @@ function AdminShell() {
                 {tab === "dashboard" && <DashboardTab onNavigate={(t) => setTab(t as Tab)} />}
                 {tab === "reservations" && <ReservationsTab />}
                 {tab === "vouchers" && <VouchersTab />}
+                {tab === "newsletter" && <NewsletterTab />}
+
                 {tab === "content" && <ContentTab />}
                 {tab === "contact" && <ContactTab />}
                 {tab === "analytics" && <AnalyticsTab />}
