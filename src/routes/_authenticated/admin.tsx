@@ -24,7 +24,7 @@ import {
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
   SidebarMenuBadge,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search, BarChart3, Mail, MailOpen, Gift } from "lucide-react";
+import { LayoutDashboard, CalendarDays, FileText, MapPin, Settings, LogOut, ExternalLink, ShieldCheck, Search, BarChart3, Mail, MailOpen, Gift, Send } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Balkaneros" }] }),
