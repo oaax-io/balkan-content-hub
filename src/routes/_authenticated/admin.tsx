@@ -15,7 +15,9 @@ import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { EmailTab } from "@/components/admin/EmailTab";
 import { EmailTemplatesTab } from "@/components/admin/EmailTemplatesTab";
 import { VouchersTab } from "@/components/admin/VouchersTab";
+import { NewsletterTab } from "@/components/admin/NewsletterTab";
 import { toast } from "sonner";
+
 
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
