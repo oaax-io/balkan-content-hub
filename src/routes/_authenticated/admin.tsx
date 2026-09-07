@@ -31,12 +31,13 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: Admin,
 });
 
-type Tab = "dashboard" | "reservations" | "vouchers" | "content" | "contact" | "analytics" | "seo" | "email" | "email_templates" | "settings";
+type Tab = "dashboard" | "reservations" | "vouchers" | "newsletter" | "content" | "contact" | "analytics" | "seo" | "email" | "email_templates" | "settings";
 
 const NAV: { key: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "reservations", label: "Reservierungen", icon: CalendarDays },
   { key: "vouchers", label: "Gutscheine", icon: Gift },
+  { key: "newsletter", label: "Newsletter", icon: Send },
   { key: "content", label: "Inhalte & Bilder", icon: FileText },
   { key: "contact", label: "Kontakt & Zeiten", icon: MapPin },
   { key: "analytics", label: "Website Analytics", icon: BarChart3 },
@@ -50,6 +51,7 @@ const TITLES: Record<Tab, string> = {
   dashboard: "Dashboard",
   reservations: "Reservierungen",
   vouchers: "Gutscheine",
+  newsletter: "Newsletter",
   content: "Inhalte & Bilder",
   contact: "Kontakt & Öffnungszeiten",
   analytics: "Website Analytics",
@@ -58,6 +60,7 @@ const TITLES: Record<Tab, string> = {
   email_templates: "E-Mail-Templates",
   settings: "Einstellungen",
 };
+
 
 function Admin() {
   const checkFn = useServerFn(checkIsAdmin);
