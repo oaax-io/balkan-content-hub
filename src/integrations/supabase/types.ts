@@ -176,6 +176,39 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          note: string
+          source: string
+          subscribed: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name?: string
+          note?: string
+          source?: string
+          subscribed?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          note?: string
+          source?: string
+          subscribed?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       occasion_capacities: {
         Row: {
           max_reservations: number
