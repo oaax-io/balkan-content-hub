@@ -74,6 +74,7 @@ export function ReservationsTab() {
     { id: string; isPaid: boolean; daysUntil: number } | null
   >(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [statusTarget, setStatusTarget] = useState<{ id: string; status: "confirmed" | "declined" } | null>(null);
 
   async function setStatus(id: string, status: "confirmed" | "declined" | "pending" | "cancelled") {
     setBusy(id);
