@@ -139,6 +139,8 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
   const [items, setItems] = useState<Occasion[]>(initial);
   const [saving, setSaving] = useState(false);
   const [settingsIndex, setSettingsIndex] = useState<number | null>(null);
+  const [payMode, setPayMode] = useState<"fee" | "ticket">("fee");
+  const openSettings = (i: number, price: number) => { setPayMode(price > 0 ? "ticket" : "fee"); setSettingsIndex(i); };
   useEffect(() => { setItems(initial); }, [initial]);
 
   const dirty = JSON.stringify(items) !== JSON.stringify(initial);
@@ -150,7 +152,7 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
 
   const togglePaid = (i: number, checked: boolean) => {
     update(i, { paid: checked });
-    if (checked) setSettingsIndex(i);
+    if (checked) openSettings(i, items[i]?.price ?? 0);
   };
 
   const move = (i: number, dir: -1 | 1) =>
@@ -222,7 +224,7 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
               Kostenpflichtig
             </label>
             {it.paid && (
-              <button type="button" onClick={() => setSettingsIndex(i)}
+              <button type="button" onClick={() => openSettings(i, it.price)}
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
                 title="Preis & Gäste-Einstellungen">
                 <Settings2 className="w-3.5 h-3.5" />
