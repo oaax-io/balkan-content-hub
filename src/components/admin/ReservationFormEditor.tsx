@@ -189,7 +189,8 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
           <span className="font-medium text-foreground">Anlass-Optionen (Dropdown im Formular)</span>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          Pro Anlass legst du fest, ob er <strong>kostenpflichtig</strong> ist (Stripe + CHF 50 Storno) und ob dazu <strong>Event-Daten</strong> zur Auswahl erscheinen.
+          Pro Anlass legst du fest, ob er <strong>kostenpflichtig</strong> ist (Zahlungsmethode als Sicherheit + CHF 50 Storno pro Person),
+          ob <strong>Event-Daten</strong> erscheinen, den <strong>Ticketpreis pro Person</strong> (dann wird sofort bezahlt) und die <strong>Mindestanzahl Gäste</strong>.
         </p>
       </div>
 
@@ -206,9 +207,29 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
             <input
               value={it.label}
               onChange={(e) => update(i, { label: e.target.value })}
-              placeholder="z.B. Dinner & Dance (99.- pro Person)"
+              placeholder="z.B. Ticket ab 21:30 Uhr (CHF 15.-)"
               className="flex-1 bg-card border border-border rounded-sm px-3 py-2 focus:border-primary outline-none text-sm"
             />
+            <label className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="whitespace-nowrap">Ticket CHF</span>
+              <input
+                type="number" min={0} step="0.05" inputMode="decimal"
+                value={it.price || ""}
+                onChange={(e) => update(i, { price: Number(e.target.value) || 0 })}
+                placeholder="0"
+                className="w-20 bg-card border border-border rounded-sm px-2 py-2 focus:border-primary outline-none text-sm text-foreground"
+              />
+            </label>
+            <label className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="whitespace-nowrap">Min. Gäste</span>
+              <input
+                type="number" min={0} max={99} step={1}
+                value={it.minGuests || ""}
+                onChange={(e) => update(i, { minGuests: Number(e.target.value) || 0 })}
+                placeholder={it.price > 0 ? "1" : "2"}
+                className="w-16 bg-card border border-border rounded-sm px-2 py-2 focus:border-primary outline-none text-sm text-foreground"
+              />
+            </label>
             <label className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border cursor-pointer select-none ${it.paid ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
               <input type="checkbox" className="sr-only" checked={it.paid} onChange={(e) => update(i, { paid: e.target.checked })} />
               <CreditCard className="w-3.5 h-3.5" />
@@ -219,6 +240,7 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
               <CalendarIcon className="w-3.5 h-3.5" />
               Event-Daten
             </label>
+
             <button type="button" onClick={() => remove(i)} className="p-2 text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
               <Trash2 className="w-4 h-4" />
             </button>
