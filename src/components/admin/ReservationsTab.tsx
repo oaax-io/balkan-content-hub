@@ -459,6 +459,8 @@ function OccasionsPanel({ rows, onSaved, onFilterByOccasion }: {
     finally { setSavingKey(null); }
   }
 
+  const [open, setOpen] = useState(true);
+
   if (rows.length === 0) {
     return (
       <section className="rounded-sm border border-border bg-card p-6">
@@ -470,18 +472,29 @@ function OccasionsPanel({ rows, onSaved, onFilterByOccasion }: {
     );
   }
 
+  const totalRes = rows.reduce((s, r) => s + r.reservations, 0);
+  const totalPersons = rows.reduce((s, r) => s + r.persons, 0);
+
   return (
-    <section className="rounded-sm border border-border bg-card p-6">
-      <header className="mb-4 flex items-end justify-between gap-3 flex-wrap">
-        <div>
+    <section className="rounded-sm border border-border bg-card overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-6 py-4 text-left hover:bg-accent/40 transition-colors"
+        aria-expanded={open}
+      >
+        <div className="min-w-0">
           <h3 className="font-display text-xl">Pro Anlass</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Anzahl Reservierungen, Personen und freier Platz bis zum Maximum.
+            {rows.length} Anlass{rows.length === 1 ? "" : "e"} · {totalRes} Reservierungen · {totalPersons} Personen
           </p>
         </div>
-      </header>
+        <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
 
-      <div className="overflow-x-auto">
+      {open && (
+        <div className="border-t border-border px-6 pb-6 pt-4">
+          <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-xs uppercase tracking-widest text-muted-foreground">
             <tr className="border-b border-border">
