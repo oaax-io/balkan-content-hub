@@ -3,18 +3,44 @@ import type { ContactInfo, OpeningHour } from "@/lib/public.functions";
 import { Instagram, Facebook, Youtube, MapPin, Phone, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { subscribeNewsletter } from "@/lib/newsletter.functions";
 import logo from "@/assets/logo.webp";
 
 export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; hours: OpeningHour[] }) {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [busy, setBusy] = useState(false);
+  const subscribe = useServerFn(subscribeNewsletter);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    toast.success("Danke für deine Anmeldung!");
-    setEmail("");
+    setError("");
+    setSuccess("");
+    const value = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) {
+      setError("Bitte eine gültige E-Mail-Adresse eingeben.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const r = await subscribe({ data: { email: value, name: name.trim() } });
+      setSuccess(
+        r.alreadySubscribed
+          ? "Diese E-Mail-Adresse ist bereits angemeldet."
+          : "Danke schön! Du erhältst gleich eine Bestätigungs-E-Mail.",
+      );
+      setEmail("");
+      setName("");
+    } catch {
+      setError("Anmeldung fehlgeschlagen. Bitte versuche es später erneut.");
+    } finally {
+      setBusy(false);
+    }
   };
+
 
   const instagramUrl = contact.instagram_url || "https://instagram.com";
   const facebookUrl = contact.facebook_url || "https://facebook.com";
@@ -29,19 +55,34 @@ export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; h
             <h3 className="font-display text-2xl md:text-3xl text-[oklch(0.2_0.01_60)]">Bleib auf dem Laufenden</h3>
             <p className="text-sm text-[oklch(0.4_0.01_60)] max-w-md">Erhalte Neuigkeiten zu Events, exklusiven Angeboten und besonderen Menüs direkt in dein Postfach.</p>
           </div>
-          <form onSubmit={handleSubmit} className="flex gap-2 w-full md:w-auto md:min-w-[420px]">
-            <Input
-              type="email"
-              required
-              placeholder="Deine E-Mail-Adresse"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-white border-[oklch(0.85_0.02_75)] text-[oklch(0.2_0.01_60)] placeholder:text-[oklch(0.55_0.01_60)] focus-visible:ring-gold"
-            />
-            <Button type="submit" className="bg-gold text-gold-foreground hover:bg-gold/90 gap-2 px-6">
-              Anmelden <ArrowRight className="w-4 h-4" />
-            </Button>
+          <form onSubmit={handleSubmit} className="w-full md:w-auto md:min-w-[420px] space-y-2" noValidate>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                type="text"
+                placeholder="Name (optional)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-white border-[oklch(0.85_0.02_75)] text-[oklch(0.2_0.01_60)] placeholder:text-[oklch(0.55_0.01_60)] focus-visible:ring-gold sm:max-w-[40%]"
+              />
+              <Input
+                type="email"
+                placeholder="Deine E-Mail-Adresse"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                aria-invalid={!!error}
+                className="bg-white border-[oklch(0.85_0.02_75)] text-[oklch(0.2_0.01_60)] placeholder:text-[oklch(0.55_0.01_60)] focus-visible:ring-gold"
+              />
+              <Button type="submit" disabled={busy} className="bg-gold text-gold-foreground hover:bg-gold/90 gap-2 px-6 shrink-0">
+                {busy ? "Sendet …" : <>Anmelden <ArrowRight className="w-4 h-4" /></>}
+              </Button>
+            </div>
+            {error && <p className="text-xs text-red-700">{error}</p>}
+            {success && <p className="text-xs text-[oklch(0.4_0.08_140)]">{success}</p>}
+            <p className="text-[11px] text-[oklch(0.5_0.01_60)]">
+              Du kannst dich jederzeit über den Link in jeder E-Mail wieder abmelden.
+            </p>
           </form>
+
         </div>
       </div>
 

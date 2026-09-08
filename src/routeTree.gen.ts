@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UeberUnsRouteImport } from './routes/ueber-uns'
 import { Route as ReservierenRouteImport } from './routes/reservieren'
+import { Route as NewsletterAbmeldenRouteImport } from './routes/newsletter-abmelden'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as GutscheinDankeRouteImport } from './routes/gutschein-danke'
 import { Route as EventsRouteImport } from './routes/events'
@@ -32,6 +33,11 @@ const UeberUnsRoute = UeberUnsRouteImport.update({
 const ReservierenRoute = ReservierenRouteImport.update({
   id: '/reservieren',
   path: '/reservieren',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsletterAbmeldenRoute = NewsletterAbmeldenRouteImport.update({
+  id: '/newsletter-abmelden',
+  path: '/newsletter-abmelden',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KontaktRoute = KontaktRouteImport.update({
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/events': typeof EventsRoute
   '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
+  '/newsletter-abmelden': typeof NewsletterAbmeldenRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/events': typeof EventsRoute
   '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
+  '/newsletter-abmelden': typeof NewsletterAbmeldenRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/events': typeof EventsRoute
   '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
+  '/newsletter-abmelden': typeof NewsletterAbmeldenRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/gutschein-danke'
     | '/kontakt'
+    | '/newsletter-abmelden'
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/gutschein-danke'
     | '/kontakt'
+    | '/newsletter-abmelden'
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/gutschein-danke'
     | '/kontakt'
+    | '/newsletter-abmelden'
     | '/reservieren'
     | '/ueber-uns'
     | '/_authenticated/admin'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   EventsRoute: typeof EventsRoute
   GutscheinDankeRoute: typeof GutscheinDankeRoute
   KontaktRoute: typeof KontaktRoute
+  NewsletterAbmeldenRoute: typeof NewsletterAbmeldenRoute
   ReservierenRoute: typeof ReservierenRoute
   UeberUnsRoute: typeof UeberUnsRoute
   ReservationCancelTokenRoute: typeof ReservationCancelTokenRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/reservieren'
       fullPath: '/reservieren'
       preLoaderRoute: typeof ReservierenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newsletter-abmelden': {
+      id: '/newsletter-abmelden'
+      path: '/newsletter-abmelden'
+      fullPath: '/newsletter-abmelden'
+      preLoaderRoute: typeof NewsletterAbmeldenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kontakt': {
@@ -331,6 +351,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsRoute: EventsRoute,
   GutscheinDankeRoute: GutscheinDankeRoute,
   KontaktRoute: KontaktRoute,
+  NewsletterAbmeldenRoute: NewsletterAbmeldenRoute,
   ReservierenRoute: ReservierenRoute,
   UeberUnsRoute: UeberUnsRoute,
   ReservationCancelTokenRoute: ReservationCancelTokenRoute,

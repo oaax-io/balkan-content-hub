@@ -392,3 +392,45 @@ export async function sendReservationStatusUpdate(r: Reservation) {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Newsletter
+// ---------------------------------------------------------------------------
+
+export async function sendNewsletterWelcome(opts: { to: string; name?: string; unsubscribeToken: string }) {
+  const contact = await getContact();
+  const restaurant = contact?.restaurant_name ?? "Balkaneros";
+  const unsubUrl = `${getSiteBaseUrl()}/newsletter-abmelden?token=${opts.unsubscribeToken}`;
+  const greeting = opts.name?.trim() ? `Liebe/r ${opts.name.trim()}` : "Hallo";
+  const html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;padding:32px 0;font-family:Arial,Helvetica,sans-serif;">
+  <tr><td align="center">
+    <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#141414;border:1px solid #2a2a2a;border-radius:12px;">
+      <tr><td style="padding:32px 32px 8px;text-align:center;">
+        <div style="letter-spacing:6px;font-size:15px;color:#c9a227;font-weight:bold;">BALKANEROS</div>
+        <div style="letter-spacing:3px;font-size:10px;color:#8a8a8a;margin-top:6px;">EVENTS</div>
+      </td></tr>
+      <tr><td style="padding:16px 32px 0;">
+        <h1 style="color:#f3f3f3;font-size:22px;margin:0 0 12px;">Danke schön für deine Newsletter-Anmeldung!</h1>
+        <p style="color:#cfcfcf;font-size:14px;line-height:22px;margin:0 0 12px;">${greeting}, schön bist du dabei. Du erhältst ab jetzt Neuigkeiten zu unseren Events, exklusiven Angeboten und besonderen Menüs direkt in dein Postfach.</p>
+        <p style="color:#cfcfcf;font-size:14px;line-height:22px;margin:0 0 24px;">Bis bald bei ${restaurant}!</p>
+      </td></tr>
+      <tr><td style="padding:0 32px 28px;">
+        <a href="${getSiteBaseUrl()}" style="display:inline-block;background:#c9a227;color:#141414;text-decoration:none;font-weight:bold;font-size:14px;padding:12px 22px;border-radius:8px;">Zur Website</a>
+      </td></tr>
+      <tr><td style="padding:18px 32px 26px;border-top:1px solid #2a2a2a;">
+        <p style="color:#8a8a8a;font-size:11px;line-height:18px;margin:0;">
+          Du möchtest keine Newsletter mehr erhalten?
+          <a href="${unsubUrl}" style="color:#c9a227;">Hier abmelden</a>.
+        </p>
+        <p style="color:#6f6f6f;font-size:11px;line-height:18px;margin:8px 0 0;">Fine Moments GmbH · Kaspar-Koppstrasse 90 · CH-6030 Ebikon</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>`;
+  await sendEmail({
+    to: opts.to,
+    subject: `Danke schön für deine Newsletter-Anmeldung – ${restaurant}`,
+    html,
+    templateKey: "newsletter_welcome",
+  });
+}
