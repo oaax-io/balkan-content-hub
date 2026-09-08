@@ -28,8 +28,8 @@ export function ReservationFormEditorDialog({ open, onClose }: { open: boolean; 
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 p-0 sm:p-4">
-      <div className="flex h-full w-full flex-col overflow-hidden bg-card shadow-2xl sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:rounded-lg sm:border sm:border-border">
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-foreground/60 p-0 sm:items-center sm:p-4">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-card shadow-2xl sm:h-[min(88dvh,52rem)] sm:max-w-5xl sm:rounded-lg sm:border sm:border-border">
         <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-2">
             <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
@@ -39,17 +39,23 @@ export function ReservationFormEditorDialog({ open, onClose }: { open: boolean; 
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-5">
-          <ReservationFormEditor />
-        </div>
+        <ReservationFormEditor />
       </div>
     </div>
   );
 }
 
+const TABS = [
+  { key: "occasions", label: "Anlass-Optionen", icon: CalendarDays },
+  { key: "dates", label: "Termine pro Anlass", icon: CalendarIcon },
+  { key: "text", label: "Richtlinien-Text", icon: CreditCard },
+] as const;
+type EditorTab = (typeof TABS)[number]["key"];
+
 export function ReservationFormEditor() {
   const listFn = useServerFn(listSiteContent);
   const qc = useQueryClient();
+  const [tab, setTab] = useState<EditorTab>("occasions");
   const { data, isLoading } = useQuery({ queryKey: ["site-content-admin"], queryFn: () => listFn() });
 
   const rowMap = useMemo(() => {
@@ -64,17 +70,37 @@ export function ReservationFormEditor() {
     qc.invalidateQueries({ queryKey: ["occasions-from-content"] });
   };
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Lade …</p>;
-
   return (
-    <div className="space-y-4">
-      <OccasionsEditor rowMap={rowMap} onSaved={refresh} />
-      <PerOccasionDatesEditor rowMap={rowMap} onSaved={refresh} />
-      <TextField rowMap={rowMap} keyName="reservation_disclaimer" onSaved={refresh}
-        help="Stornierungs-Hinweis für kostenpflichtige Anlässe (z.B. Dinner & Dance). Wird als Checkbox-Text im Reservationsformular angezeigt." />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border bg-accent/20 px-2 sm:px-4">
+        {TABS.map((t) => (
+          <button key={t.key} type="button" onClick={() => setTab(t.key)}
+            className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-xs uppercase tracking-widest transition-colors ${
+              tab === t.key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}>
+            <t.icon className="h-3.5 w-3.5" />
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-background p-3 sm:p-5">
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Lade …</p>
+        ) : (
+          <>
+            {tab === "occasions" && <OccasionsEditor rowMap={rowMap} onSaved={refresh} />}
+            {tab === "dates" && <PerOccasionDatesEditor rowMap={rowMap} onSaved={refresh} />}
+            {tab === "text" && (
+              <TextField rowMap={rowMap} keyName="reservation_disclaimer" onSaved={refresh}
+                help="Allgemeiner Stornierungs-Hinweis. Gilt für alle Anlässe ohne eigenen Richtlinien-Text." />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
+
 
 
 function TextField({
@@ -211,10 +237,11 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
         </p>
       </div>
 
-      <div className="space-y-2 p-3 sm:p-4">
+      <div className="p-3 sm:p-4">
         {items.length === 0 && (
           <p className="text-sm text-muted-foreground italic">Noch keine Anlässe. Füge einen hinzu ↓</p>
         )}
+        <div className="grid gap-2 lg:grid-cols-2">
         {items.map((it, i) => (
           <div key={i} className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2 rounded-md border border-border bg-card p-2.5">
             <div className="row-span-2 flex flex-col justify-center text-xs text-muted-foreground">
@@ -252,8 +279,10 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
             </div>
           </div>
         ))}
+        </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+
           <button type="button" onClick={add}
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest text-foreground hover:bg-accent">
             <Plus className="w-3.5 h-3.5" /> Anlass hinzufügen
