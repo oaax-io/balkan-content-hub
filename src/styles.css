@@ -100,13 +100,13 @@
   --ring: oklch(0.52 0.14 48);
   --gold: oklch(0.55 0.14 55);
   --gold-foreground: oklch(1 0 0);
-  --sidebar: oklch(0.635 0.21 46);
+  --sidebar: oklch(0.52 0.15 46);
   --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(0.15 0.005 60);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.15 0.005 60);
   --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.5 0.16 46);
+  --sidebar-border: oklch(0.42 0.12 46);
   --sidebar-ring: oklch(0.15 0.005 60);
 }
 
