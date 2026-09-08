@@ -279,8 +279,10 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
             </div>
           </div>
         ))}
+        </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+
           <button type="button" onClick={add}
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest text-foreground hover:bg-accent">
             <Plus className="w-3.5 h-3.5" /> Anlass hinzufügen
