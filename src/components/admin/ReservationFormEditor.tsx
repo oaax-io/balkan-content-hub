@@ -165,7 +165,10 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
       { key: "reservation_occasions", value: unique.map((i) => i.label).join("\n") },
       { key: "reservation_paid_occasions", value: unique.filter((i) => i.paid).map((i) => i.label).join("\n") },
       { key: "reservation_occasions_with_dates", value: unique.filter((i) => i.hasDates).map((i) => i.label).join("\n") },
+      { key: "reservation_occasion_prices", value: serializeOccasionNumberMap(unique.map((i) => ({ label: i.label, value: i.price }))) },
+      { key: "reservation_occasion_min_guests", value: serializeOccasionNumberMap(unique.map((i) => ({ label: i.label, value: i.minGuests }))) },
     ];
+
     setSaving(true);
     try {
       await bulkFn({ data: { entries } });
