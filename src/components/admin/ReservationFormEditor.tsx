@@ -4,8 +4,9 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { listSiteContent, updateSiteContent, updateSiteContentBulk } from "@/lib/admin.functions";
 import { toast } from "sonner";
-import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X, Settings2 } from "lucide-react";
+import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X, Settings2, Users } from "lucide-react";
 import { parseOccasionNumberMap, serializeOccasionNumberMap, parseOccasionTextMap, serializeOccasionTextMap } from "@/lib/occasions";
+import { OccasionLoadPanel } from "./OccasionLoad";
 
 type Row = { key: string; value: string; label: string; kind: string; sort_order: number; preview_url: string };
 type Occasion = { label: string; paid: boolean; hasDates: boolean; price: number; minGuests: number; cancelFee: number; noShowFee: number; policy: string };
@@ -48,6 +49,7 @@ export function ReservationFormEditorDialog({ open, onClose }: { open: boolean; 
 const TABS = [
   { key: "occasions", label: "Anlass-Optionen", icon: CalendarDays },
   { key: "dates", label: "Termine pro Anlass", icon: CalendarIcon },
+  { key: "load", label: "Pro Anlass / Auslastung", icon: Users },
   { key: "text", label: "Richtlinien-Text", icon: CreditCard },
 ] as const;
 type EditorTab = (typeof TABS)[number]["key"];
@@ -90,6 +92,7 @@ export function ReservationFormEditor() {
           <>
             {tab === "occasions" && <OccasionsEditor rowMap={rowMap} onSaved={refresh} />}
             {tab === "dates" && <PerOccasionDatesEditor rowMap={rowMap} onSaved={refresh} />}
+            {tab === "load" && <OccasionLoadPanel />}
             {tab === "text" && (
               <TextField rowMap={rowMap} keyName="reservation_disclaimer" onSaved={refresh}
                 help="Allgemeiner Stornierungs-Hinweis. Gilt für alle Anlässe ohne eigenen Richtlinien-Text." />

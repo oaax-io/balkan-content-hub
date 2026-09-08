@@ -5,16 +5,17 @@ import {
   listReservations,
   updateReservationStatus,
   listOccasionCapacities,
-  setOccasionCapacity,
+
   chargeNoShowFee,
   cancelReservation,
   deleteReservation,
 } from "@/lib/reservations.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp, Trash2, ChevronDown } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp, Trash2 } from "lucide-react";
 import { ReservationFormEditorDialog } from "./ReservationFormEditor";
 import { ConfirmDialog, PromptDialog } from "./InAppDialogs";
+import { barColor } from "./OccasionLoad";
 
 
 const STATUS_STYLES: Record<string, string> = {
@@ -156,6 +157,13 @@ export function ReservationsTab() {
   const cancelledCount = all.filter((r) => r.status === "cancelled").length;
   const cancelledFree = cancelledCount - chargedFees.length;
 
+  const avgParty = totals.reservations > 0 ? (totals.persons / totals.reservations).toFixed(1) : "0";
+  const withLimit = perOccasion.filter((r) => r.max > 0);
+  const totalMax = withLimit.reduce((s, r) => s + r.max, 0);
+  const resWithLimit = withLimit.reduce((s, r) => s + r.reservations, 0);
+  const overallPct = totalMax > 0 ? Math.min(100, Math.round((resWithLimit / totalMax) * 100)) : 0;
+  const maxPersons = perOccasion.reduce((m, r) => Math.max(m, r.persons), 0);
+
 
   const filtered = all
     .filter((r) => filter === "all" || r.status === filter)
@@ -219,24 +227,63 @@ export function ReservationsTab() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={CalendarDays} label="Aktive Reservierungen" value={totals.reservations} hint="Bestätigt + offen" />
-          <Stat icon={Users} label="Personen gesamt" value={totals.persons} hint="Summe aller Gäste" />
+          <Stat icon={Users} label="Personen gesamt" value={totals.persons} hint={`Ø ${avgParty} pro Reservierung`} />
           <Stat icon={Sparkles} label="Offene Anfragen" value={totals.pending} hint="Noch zu bestätigen" accent={totals.pending > 0} />
           <Stat icon={Check} label="Bestätigt" value={totals.confirmed} hint="Insgesamt" />
         </div>
 
-        {/* Storno-Statistik */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Stat icon={TrendingUp} label="Storno-Einnahmen" value={feeRevenue} hint={`${chargedFees.length} belastete Gebühr(en)`} accent={feeRevenue > 0} currency />
-          <Stat icon={Ban} label="Stornierungen (kostenpflichtig)" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
-          <Stat icon={X} label="Stornierungen (kostenlos)" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
-        </div>
+        {/* Auslastung */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="rounded-sm border border-border bg-card p-5 lg:col-span-2">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">Gesamt-Auslastung</span>
+              <TrendingUp className={`h-4 w-4 ${overallPct >= 80 ? "text-gold" : "text-muted-foreground"}`} />
+            </div>
+            {totalMax > 0 ? (
+              <>
+                <div className="flex items-end gap-3">
+                  <div className={`font-display text-3xl ${overallPct >= 80 ? "text-gold" : ""}`}>{overallPct}%</div>
+                  <div className="pb-1 text-xs text-muted-foreground">
+                    {resWithLimit} von {totalMax} Plätzen belegt · {Math.max(0, totalMax - resWithLimit)} frei
+                  </div>
+                </div>
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
+                  <div className={`h-full ${barColor(overallPct)} transition-all`} style={{ width: `${overallPct}%` }} />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Noch keine Limiten gesetzt — im Fenster «Formular bearbeiten» unter «Pro Anlass / Auslastung» festlegen.
+              </p>
+            )}
 
-        <OccasionsPanel
-          rows={perOccasion}
-          onSaved={() => qc.invalidateQueries({ queryKey: ["occasion-capacities"] })}
-          onFilterByOccasion={(name) => setOccasionFilter(name)}
-        />
+            <div className="mt-5 space-y-3">
+              {perOccasion.slice(0, 5).map((r) => (
+                <button key={r.name} type="button" onClick={() => setOccasionFilter(r.name)}
+                  className="block w-full text-left group">
+                  <div className="flex items-baseline justify-between gap-3 text-xs">
+                    <span className="truncate font-medium group-hover:text-gold">{r.name}</span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {r.reservations} Res. · {r.persons} Pers.{r.max > 0 ? ` · ${r.pct}%` : ""}
+                    </span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div className={`h-full ${r.max > 0 ? barColor(r.pct) : "bg-muted-foreground/40"} transition-all`}
+                      style={{ width: `${r.max > 0 ? r.pct : (maxPersons > 0 ? Math.round((r.persons / maxPersons) * 100) : 0)}%` }} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            <Stat icon={TrendingUp} label="Storno-Einnahmen" value={feeRevenue} hint={`${chargedFees.length} belastete Gebühr(en)`} accent={feeRevenue > 0} currency />
+            <Stat icon={Ban} label="Storno kostenpflichtig" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
+            <Stat icon={X} label="Storno kostenlos" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
+          </div>
+        </div>
       </section>
+
 
 
       {/* ───────────── Filters ───────────── */}
@@ -423,151 +470,6 @@ function Stat({ icon: Icon, label, value, hint, accent, currency }: {
 }
 
 
-type OccRow = {
-  name: string; reservations: number; persons: number;
-  max: number; remaining: number; pct: number; isConfigured: boolean;
-};
-
-function OccasionsPanel({ rows, onSaved, onFilterByOccasion }: {
-  rows: OccRow[]; onSaved: () => void; onFilterByOccasion: (name: string) => void;
-}) {
-  const setCapFn = useServerFn(setOccasionCapacity);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
-  const [savingKey, setSavingKey] = useState<string | null>(null);
-  const [open, setOpen] = useState(true);
-
-  // Reset drafts when rows change (keep edits in progress though)
-  useEffect(() => {
-    setDrafts((d) => {
-      const next = { ...d };
-      // Drop drafts for occasions that no longer exist
-      Object.keys(next).forEach((k) => { if (!rows.some((r) => r.name === k)) delete next[k]; });
-      return next;
-    });
-  }, [rows]);
-
-  async function save(name: string) {
-    const raw = drafts[name];
-    const n = Number(raw);
-    if (!Number.isFinite(n) || n < 0) { toast.error("Bitte eine Zahl ≥ 0 eingeben."); return; }
-    setSavingKey(name);
-    try {
-      await setCapFn({ data: { occasion: name, max_reservations: Math.floor(n) } });
-      toast.success(`Maximum für „${name}" gespeichert.`);
-      setDrafts((d) => { const c = { ...d }; delete c[name]; return c; });
-      onSaved();
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
-    finally { setSavingKey(null); }
-  }
-
-  if (rows.length === 0) {
-    return (
-      <section className="rounded-sm border border-border bg-card p-6">
-        <header className="mb-2"><h3 className="font-display text-xl">Pro Anlass</h3></header>
-        <p className="text-sm text-muted-foreground">
-          Noch keine Anlässe konfiguriert. Füge sie unter <em>Inhalte & Bilder → reservation_occasions</em> hinzu.
-        </p>
-      </section>
-    );
-  }
-
-  const totalRes = rows.reduce((s, r) => s + r.reservations, 0);
-  const totalPersons = rows.reduce((s, r) => s + r.persons, 0);
-
-  return (
-    <section className="rounded-sm border border-border bg-card overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-6 py-4 text-left hover:bg-accent/40 transition-colors"
-        aria-expanded={open}
-      >
-        <div className="min-w-0">
-          <h3 className="font-display text-xl">Pro Anlass</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {rows.length} Anlass{rows.length === 1 ? "" : "e"} · {totalRes} Reservierungen · {totalPersons} Personen
-          </p>
-        </div>
-        <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-      </button>
-
-      {open && (
-        <div className="border-t border-border px-6 pb-6 pt-4">
-          <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-xs uppercase tracking-widest text-muted-foreground">
-            <tr className="border-b border-border">
-              <th className="text-left py-2 pr-4 font-medium">Anlass</th>
-              <th className="text-right py-2 px-2 font-medium">Reservierungen</th>
-              <th className="text-right py-2 px-2 font-medium">Personen</th>
-              <th className="text-left py-2 px-2 font-medium w-1/3">Auslastung</th>
-              <th className="text-right py-2 px-2 font-medium">Max</th>
-              <th className="text-right py-2 pl-2 font-medium">Aktion</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const draft = drafts[r.name];
-              const editing = draft !== undefined;
-              const barColor = r.pct >= 100 ? "bg-red-500"
-                : r.pct >= 80 ? "bg-amber-500" : "bg-emerald-500";
-              return (
-                <tr key={r.name} className="border-b border-border last:border-0">
-                  <td className="py-3 pr-4">
-                    <button onClick={() => onFilterByOccasion(r.name)} className="text-left hover:text-gold">
-                      <div className="font-medium">{r.name}</div>
-                      {!r.isConfigured && (
-                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">
-                          nicht in Dropdown
-                        </div>
-                      )}
-                    </button>
-                  </td>
-                  <td className="py-3 px-2 text-right tabular-nums font-display text-lg">{r.reservations}</td>
-                  <td className="py-3 px-2 text-right tabular-nums text-muted-foreground">{r.persons}</td>
-                  <td className="py-3 px-2">
-                    {r.max > 0 ? (
-                      <div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full ${barColor} transition-all`} style={{ width: `${r.pct}%` }} />
-                        </div>
-                        <div className="text-[10px] text-muted-foreground mt-1">
-                          {r.pct}% · {r.remaining > 0 ? `noch ${r.remaining} frei` : "ausgebucht"}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">kein Limit</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-2 text-right">
-                    <input
-                      type="number" min={0} inputMode="numeric"
-                      value={editing ? draft : (r.max || "")}
-                      placeholder="—"
-                      onChange={(e) => setDrafts((d) => ({ ...d, [r.name]: e.target.value }))}
-                      className="w-20 rounded border border-border bg-background px-2 py-1 text-right text-sm focus:outline-none focus:border-gold"
-                    />
-                  </td>
-                  <td className="py-3 pl-2 text-right">
-                    <button
-                      onClick={() => save(r.name)}
-                      disabled={!editing || savingKey === r.name}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-[11px] uppercase tracking-widest text-gold-foreground disabled:opacity-30">
-                      <Save className="w-3 h-3" />
-                      {savingKey === r.name ? "…" : "Speichern"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-          </div>
-        </div>
-      )}
-    </section>
-  );
-}
 
 function fmt(d: string) {
   try { return new Date(d + "T00:00:00").toLocaleDateString("de-CH", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }); }
