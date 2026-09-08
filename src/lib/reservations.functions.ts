@@ -113,13 +113,19 @@ const createSchema = z.object({
 export const createReservation = createServerFn({ method: "POST" })
   .inputValidator((input) => createSchema.parse(input))
   .handler(async ({ data }) => {
-    const isPaid = await isPaidOccasionServer(data.occasion);
+    const cfg = await loadOccasionConfig(data.occasion);
+    const isTicket = cfg.pricePerPerson > 0;
+    if (data.party_size < cfg.minGuests) {
+      throw new Error(`Für diesen Anlass sind mindestens ${cfg.minGuests} Personen nötig.`);
+    }
+    const isPaid = !isTicket && (await isPaidOccasionServer(data.occasion));
 
     // Bei kostenpflichtigen Anlässen ist eine hinterlegte Zahlungsmethode + Zustimmung Pflicht.
     if (isPaid) {
       if (!data.stripe_customer_id || !data.stripe_payment_method_id || !data.stripe_setup_intent_id) {
         throw new Error("Für diesen Anlass ist eine hinterlegte Zahlungsmethode erforderlich.");
       }
+
       if (!data.cancellation_terms_accepted) {
         throw new Error("Bitte akzeptiere die Stornierungsbedingungen.");
       }
