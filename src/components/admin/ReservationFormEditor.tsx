@@ -253,6 +253,61 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
           </button>
         </div>
       </div>
+
+      {settingsIndex !== null && items[settingsIndex] && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setSettingsIndex(null)} />
+          <div className="relative w-full max-w-md bg-background border border-border rounded-lg shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-primary" />
+                <span className="font-medium text-foreground text-sm">
+                  Zahlungs-Einstellungen{items[settingsIndex].label ? ` · ${items[settingsIndex].label}` : ""}
+                </span>
+              </div>
+              <button type="button" onClick={() => setSettingsIndex(null)} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-5">
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Ticketpreis pro Person (CHF)</label>
+                <input
+                  type="number" min={0} step="0.05" inputMode="decimal"
+                  value={items[settingsIndex].price || ""}
+                  onChange={(e) => update(settingsIndex, { price: Number(e.target.value) || 0 })}
+                  placeholder="0.00"
+                  className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  {items[settingsIndex].price > 0
+                    ? <>Sofortzahlung: Der Gast bezahlt <strong className="text-foreground">CHF {items[settingsIndex].price.toFixed(2)} × Personen</strong> direkt bei der Reservation.</>
+                    : <>Kein Ticketpreis: Zahlungsmethode nur als Sicherheit. Bei Storno innert 7 Tagen oder No-Show wird <strong className="text-foreground">CHF 50.– pro Person</strong> belastet.</>}
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Mindestanzahl Gäste</label>
+                <input
+                  type="number" min={1} max={99} step={1}
+                  value={items[settingsIndex].minGuests || ""}
+                  onChange={(e) => update(settingsIndex, { minGuests: Number(e.target.value) || 0 })}
+                  placeholder={items[settingsIndex].price > 0 ? "1" : "2"}
+                  className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Leer lassen für Standard: {items[settingsIndex].price > 0 ? "1 Person (Tickets einzeln buchbar)" : "2 Personen"}.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end px-5 py-4 border-t border-border">
+              <button type="button" onClick={() => setSettingsIndex(null)}
+                className="rounded-full bg-primary px-5 py-2 text-xs uppercase tracking-widest text-primary-foreground">
+                Übernehmen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
