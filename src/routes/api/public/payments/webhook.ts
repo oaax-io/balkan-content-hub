@@ -25,6 +25,15 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
               const { handleVoucherPaid } = await import("@/lib/vouchers-webhook.server");
               await handleVoucherPaid(session.metadata.voucher_id, session.id, session.payment_intent ?? null);
             }
+            if (purpose === "reservation_ticket" && session.metadata?.reservation_id) {
+              const { handleReservationTicketPaid } = await import("@/lib/reservation-ticket-webhook.server");
+              await handleReservationTicketPaid(
+                session.metadata.reservation_id,
+                session.id,
+                session.payment_intent ?? null,
+              );
+            }
+
           }
           return Response.json({ received: true });
         } catch (e) {
