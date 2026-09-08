@@ -227,6 +227,20 @@ export function ReservationsTab() {
         onConfirm={() => { if (deleteTarget) doDelete(deleteTarget.id); setDeleteTarget(null); }}
       />
 
+      <ConfirmDialog
+        open={!!statusTarget}
+        onOpenChange={(v) => !v && setStatusTarget(null)}
+        title={statusTarget?.status === "confirmed" ? "Reservation bestätigen?" : "Reservation ablehnen?"}
+        description={
+          statusTarget?.status === "confirmed"
+            ? "Der Gast erhält eine Bestätigungs-E-Mail."
+            : "Der Gast erhält eine Absage-E-Mail. Diese Aktion kann jederzeit durch erneutes Bestätigen korrigiert werden."
+        }
+        confirmLabel={statusTarget?.status === "confirmed" ? "Bestätigen" : "Ablehnen"}
+        destructive={statusTarget?.status === "declined"}
+        onConfirm={() => { if (statusTarget) setStatus(statusTarget.id, statusTarget.status); setStatusTarget(null); }}
+      />
+
       {/* ───────────── Overview ───────────── */}
       <section className="space-y-4">
         <header className="flex items-start justify-between gap-4">
