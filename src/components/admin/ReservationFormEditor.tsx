@@ -237,10 +237,11 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
         </p>
       </div>
 
-      <div className="space-y-2 p-3 sm:p-4">
+      <div className="p-3 sm:p-4">
         {items.length === 0 && (
           <p className="text-sm text-muted-foreground italic">Noch keine Anlässe. Füge einen hinzu ↓</p>
         )}
+        <div className="grid gap-2 lg:grid-cols-2">
         {items.map((it, i) => (
           <div key={i} className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2 rounded-md border border-border bg-card p-2.5">
             <div className="row-span-2 flex flex-col justify-center text-xs text-muted-foreground">
