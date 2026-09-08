@@ -138,14 +138,20 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
 
   const [items, setItems] = useState<Occasion[]>(initial);
   const [saving, setSaving] = useState(false);
+  const [settingsIndex, setSettingsIndex] = useState<number | null>(null);
   useEffect(() => { setItems(initial); }, [initial]);
 
   const dirty = JSON.stringify(items) !== JSON.stringify(initial);
 
   const update = (i: number, patch: Partial<Occasion>) =>
     setItems((p) => p.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
-  const remove = (i: number) => setItems((p) => p.filter((_, idx) => idx !== i));
+  const remove = (i: number) => { setItems((p) => p.filter((_, idx) => idx !== i)); setSettingsIndex(null); };
   const add = () => setItems((p) => [...p, { label: "", paid: false, hasDates: false, price: 0, minGuests: 0 }]);
+
+  const togglePaid = (i: number, checked: boolean) => {
+    update(i, { paid: checked });
+    if (checked) setSettingsIndex(i);
+  };
 
   const move = (i: number, dir: -1 | 1) =>
     setItems((p) => {
