@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { listSiteContent, updateSiteContent, updateSiteContentBulk } from "@/lib/admin.functions";
 import { toast } from "sonner";
 import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X, Settings2 } from "lucide-react";
@@ -27,18 +28,18 @@ export function ReservationFormEditorDialog({ open, onClose }: { open: boolean; 
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-8 overflow-y-auto bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-3xl bg-card border border-border rounded-lg shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border sticky top-0 bg-card z-10 rounded-t-lg">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-primary" />
-            <h2 className="font-display text-xl">Reservierungsformular bearbeiten</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 p-0 sm:p-4">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-card shadow-2xl sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-2xl sm:rounded-lg sm:border sm:border-border">
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <CalendarDays className="h-4 w-4 shrink-0 text-primary" />
+            <h2 className="truncate font-display text-lg">Reservierungsformular bearbeiten</h2>
           </div>
-          <button ref={closeRef} onClick={onClose} className="p-2 rounded-full hover:bg-accent" aria-label="Schliessen">
+          <button ref={closeRef} onClick={onClose} className="shrink-0 rounded-full p-2 hover:bg-accent" aria-label="Schliessen">
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-5 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-5">
           <ReservationFormEditor />
         </div>
       </div>
@@ -66,7 +67,7 @@ export function ReservationFormEditor() {
   if (isLoading) return <p className="text-sm text-muted-foreground">Lade …</p>;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <OccasionsEditor rowMap={rowMap} onSaved={refresh} />
       <PerOccasionDatesEditor rowMap={rowMap} onSaved={refresh} />
       <TextField rowMap={rowMap} keyName="reservation_disclaimer" onSaved={refresh}
@@ -200,24 +201,23 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
 
   return (
     <div className="border border-border rounded-md bg-background overflow-hidden">
-      <div className="px-4 py-3 border-b border-border bg-accent/20">
+      <div className="border-b border-border bg-accent/20 px-3 py-3 sm:px-4">
         <div className="flex items-center gap-2">
           <CalendarDays className="w-4 h-4 text-primary" />
           <span className="font-medium text-foreground">Anlass-Optionen (Dropdown im Formular)</span>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Pro Anlass legst du fest, ob er <strong>kostenpflichtig</strong> ist (Zahlungsmethode als Sicherheit + CHF 50 Storno pro Person),
-          ob <strong>Event-Daten</strong> erscheinen, den <strong>Ticketpreis pro Person</strong> (dann wird sofort bezahlt) und die <strong>Mindestanzahl Gäste</strong>.
+        <p className="mt-1 text-xs text-muted-foreground">
+          Anlass, Zahlung, Termine und Mindestanzahl individuell festlegen.
         </p>
       </div>
 
-      <div className="p-4 space-y-2">
+      <div className="space-y-2 p-3 sm:p-4">
         {items.length === 0 && (
           <p className="text-sm text-muted-foreground italic">Noch keine Anlässe. Füge einen hinzu ↓</p>
         )}
         {items.map((it, i) => (
-          <div key={i} className="flex flex-col md:flex-row md:items-center gap-2 p-3 rounded-md border border-border bg-card">
-            <div className="flex flex-col text-muted-foreground text-xs">
+          <div key={i} className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2 rounded-md border border-border bg-card p-2.5">
+            <div className="row-span-2 flex flex-col justify-center text-xs text-muted-foreground">
               <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="disabled:opacity-30 hover:text-foreground">▲</button>
               <button type="button" onClick={() => move(i, 1)} disabled={i === items.length - 1} className="disabled:opacity-30 hover:text-foreground">▼</button>
             </div>
@@ -225,31 +225,31 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
               value={it.label}
               onChange={(e) => update(i, { label: e.target.value })}
               placeholder="z.B. Ticket ab 21:30 Uhr (CHF 15.-)"
-              className="flex-1 bg-card border border-border rounded-sm px-3 py-2 focus:border-primary outline-none text-sm"
+              className="min-w-0 bg-card border border-border rounded-sm px-3 py-2 focus:border-primary outline-none text-sm"
             />
-            <label className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border cursor-pointer select-none ${it.paid ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+            <button type="button" onClick={() => remove(i)} className="row-span-2 self-center p-2 text-muted-foreground hover:text-destructive transition-colors" title="Entfernen" aria-label={`${it.label || "Anlass"} entfernen`}>
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <div className="col-start-2 flex min-w-0 flex-wrap gap-1.5">
+            <label className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border cursor-pointer select-none ${it.paid ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
               <input type="checkbox" className="sr-only" checked={it.paid} onChange={(e) => togglePaid(i, e.target.checked)} />
               <CreditCard className="w-3.5 h-3.5" />
               Kostenpflichtig
             </label>
             {it.paid && (
               <button type="button" onClick={() => openSettings(i, it.price)}
-                className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+                className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
                 title="Preis & Gäste-Einstellungen">
                 <Settings2 className="w-3.5 h-3.5" />
-                {it.price > 0 ? `CHF ${it.price.toFixed(2)} / Pers.` : `Storno CHF ${(it.cancelFee || 50).toFixed(2)} · No-Show CHF ${(it.noShowFee || it.cancelFee || 50).toFixed(2)}`}
-                {` · Min. ${it.minGuests > 0 ? it.minGuests : (it.price > 0 ? 1 : 2)}`}
+                <span className="truncate">{it.price > 0 ? `CHF ${it.price.toFixed(2)} / Pers.` : `Storno ${it.cancelFee || 50} · No-Show ${it.noShowFee || it.cancelFee || 50}`}</span>
               </button>
             )}
-            <label className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border cursor-pointer select-none ${it.hasDates ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
+            <label className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border cursor-pointer select-none ${it.hasDates ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
               <input type="checkbox" className="sr-only" checked={it.hasDates} onChange={(e) => update(i, { hasDates: e.target.checked })} />
               <CalendarIcon className="w-3.5 h-3.5" />
               Event-Daten
             </label>
-
-            <button type="button" onClick={() => remove(i)} className="p-2 text-muted-foreground hover:text-destructive transition-colors" title="Entfernen">
-              <Trash2 className="w-4 h-4" />
-            </button>
+            </div>
           </div>
         ))}
 
@@ -265,36 +265,36 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
         </div>
       </div>
 
-      {settingsIndex !== null && items[settingsIndex] && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setSettingsIndex(null)} />
-          <div className="relative w-full max-w-md bg-background border border-border rounded-lg shadow-2xl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+      {settingsIndex !== null && items[settingsIndex] && createPortal(
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-foreground/70 p-0 sm:p-4">
+          <div className="flex h-full w-full flex-col overflow-hidden bg-background shadow-2xl sm:h-auto sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:rounded-lg sm:border sm:border-border">
+            <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3 sm:px-5">
               <div className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-primary" />
-                <span className="font-medium text-foreground text-sm">
-                  Zahlungs-Einstellungen{items[settingsIndex].label ? ` · ${items[settingsIndex].label}` : ""}
-                </span>
+                <div className="min-w-0">
+                  <span className="block text-sm font-medium text-foreground">Zahlungs-Einstellungen</span>
+                  {items[settingsIndex].label && <span className="block max-w-[16rem] truncate text-xs text-muted-foreground">{items[settingsIndex].label}</span>}
+                </div>
               </div>
-              <button type="button" onClick={() => setSettingsIndex(null)} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+              <button type="button" onClick={() => setSettingsIndex(null)} className="rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" aria-label="Schliessen">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="p-5 space-y-5">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 sm:px-5">
               <div>
                 <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-2">Zahlungsart</label>
-                <div className="grid gap-2">
+                <div className="grid gap-2 sm:grid-cols-2">
                   <button type="button"
                     onClick={() => { setPayMode("fee"); update(settingsIndex, { price: 0 }); }}
-                    className={`text-left p-3 rounded-md border transition-colors ${payMode === "fee" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
+                     className={`text-left p-2.5 rounded-md border transition-colors ${payMode === "fee" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
                     <span className="block text-sm text-foreground">Nur Stornogebühr</span>
                     <span className="block text-xs text-muted-foreground mt-1">
-                      Bei der Reservation wird nichts belastet. Zahlungsmethode als Sicherheit; bei Storno innert 7 Tagen oder No-Show CHF 50.– pro Person.
+                      Karte als Sicherheit; Belastung nur bei Storno oder No-Show.
                     </span>
                   </button>
                   <button type="button"
                     onClick={() => setPayMode("ticket")}
-                    className={`text-left p-3 rounded-md border transition-colors ${payMode === "ticket" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
+                     className={`text-left p-2.5 rounded-md border transition-colors ${payMode === "ticket" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
                     <span className="block text-sm text-foreground">Sofortzahlung (Ticket)</span>
                     <span className="block text-xs text-muted-foreground mt-1">
                       Der Gast bezahlt den Ticketpreis direkt online bei der Reservation.
@@ -357,7 +357,7 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
               )}
               <div>
                 <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Richtlinien-Text für diesen Anlass</label>
-                <textarea rows={4}
+                <textarea rows={3}
                   value={items[settingsIndex].policy}
                   onChange={(e) => update(settingsIndex, { policy: e.target.value })}
                   placeholder="Leer lassen für den allgemeinen Standardtext."
@@ -367,14 +367,15 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
                 </p>
               </div>
             </div>
-            <div className="flex justify-end px-5 py-4 border-t border-border">
+            <div className="flex shrink-0 justify-end border-t border-border bg-background px-4 py-3 sm:px-5">
               <button type="button" onClick={() => setSettingsIndex(null)}
                 className="rounded-full bg-primary px-5 py-2 text-xs uppercase tracking-widest text-primary-foreground">
                 Übernehmen
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
