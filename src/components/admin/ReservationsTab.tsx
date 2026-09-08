@@ -344,11 +344,21 @@ export function ReservationsTab() {
                   : daysUntil < 7
                     ? "bg-amber-50 text-amber-700 border-amber-200"
                     : "bg-emerald-50 text-emerald-700 border-emerald-200";
+              const accent = r.status === "pending"
+                ? "border-l-amber-400"
+                : r.status === "confirmed"
+                  ? "border-l-emerald-400"
+                  : r.status === "declined"
+                    ? "border-l-red-400"
+                    : "border-l-gray-300";
+              const createdLabel = r.created_at
+                ? new Date(r.created_at).toLocaleDateString("de-CH", { day: "2-digit", month: "short", year: "numeric" })
+                : "—";
               return (
-              <li key={r.id} className="bg-card border border-border rounded-sm p-5">
+              <li key={r.id} className={`bg-card border border-border border-l-4 ${accent} rounded-sm p-5 shadow-sm hover:shadow-md transition-shadow`}>
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-2.5 mb-3">
                       <h3 className="font-display text-lg">{r.guest_name}</h3>
                       <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${STATUS_STYLES[r.status]}`}>
                         {STATUS_LABEL[r.status]}
@@ -366,11 +376,12 @@ export function ReservationsTab() {
                       )}
                     </div>
 
-                    <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                    <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-muted-foreground">
                       <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> {fmt(r.reservation_date)} · {r.reservation_time}</span>
                       <span className="flex items-center gap-2"><Users className="w-4 h-4" /> {r.party_size} Personen</span>
                       <a href={`mailto:${r.guest_email}`} className="flex items-center gap-2 hover:text-gold"><Mail className="w-4 h-4" /> {r.guest_email}</a>
                       {r.guest_phone && <a href={`tel:${r.guest_phone}`} className="flex items-center gap-2 hover:text-gold"><Phone className="w-4 h-4" /> {r.guest_phone}</a>}
+                      <span className="flex items-center gap-2"><CalendarDays className="w-4 h-4" /> Erstellt am {createdLabel}</span>
                     </div>
                     {r.event_date_label && (
                       <p className="mt-2 text-xs text-muted-foreground">Anlass-Datum: <span className="text-foreground">{r.event_date_label}</span></p>
