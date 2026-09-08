@@ -86,14 +86,18 @@ export function ReservationCard({
   occasions,
   occasionsWithDates,
   paidOccasions,
+  occasionPrices = {},
+  occasionMinGuests = {},
   variant = "overlay",
 }: ReservationCardProps) {
   const createFn = useServerFn(createReservation);
   const setupFn = useServerFn(createReservationSetupIntent);
+  const ticketFn = useServerFn(createTicketReservationCheckout);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [occasion, setOccasion] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [partySize, setPartySize] = useState("2");
 
   // Stripe stage
   const [stripeStage, setStripeStage] = useState<null | {
@@ -101,8 +105,15 @@ export function ReservationCard({
     customerId: string;
     values: FormValues;
   }>(null);
+  // Ticket-Checkout (Sofortzahlung)
+  const [ticketStage, setTicketStage] = useState<null | { clientSecret: string; occasion: string; total: number }>(null);
 
-  const paid = isPaidOccasion(occasion, paidOccasions);
+  const ticketPrice = getOccasionPrice(occasion, occasionPrices);
+  const minGuests = getOccasionMinGuests(occasion, occasionMinGuests, ticketPrice > 0);
+  const partyOptions = partySizeOptions(minGuests);
+  const currentParty = partyOptions.some((o) => o.value === partySize) ? partySize : partyOptions[0].value;
+  const paid = ticketPrice === 0 && isPaidOccasion(occasion, paidOccasions);
+  const ticketTotal = ticketPrice > 0 ? ticketPrice * (currentParty === "17" ? 1 : Number(currentParty)) : 0;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -112,7 +123,7 @@ export function ReservationCard({
       const occasionValue = String(fd.get("occasion") ?? "");
       const parsedDates = parseEventDates(eventDates, occasionValue);
 
-      const partyRaw = String(fd.get("party_size") ?? "2");
+      const partyRaw = String(fd.get("party_size") ?? String(minGuests));
       const partyNum = parseInt(partyRaw, 10);
       const eventDateMachine = String(fd.get("event_date") ?? "");
       const selectedEvent = parsedDates.find((d) => d.machineDate === eventDateMachine);
@@ -121,12 +132,36 @@ export function ReservationCard({
         guest_email: String(fd.get("email") ?? ""),
         country_code: String(fd.get("country_code") ?? ""),
         guest_phone: String(fd.get("phone") ?? ""),
-        party_size: Number.isFinite(partyNum) ? Math.max(2, Math.min(99, partyNum)) : 17,
-        occasion: String(fd.get("occasion") ?? ""),
+        party_size: Number.isFinite(partyNum) ? Math.max(minGuests, Math.min(99, partyNum)) : 17,
+        occasion: occasionValue,
         event_date: eventDateMachine,
         event_date_label: selectedEvent?.displayLabel ?? eventDateMachine,
         notes: String(fd.get("notes") ?? ""),
       };
+
+      // Ticket-Anlass: sofort bezahlen via Stripe Checkout
+      if (ticketPrice > 0) {
+        if (partyRaw === "17") {
+          toast.error("Für mehr als 16 Personen bitte direkt Kontakt aufnehmen.");
+          setSubmitting(false);
+          return;
+        }
+        const result = await ticketFn({
+          data: {
+            ...values,
+            returnUrl: `${window.location.origin}/reservation-danke?session_id={CHECKOUT_SESSION_ID}`,
+            environment: getStripeEnvironment(),
+          },
+        });
+        if ("error" in result) throw new Error(result.error);
+        setTicketStage({
+          clientSecret: result.clientSecret,
+          occasion: values.occasion,
+          total: ticketPrice * values.party_size,
+        });
+        setSubmitting(false);
+        return;
+      }
 
       if (isPaidOccasion(values.occasion, paidOccasions)) {
         if (!termsAccepted) {
@@ -151,6 +186,7 @@ export function ReservationCard({
       await createFn({ data: values });
       setDone(true);
       toast.success("Anfrage gesendet! Wir melden uns per E-Mail.");
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Senden fehlgeschlagen");
     } finally {
