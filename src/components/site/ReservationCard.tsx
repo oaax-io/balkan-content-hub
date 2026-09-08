@@ -360,13 +360,30 @@ export function ReservationCard({
         <Input label="Telefon" name="phone" type="tel" maxLength={40} autoComplete="tel" inputMode="tel" />
       </div>
 
-      <Select label="Personen *" name="party_size" required defaultValue="2">
-        {PARTY_SIZES.map((p, i) => (
-          <option key={p} value={i < 15 ? String(i + 2) : "17"}>
-            {p}
+      <Select
+        label="Personen *"
+        name="party_size"
+        required
+        value={currentParty}
+        onChange={(e) => setPartySize(e.target.value)}
+      >
+        {partyOptions.map((p) => (
+          <option key={p.value} value={p.value}>
+            {p.label}
           </option>
         ))}
       </Select>
+
+      {ticketPrice > 0 && (
+        <div className="text-[12px] leading-snug text-[#1a1a1a] bg-white/70 border border-gold/40 rounded-lg px-3 py-2">
+          Ticketpreis: <strong>CHF {formatChf(ticketPrice)}</strong> pro Person
+          {currentParty !== "17" && (
+            <> — Total <strong>CHF {formatChf(ticketTotal)}</strong></>
+          )}
+          . Die Zahlung erfolgt direkt online, die Reservation ist danach sofort bestätigt.
+        </div>
+      )}
+
 
       {showEventDates ? (
         <Select
