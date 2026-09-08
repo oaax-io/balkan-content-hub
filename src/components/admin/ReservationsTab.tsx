@@ -563,7 +563,9 @@ function OccasionsPanel({ rows, onSaved, onFilterByOccasion }: {
             })}
           </tbody>
         </table>
-      </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
