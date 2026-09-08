@@ -49,6 +49,7 @@ export function ReservationFormEditorDialog({ open, onClose }: { open: boolean; 
 const TABS = [
   { key: "occasions", label: "Anlass-Optionen", icon: CalendarDays },
   { key: "dates", label: "Termine pro Anlass", icon: CalendarIcon },
+  { key: "load", label: "Pro Anlass / Auslastung", icon: Users },
   { key: "text", label: "Richtlinien-Text", icon: CreditCard },
 ] as const;
 type EditorTab = (typeof TABS)[number]["key"];
