@@ -5,14 +5,14 @@ import {
   listReservations,
   updateReservationStatus,
   listOccasionCapacities,
-  setOccasionCapacity,
+
   chargeNoShowFee,
   cancelReservation,
   deleteReservation,
 } from "@/lib/reservations.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar, Save, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp, Trash2, ChevronDown } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp, Trash2 } from "lucide-react";
 import { ReservationFormEditorDialog } from "./ReservationFormEditor";
 import { ConfirmDialog, PromptDialog } from "./InAppDialogs";
 import { barColor } from "./OccasionLoad";
