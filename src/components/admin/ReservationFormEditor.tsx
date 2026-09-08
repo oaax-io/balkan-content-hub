@@ -4,9 +4,11 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { listSiteContent, updateSiteContent, updateSiteContentBulk } from "@/lib/admin.functions";
 import { toast } from "sonner";
 import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X } from "lucide-react";
+import { parseOccasionNumberMap, serializeOccasionNumberMap } from "@/lib/occasions";
 
 type Row = { key: string; value: string; label: string; kind: string; sort_order: number; preview_url: string };
-type Occasion = { label: string; paid: boolean; hasDates: boolean };
+type Occasion = { label: string; paid: boolean; hasDates: boolean; price: number; minGuests: number };
+
 
 const parseList = (v: string) => (v || "").split("\n").map((s) => s.trim()).filter(Boolean);
 
