@@ -123,10 +123,14 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
     const labels = parseList(rowMap.get("reservation_occasions")?.value ?? "");
     const paid = new Set(parseList(rowMap.get("reservation_paid_occasions")?.value ?? "").map((s) => s.toLowerCase()));
     const dates = new Set(parseList(rowMap.get("reservation_occasions_with_dates")?.value ?? "").map((s) => s.toLowerCase()));
+    const prices = parseOccasionNumberMap(rowMap.get("reservation_occasion_prices")?.value ?? "");
+    const mins = parseOccasionNumberMap(rowMap.get("reservation_occasion_min_guests")?.value ?? "");
     return labels.map((label) => ({
       label,
       paid: paid.has(label.toLowerCase()),
       hasDates: dates.has(label.toLowerCase()),
+      price: prices[label.toLowerCase()] ?? 0,
+      minGuests: mins[label.toLowerCase()] ?? 0,
     }));
   }, [rowMap]);
 
@@ -139,7 +143,8 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
   const update = (i: number, patch: Partial<Occasion>) =>
     setItems((p) => p.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
   const remove = (i: number) => setItems((p) => p.filter((_, idx) => idx !== i));
-  const add = () => setItems((p) => [...p, { label: "", paid: false, hasDates: false }]);
+  const add = () => setItems((p) => [...p, { label: "", paid: false, hasDates: false, price: 0, minGuests: 0 }]);
+
   const move = (i: number, dir: -1 | 1) =>
     setItems((p) => {
       const n = [...p]; const j = i + dir;
