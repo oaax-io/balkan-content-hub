@@ -92,6 +92,7 @@ export function ReservationFormEditor() {
           <>
             {tab === "occasions" && <OccasionsEditor rowMap={rowMap} onSaved={refresh} />}
             {tab === "dates" && <PerOccasionDatesEditor rowMap={rowMap} onSaved={refresh} />}
+            {tab === "load" && <OccasionLoadPanel />}
             {tab === "text" && (
               <TextField rowMap={rowMap} keyName="reservation_disclaimer" onSaved={refresh}
                 help="Allgemeiner Stornierungs-Hinweis. Gilt für alle Anlässe ohne eigenen Richtlinien-Text." />
