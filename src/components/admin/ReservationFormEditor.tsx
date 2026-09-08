@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { listSiteContent, updateSiteContent, updateSiteContentBulk } from "@/lib/admin.functions";
 import { toast } from "sonner";
-import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X } from "lucide-react";
+import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X, Settings2 } from "lucide-react";
 import { parseOccasionNumberMap, serializeOccasionNumberMap } from "@/lib/occasions";
 
 type Row = { key: string; value: string; label: string; kind: string; sort_order: number; preview_url: string };
@@ -138,14 +138,20 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
 
   const [items, setItems] = useState<Occasion[]>(initial);
   const [saving, setSaving] = useState(false);
+  const [settingsIndex, setSettingsIndex] = useState<number | null>(null);
   useEffect(() => { setItems(initial); }, [initial]);
 
   const dirty = JSON.stringify(items) !== JSON.stringify(initial);
 
   const update = (i: number, patch: Partial<Occasion>) =>
     setItems((p) => p.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
-  const remove = (i: number) => setItems((p) => p.filter((_, idx) => idx !== i));
+  const remove = (i: number) => { setItems((p) => p.filter((_, idx) => idx !== i)); setSettingsIndex(null); };
   const add = () => setItems((p) => [...p, { label: "", paid: false, hasDates: false, price: 0, minGuests: 0 }]);
+
+  const togglePaid = (i: number, checked: boolean) => {
+    update(i, { paid: checked });
+    if (checked) setSettingsIndex(i);
+  };
 
   const move = (i: number, dir: -1 | 1) =>
     setItems((p) => {
@@ -210,31 +216,20 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
               placeholder="z.B. Ticket ab 21:30 Uhr (CHF 15.-)"
               className="flex-1 bg-card border border-border rounded-sm px-3 py-2 focus:border-primary outline-none text-sm"
             />
-            <label className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <span className="whitespace-nowrap">Ticket CHF</span>
-              <input
-                type="number" min={0} step="0.05" inputMode="decimal"
-                value={it.price || ""}
-                onChange={(e) => update(i, { price: Number(e.target.value) || 0 })}
-                placeholder="0"
-                className="w-20 bg-card border border-border rounded-sm px-2 py-2 focus:border-primary outline-none text-sm text-foreground"
-              />
-            </label>
-            <label className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <span className="whitespace-nowrap">Min. Gäste</span>
-              <input
-                type="number" min={0} max={99} step={1}
-                value={it.minGuests || ""}
-                onChange={(e) => update(i, { minGuests: Number(e.target.value) || 0 })}
-                placeholder={it.price > 0 ? "1" : "2"}
-                className="w-16 bg-card border border-border rounded-sm px-2 py-2 focus:border-primary outline-none text-sm text-foreground"
-              />
-            </label>
             <label className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border cursor-pointer select-none ${it.paid ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
-              <input type="checkbox" className="sr-only" checked={it.paid} onChange={(e) => update(i, { paid: e.target.checked })} />
+              <input type="checkbox" className="sr-only" checked={it.paid} onChange={(e) => togglePaid(i, e.target.checked)} />
               <CreditCard className="w-3.5 h-3.5" />
               Kostenpflichtig
             </label>
+            {it.paid && (
+              <button type="button" onClick={() => setSettingsIndex(i)}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+                title="Preis & Gäste-Einstellungen">
+                <Settings2 className="w-3.5 h-3.5" />
+                {it.price > 0 ? `CHF ${it.price.toFixed(2)} / Pers.` : "Storno CHF 50 / Pers."}
+                {` · Min. ${it.minGuests > 0 ? it.minGuests : (it.price > 0 ? 1 : 2)}`}
+              </button>
+            )}
             <label className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border cursor-pointer select-none ${it.hasDates ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
               <input type="checkbox" className="sr-only" checked={it.hasDates} onChange={(e) => update(i, { hasDates: e.target.checked })} />
               <CalendarIcon className="w-3.5 h-3.5" />
@@ -258,6 +253,61 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
           </button>
         </div>
       </div>
+
+      {settingsIndex !== null && items[settingsIndex] && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setSettingsIndex(null)} />
+          <div className="relative w-full max-w-md bg-background border border-border rounded-lg shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-primary" />
+                <span className="font-medium text-foreground text-sm">
+                  Zahlungs-Einstellungen{items[settingsIndex].label ? ` · ${items[settingsIndex].label}` : ""}
+                </span>
+              </div>
+              <button type="button" onClick={() => setSettingsIndex(null)} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-5">
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Ticketpreis pro Person (CHF)</label>
+                <input
+                  type="number" min={0} step="0.05" inputMode="decimal"
+                  value={items[settingsIndex].price || ""}
+                  onChange={(e) => update(settingsIndex, { price: Number(e.target.value) || 0 })}
+                  placeholder="0.00"
+                  className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  {items[settingsIndex].price > 0
+                    ? <>Sofortzahlung: Der Gast bezahlt <strong className="text-foreground">CHF {items[settingsIndex].price.toFixed(2)} × Personen</strong> direkt bei der Reservation.</>
+                    : <>Kein Ticketpreis: Zahlungsmethode nur als Sicherheit. Bei Storno innert 7 Tagen oder No-Show wird <strong className="text-foreground">CHF 50.– pro Person</strong> belastet.</>}
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Mindestanzahl Gäste</label>
+                <input
+                  type="number" min={1} max={99} step={1}
+                  value={items[settingsIndex].minGuests || ""}
+                  onChange={(e) => update(settingsIndex, { minGuests: Number(e.target.value) || 0 })}
+                  placeholder={items[settingsIndex].price > 0 ? "1" : "2"}
+                  className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Leer lassen für Standard: {items[settingsIndex].price > 0 ? "1 Person (Tickets einzeln buchbar)" : "2 Personen"}.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end px-5 py-4 border-t border-border">
+              <button type="button" onClick={() => setSettingsIndex(null)}
+                className="rounded-full bg-primary px-5 py-2 text-xs uppercase tracking-widest text-primary-foreground">
+                Übernehmen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
