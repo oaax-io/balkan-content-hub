@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { createReservation, createReservationSetupIntent } from "@/lib/reservations.functions";
+import { Elements, PaymentElement, useStripe, useElements, EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+import { createReservation, createReservationSetupIntent, createTicketReservationCheckout } from "@/lib/reservations.functions";
 import { getStripe, getStripeEnvironment, isPaidOccasion } from "@/lib/stripe";
+import { getOccasionPrice, getOccasionMinGuests, formatChf, type OccasionConfigMap } from "@/lib/occasions";
 import { toast } from "sonner";
 
 const COUNTRY_CODES = [
@@ -16,11 +17,16 @@ const COUNTRY_CODES = [
   { code: "+1", label: "+1" },
 ];
 
-// Reservierungen ab 2 Personen. Kleinere Gruppen bitte telefonisch anfragen.
-const PARTY_SIZES = [
-  ...Array.from({ length: 15 }, (_, i) => `${i + 2} Personen`), // 2 … 16
-  "Mehr als 16 (Wir werden Sie kontaktieren)",
-];
+// Personen-Auswahl ab der Mindestanzahl des Anlasses bis 16, danach "Mehr als 16".
+function partySizeOptions(min: number) {
+  const start = Math.max(1, min);
+  const out: { value: string; label: string }[] = [];
+  for (let n = start; n <= 16; n++) {
+    out.push({ value: String(n), label: `${n} ${n === 1 ? "Person" : "Personen"}` });
+  }
+  out.push({ value: "17", label: "Mehr als 16 (Wir werden Sie kontaktieren)" });
+  return out;
+}
 
 export interface ReservationCardProps {
   eventDates: string[];
@@ -28,8 +34,11 @@ export interface ReservationCardProps {
   occasions?: string[];
   occasionsWithDates?: string[];
   paidOccasions?: string[];
+  occasionPrices?: OccasionConfigMap;
+  occasionMinGuests?: OccasionConfigMap;
   variant?: "overlay" | "page";
 }
+
 
 interface FormValues {
   guest_name: string;
