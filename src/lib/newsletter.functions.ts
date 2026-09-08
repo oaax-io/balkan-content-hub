@@ -97,3 +97,80 @@ export const importFromReservations = createServerFn({ method: "POST" })
     }
     return { added: toInsert.length, skipped: (res?.length ?? 0) - toInsert.length };
   });
+
+// ---------------------------------------------------------------------------
+// Öffentlich (Website-Footer)
+// ---------------------------------------------------------------------------
+
+export const subscribeNewsletter = createServerFn({ method: "POST" })
+  .inputValidator((i) =>
+    z
+      .object({
+        name: z.string().trim().max(160).optional().default(""),
+        email: z.string().trim().email("Bitte eine gültige E-Mail-Adresse eingeben.").max(255),
+      })
+      .parse(i),
+  )
+  .handler(async ({ data }) => {
+    const email = data.email.toLowerCase();
+    const { data: existing } = await supabaseAdmin
+      .from("newsletter_subscribers")
+      .select("id, subscribed, unsubscribe_token, name")
+      .eq("email", email)
+      .maybeSingle();
+
+    let token = existing?.unsubscribe_token ?? "";
+    if (existing) {
+      if (existing.subscribed) return { ok: true, alreadySubscribed: true };
+      const { error } = await supabaseAdmin
+        .from("newsletter_subscribers")
+        .update({ subscribed: true, name: data.name || existing.name })
+        .eq("id", existing.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { data: inserted, error } = await supabaseAdmin
+        .from("newsletter_subscribers")
+        .insert({ name: data.name, email, source: "website" })
+        .select("unsubscribe_token")
+        .single();
+      if (error) throw new Error(error.message);
+      token = inserted?.unsubscribe_token ?? "";
+    }
+
+    try {
+      const { sendNewsletterWelcome } = await import("./email.server");
+      await sendNewsletterWelcome({ to: email, name: data.name, unsubscribeToken: token });
+    } catch (e) {
+      console.error("[newsletter welcome mail failed]", e);
+    }
+    return { ok: true, alreadySubscribed: false };
+  });
+
+export const checkNewsletterToken = createServerFn({ method: "POST" })
+  .inputValidator((i) => z.object({ token: z.string().trim().min(8).max(80) }).parse(i))
+  .handler(async ({ data }) => {
+    const { data: row } = await supabaseAdmin
+      .from("newsletter_subscribers")
+      .select("email, subscribed")
+      .eq("unsubscribe_token", data.token)
+      .maybeSingle();
+    if (!row) return { found: false as const };
+    return { found: true as const, email: row.email, subscribed: row.subscribed };
+  });
+
+export const unsubscribeNewsletter = createServerFn({ method: "POST" })
+  .inputValidator((i) => z.object({ token: z.string().trim().min(8).max(80) }).parse(i))
+  .handler(async ({ data }) => {
+    const { data: row } = await supabaseAdmin
+      .from("newsletter_subscribers")
+      .select("id, email")
+      .eq("unsubscribe_token", data.token)
+      .maybeSingle();
+    if (!row) return { ok: false as const };
+    const { error } = await supabaseAdmin
+      .from("newsletter_subscribers")
+      .update({ subscribed: false, note: "Abmeldung über Website" })
+      .eq("id", row.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const, email: row.email };
+  });
