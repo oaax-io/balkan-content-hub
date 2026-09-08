@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { listSiteContent, updateSiteContent, updateSiteContentBulk } from "@/lib/admin.functions";
 import { toast } from "sonner";
-import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X } from "lucide-react";
+import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X, Settings2 } from "lucide-react";
 import { parseOccasionNumberMap, serializeOccasionNumberMap } from "@/lib/occasions";
 
 type Row = { key: string; value: string; label: string; kind: string; sort_order: number; preview_url: string };
