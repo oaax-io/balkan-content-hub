@@ -318,9 +318,16 @@ export type Database = {
           reservation_date: string
           reservation_time: string
           status: Database["public"]["Enums"]["reservation_status"]
+          stripe_checkout_session_id: string | null
           stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
           stripe_payment_method_id: string | null
           stripe_setup_intent_id: string | null
+          ticket_currency: string
+          ticket_paid_at: string | null
+          ticket_payment_status: string
+          ticket_price_rappen: number
+          ticket_total_rappen: number
           updated_at: string
         }
         Insert: {
@@ -350,9 +357,16 @@ export type Database = {
           reservation_date: string
           reservation_time: string
           status?: Database["public"]["Enums"]["reservation_status"]
+          stripe_checkout_session_id?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
           stripe_payment_method_id?: string | null
           stripe_setup_intent_id?: string | null
+          ticket_currency?: string
+          ticket_paid_at?: string | null
+          ticket_payment_status?: string
+          ticket_price_rappen?: number
+          ticket_total_rappen?: number
           updated_at?: string
         }
         Update: {
@@ -382,9 +396,16 @@ export type Database = {
           reservation_date?: string
           reservation_time?: string
           status?: Database["public"]["Enums"]["reservation_status"]
+          stripe_checkout_session_id?: string | null
           stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
           stripe_payment_method_id?: string | null
           stripe_setup_intent_id?: string | null
+          ticket_currency?: string
+          ticket_paid_at?: string | null
+          ticket_payment_status?: string
+          ticket_price_rappen?: number
+          ticket_total_rappen?: number
           updated_at?: string
         }
         Relationships: []
