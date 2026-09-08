@@ -4,10 +4,10 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { listSiteContent, updateSiteContent, updateSiteContentBulk } from "@/lib/admin.functions";
 import { toast } from "sonner";
 import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X, Settings2 } from "lucide-react";
-import { parseOccasionNumberMap, serializeOccasionNumberMap } from "@/lib/occasions";
+import { parseOccasionNumberMap, serializeOccasionNumberMap, parseOccasionTextMap, serializeOccasionTextMap } from "@/lib/occasions";
 
 type Row = { key: string; value: string; label: string; kind: string; sort_order: number; preview_url: string };
-type Occasion = { label: string; paid: boolean; hasDates: boolean; price: number; minGuests: number };
+type Occasion = { label: string; paid: boolean; hasDates: boolean; price: number; minGuests: number; cancelFee: number; noShowFee: number; policy: string };
 
 
 const parseList = (v: string) => (v || "").split("\n").map((s) => s.trim()).filter(Boolean);
@@ -127,12 +127,18 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
     const dates = new Set(parseList(rowMap.get("reservation_occasions_with_dates")?.value ?? "").map((s) => s.toLowerCase()));
     const prices = parseOccasionNumberMap(rowMap.get("reservation_occasion_prices")?.value ?? "");
     const mins = parseOccasionNumberMap(rowMap.get("reservation_occasion_min_guests")?.value ?? "");
+    const cancelFees = parseOccasionNumberMap(rowMap.get("reservation_occasion_cancel_fees")?.value ?? "");
+    const noShowFees = parseOccasionNumberMap(rowMap.get("reservation_occasion_noshow_fees")?.value ?? "");
+    const policies = parseOccasionTextMap(rowMap.get("reservation_occasion_disclaimers")?.value ?? "");
     return labels.map((label) => ({
       label,
       paid: paid.has(label.toLowerCase()),
       hasDates: dates.has(label.toLowerCase()),
       price: prices[label.toLowerCase()] ?? 0,
       minGuests: mins[label.toLowerCase()] ?? 0,
+      cancelFee: cancelFees[label.toLowerCase()] ?? 0,
+      noShowFee: noShowFees[label.toLowerCase()] ?? 0,
+      policy: policies[label.toLowerCase()] ?? "",
     }));
   }, [rowMap]);
 
@@ -148,7 +154,7 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
   const update = (i: number, patch: Partial<Occasion>) =>
     setItems((p) => p.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
   const remove = (i: number) => { setItems((p) => p.filter((_, idx) => idx !== i)); setSettingsIndex(null); };
-  const add = () => setItems((p) => [...p, { label: "", paid: false, hasDates: false, price: 0, minGuests: 0 }]);
+  const add = () => setItems((p) => [...p, { label: "", paid: false, hasDates: false, price: 0, minGuests: 0, cancelFee: 0, noShowFee: 0, policy: "" }]);
 
   const togglePaid = (i: number, checked: boolean) => {
     update(i, { paid: checked });
@@ -177,6 +183,9 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
       { key: "reservation_occasions_with_dates", value: unique.filter((i) => i.hasDates).map((i) => i.label).join("\n") },
       { key: "reservation_occasion_prices", value: serializeOccasionNumberMap(unique.map((i) => ({ label: i.label, value: i.price }))) },
       { key: "reservation_occasion_min_guests", value: serializeOccasionNumberMap(unique.map((i) => ({ label: i.label, value: i.minGuests }))) },
+      { key: "reservation_occasion_cancel_fees", value: serializeOccasionNumberMap(unique.map((i) => ({ label: i.label, value: i.cancelFee }))) },
+      { key: "reservation_occasion_noshow_fees", value: serializeOccasionNumberMap(unique.map((i) => ({ label: i.label, value: i.noShowFee }))) },
+      { key: "reservation_occasion_disclaimers", value: serializeOccasionTextMap(unique.map((i) => ({ label: i.label, value: i.policy }))) },
     ];
 
     setSaving(true);
@@ -228,7 +237,7 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
                 title="Preis & Gäste-Einstellungen">
                 <Settings2 className="w-3.5 h-3.5" />
-                {it.price > 0 ? `CHF ${it.price.toFixed(2)} / Pers.` : "Storno CHF 50 / Pers."}
+                {it.price > 0 ? `CHF ${it.price.toFixed(2)} / Pers.` : `Storno CHF ${(it.cancelFee || 50).toFixed(2)} · No-Show CHF ${(it.noShowFee || it.cancelFee || 50).toFixed(2)}`}
                 {` · Min. ${it.minGuests > 0 ? it.minGuests : (it.price > 0 ? 1 : 2)}`}
               </button>
             )}
@@ -322,6 +331,39 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
                 />
                 <p className="text-xs text-muted-foreground mt-2">
                   Leer lassen für Standard: {items[settingsIndex].price > 0 ? "1 Person (Tickets einzeln buchbar)" : "2 Personen"}.
+                </p>
+              </div>
+              {payMode === "fee" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Storno-Betrag / Pers. (CHF)</label>
+                    <input type="number" min={0} step="0.05" inputMode="decimal"
+                      value={items[settingsIndex].cancelFee || ""}
+                      onChange={(e) => update(settingsIndex, { cancelFee: Number(e.target.value) || 0 })}
+                      placeholder="50.00"
+                      className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground" />
+                    <p className="text-xs text-muted-foreground mt-1.5">Bei Storno innert 7 Tagen vor dem Anlass.</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">No-Show-Betrag / Pers. (CHF)</label>
+                    <input type="number" min={0} step="0.05" inputMode="decimal"
+                      value={items[settingsIndex].noShowFee || ""}
+                      onChange={(e) => update(settingsIndex, { noShowFee: Number(e.target.value) || 0 })}
+                      placeholder={(items[settingsIndex].cancelFee || 50).toFixed(2)}
+                      className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground" />
+                    <p className="text-xs text-muted-foreground mt-1.5">Bei Nichterscheinen. Leer = gleich wie Storno-Betrag.</p>
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Richtlinien-Text für diesen Anlass</label>
+                <textarea rows={4}
+                  value={items[settingsIndex].policy}
+                  onChange={(e) => update(settingsIndex, { policy: e.target.value })}
+                  placeholder="Leer lassen für den allgemeinen Standardtext."
+                  className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground" />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Erscheint im Reservationsformular als Checkbox-Text, wenn dieser Anlass gewählt wird.
                 </p>
               </div>
             </div>

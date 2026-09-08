@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Elements, PaymentElement, useStripe, useElements, EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { createReservation, createReservationSetupIntent, createTicketReservationCheckout } from "@/lib/reservations.functions";
 import { getStripe, getStripeEnvironment, isPaidOccasion } from "@/lib/stripe";
-import { getOccasionPrice, getOccasionMinGuests, formatChf, type OccasionConfigMap } from "@/lib/occasions";
+import { getOccasionPrice, getOccasionMinGuests, getOccasionText, formatChf, type OccasionConfigMap } from "@/lib/occasions";
 import { toast } from "sonner";
 
 const COUNTRY_CODES = [
@@ -36,6 +36,7 @@ export interface ReservationCardProps {
   paidOccasions?: string[];
   occasionPrices?: OccasionConfigMap;
   occasionMinGuests?: OccasionConfigMap;
+  occasionDisclaimers?: Record<string, string>;
   variant?: "overlay" | "page";
 }
 
@@ -88,6 +89,7 @@ export function ReservationCard({
   paidOccasions,
   occasionPrices = {},
   occasionMinGuests = {},
+  occasionDisclaimers = {},
   variant = "overlay",
 }: ReservationCardProps) {
   const createFn = useServerFn(createReservation);
@@ -422,8 +424,8 @@ export function ReservationCard({
             className="mt-0.5 accent-[#8a6a14]"
           />
           <span className="whitespace-pre-line">
-            {disclaimer && disclaimer.trim().length > 0 ? (
-              disclaimer
+            {(getOccasionText(occasion, occasionDisclaimers) || disclaimer || "").trim().length > 0 ? (
+              getOccasionText(occasion, occasionDisclaimers) || disclaimer
             ) : (
               <>
                 Ich akzeptiere, dass bei Stornierung weniger als <strong>7 Tage</strong> vor dem

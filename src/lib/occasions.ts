@@ -50,3 +50,42 @@ export function getOccasionMinGuests(
 export function formatChf(amount: number): string {
   return amount % 1 === 0 ? amount.toFixed(0) : amount.toFixed(2);
 }
+
+/** Textwerte pro Anlass ("Anlass::Text", Zeilenumbrüche als \n kodiert). */
+export function parseOccasionTextMap(raw: string | null | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of (raw || "").split("\n")) {
+    const idx = line.indexOf("::");
+    if (idx < 0) continue;
+    const label = normKey(line.slice(0, idx));
+    const value = line.slice(idx + 2).trim().replace(/\\n/g, "\n");
+    if (!label || !value) continue;
+    out[label] = value;
+  }
+  return out;
+}
+
+export function serializeOccasionTextMap(entries: { label: string; value: string }[]): string {
+  return entries
+    .filter((e) => e.label.trim() && (e.value || "").trim())
+    .map((e) => `${e.label.trim()}::${e.value.trim().replace(/\r?\n/g, "\\n")}`)
+    .join("\n");
+}
+
+export function getOccasionText(occasion: string | null | undefined, map: Record<string, string>): string {
+  if (!occasion) return "";
+  return map[normKey(occasion)] ?? "";
+}
+
+/** Gebühr pro Person in CHF, Fallback 50. */
+export function getOccasionFee(
+  occasion: string | null | undefined,
+  fees: OccasionConfigMap,
+  fallback = 50,
+): number {
+  if (occasion) {
+    const v = fees[normKey(occasion)];
+    if (typeof v === "number" && v > 0) return v;
+  }
+  return fallback;
+}

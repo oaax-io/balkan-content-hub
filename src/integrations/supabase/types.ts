@@ -312,6 +312,7 @@ export type Database = {
           guest_phone: string
           id: string
           is_paid_occasion: boolean
+          no_show_fee_amount: number
           notes: string
           occasion: string
           party_size: number
@@ -351,6 +352,7 @@ export type Database = {
           guest_phone?: string
           id?: string
           is_paid_occasion?: boolean
+          no_show_fee_amount?: number
           notes?: string
           occasion?: string
           party_size: number
@@ -390,6 +392,7 @@ export type Database = {
           guest_phone?: string
           id?: string
           is_paid_occasion?: boolean
+          no_show_fee_amount?: number
           notes?: string
           occasion?: string
           party_size?: number
