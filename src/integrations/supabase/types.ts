@@ -185,6 +185,7 @@ export type Database = {
           note: string
           source: string
           subscribed: boolean
+          unsubscribe_token: string
           updated_at: string
         }
         Insert: {
@@ -195,6 +196,7 @@ export type Database = {
           note?: string
           source?: string
           subscribed?: boolean
+          unsubscribe_token?: string
           updated_at?: string
         }
         Update: {
@@ -205,6 +207,7 @@ export type Database = {
           note?: string
           source?: string
           subscribed?: boolean
+          unsubscribe_token?: string
           updated_at?: string
         }
         Relationships: []
