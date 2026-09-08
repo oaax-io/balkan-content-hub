@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { HeroSlider } from "@/components/site/HeroSlider";
 import { ReservationCard } from "@/components/site/ReservationCard";
+import { parseOccasionNumberMap } from "@/lib/occasions";
 import offerBrunch from "@/assets/offer-brunch.jpg";
 import offerDinner from "@/assets/offer-dinner.jpg";
 import offerEvents from "@/assets/offer-events.jpg";
@@ -50,6 +51,8 @@ function Home() {
     .split("\n")
     .map((s) => s.trim())
     .filter(Boolean);
+  const occasionPrices = parseOccasionNumberMap(content.reservation_occasion_prices);
+  const occasionMinGuests = parseOccasionNumberMap(content.reservation_occasion_min_guests);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -67,6 +70,8 @@ function Home() {
           occasions={occasions}
           occasionsWithDates={occasionsWithDates}
           paidOccasions={paidOccasions}
+          occasionPrices={occasionPrices}
+          occasionMinGuests={occasionMinGuests}
           variant="overlay"
         />
       </HeroSlider>

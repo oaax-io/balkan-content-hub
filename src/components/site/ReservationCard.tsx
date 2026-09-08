@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { createReservation, createReservationSetupIntent } from "@/lib/reservations.functions";
+import { Elements, PaymentElement, useStripe, useElements, EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
+import { createReservation, createReservationSetupIntent, createTicketReservationCheckout } from "@/lib/reservations.functions";
 import { getStripe, getStripeEnvironment, isPaidOccasion } from "@/lib/stripe";
+import { getOccasionPrice, getOccasionMinGuests, formatChf, type OccasionConfigMap } from "@/lib/occasions";
 import { toast } from "sonner";
 
 const COUNTRY_CODES = [
@@ -16,11 +17,16 @@ const COUNTRY_CODES = [
   { code: "+1", label: "+1" },
 ];
 
-// Reservierungen ab 2 Personen. Kleinere Gruppen bitte telefonisch anfragen.
-const PARTY_SIZES = [
-  ...Array.from({ length: 15 }, (_, i) => `${i + 2} Personen`), // 2 … 16
-  "Mehr als 16 (Wir werden Sie kontaktieren)",
-];
+// Personen-Auswahl ab der Mindestanzahl des Anlasses bis 16, danach "Mehr als 16".
+function partySizeOptions(min: number) {
+  const start = Math.max(1, min);
+  const out: { value: string; label: string }[] = [];
+  for (let n = start; n <= 16; n++) {
+    out.push({ value: String(n), label: `${n} ${n === 1 ? "Person" : "Personen"}` });
+  }
+  out.push({ value: "17", label: "Mehr als 16 (Wir werden Sie kontaktieren)" });
+  return out;
+}
 
 export interface ReservationCardProps {
   eventDates: string[];
@@ -28,8 +34,11 @@ export interface ReservationCardProps {
   occasions?: string[];
   occasionsWithDates?: string[];
   paidOccasions?: string[];
+  occasionPrices?: OccasionConfigMap;
+  occasionMinGuests?: OccasionConfigMap;
   variant?: "overlay" | "page";
 }
+
 
 interface FormValues {
   guest_name: string;
@@ -77,14 +86,18 @@ export function ReservationCard({
   occasions,
   occasionsWithDates,
   paidOccasions,
+  occasionPrices = {},
+  occasionMinGuests = {},
   variant = "overlay",
 }: ReservationCardProps) {
   const createFn = useServerFn(createReservation);
   const setupFn = useServerFn(createReservationSetupIntent);
+  const ticketFn = useServerFn(createTicketReservationCheckout);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [occasion, setOccasion] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [partySize, setPartySize] = useState("2");
 
   // Stripe stage
   const [stripeStage, setStripeStage] = useState<null | {
@@ -92,8 +105,15 @@ export function ReservationCard({
     customerId: string;
     values: FormValues;
   }>(null);
+  // Ticket-Checkout (Sofortzahlung)
+  const [ticketStage, setTicketStage] = useState<null | { clientSecret: string; occasion: string; total: number }>(null);
 
-  const paid = isPaidOccasion(occasion, paidOccasions);
+  const ticketPrice = getOccasionPrice(occasion, occasionPrices);
+  const minGuests = getOccasionMinGuests(occasion, occasionMinGuests, ticketPrice > 0);
+  const partyOptions = partySizeOptions(minGuests);
+  const currentParty = partyOptions.some((o) => o.value === partySize) ? partySize : partyOptions[0].value;
+  const paid = ticketPrice === 0 && isPaidOccasion(occasion, paidOccasions);
+  const ticketTotal = ticketPrice > 0 ? ticketPrice * (currentParty === "17" ? 1 : Number(currentParty)) : 0;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -103,7 +123,7 @@ export function ReservationCard({
       const occasionValue = String(fd.get("occasion") ?? "");
       const parsedDates = parseEventDates(eventDates, occasionValue);
 
-      const partyRaw = String(fd.get("party_size") ?? "2");
+      const partyRaw = String(fd.get("party_size") ?? String(minGuests));
       const partyNum = parseInt(partyRaw, 10);
       const eventDateMachine = String(fd.get("event_date") ?? "");
       const selectedEvent = parsedDates.find((d) => d.machineDate === eventDateMachine);
@@ -112,12 +132,36 @@ export function ReservationCard({
         guest_email: String(fd.get("email") ?? ""),
         country_code: String(fd.get("country_code") ?? ""),
         guest_phone: String(fd.get("phone") ?? ""),
-        party_size: Number.isFinite(partyNum) ? Math.max(2, Math.min(99, partyNum)) : 17,
-        occasion: String(fd.get("occasion") ?? ""),
+        party_size: Number.isFinite(partyNum) ? Math.max(minGuests, Math.min(99, partyNum)) : 17,
+        occasion: occasionValue,
         event_date: eventDateMachine,
         event_date_label: selectedEvent?.displayLabel ?? eventDateMachine,
         notes: String(fd.get("notes") ?? ""),
       };
+
+      // Ticket-Anlass: sofort bezahlen via Stripe Checkout
+      if (ticketPrice > 0) {
+        if (partyRaw === "17") {
+          toast.error("Für mehr als 16 Personen bitte direkt Kontakt aufnehmen.");
+          setSubmitting(false);
+          return;
+        }
+        const result = await ticketFn({
+          data: {
+            ...values,
+            returnUrl: `${window.location.origin}/reservation-danke?session_id={CHECKOUT_SESSION_ID}`,
+            environment: getStripeEnvironment(),
+          },
+        });
+        if ("error" in result) throw new Error(result.error);
+        setTicketStage({
+          clientSecret: result.clientSecret,
+          occasion: values.occasion,
+          total: ticketPrice * values.party_size,
+        });
+        setSubmitting(false);
+        return;
+      }
 
       if (isPaidOccasion(values.occasion, paidOccasions)) {
         if (!termsAccepted) {
@@ -142,6 +186,7 @@ export function ReservationCard({
       await createFn({ data: values });
       setDone(true);
       toast.success("Anfrage gesendet! Wir melden uns per E-Mail.");
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Senden fehlgeschlagen");
     } finally {
@@ -185,8 +230,38 @@ export function ReservationCard({
     );
   }
 
+  // Ticket-Anlass: Sofortzahlung im eingebetteten Stripe Checkout
+  if (ticketStage) {
+    return (
+      <div className={wrapperClass}>
+        <div className="text-center pb-3">
+          <p className="text-[#8a6a14] tracking-[0.3em] uppercase text-[10px] mb-1 font-bold">Ticket bezahlen</p>
+          <h3 className="font-display text-xl text-[#1a1a1a]">
+            {ticketStage.occasion} — CHF {formatChf(ticketStage.total)}
+          </h3>
+        </div>
+        <div className="rounded-xl overflow-hidden bg-white">
+          <EmbeddedCheckoutProvider
+            stripe={getStripe()}
+            options={{ fetchClientSecret: async () => ticketStage.clientSecret }}
+          >
+            <EmbeddedCheckout />
+          </EmbeddedCheckoutProvider>
+        </div>
+        <button
+          type="button"
+          onClick={() => setTicketStage(null)}
+          className="mt-3 w-full rounded-full border border-gold/50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#1a1a1a] hover:bg-white/60 transition"
+        >
+          Abbrechen
+        </button>
+      </div>
+    );
+  }
+
   // Stage 2: Payment method entry
   if (stripeStage) {
+
     return (
       <div className={wrapperClass}>
         <div className="text-center pb-3">
@@ -285,13 +360,30 @@ export function ReservationCard({
         <Input label="Telefon" name="phone" type="tel" maxLength={40} autoComplete="tel" inputMode="tel" />
       </div>
 
-      <Select label="Personen *" name="party_size" required defaultValue="2">
-        {PARTY_SIZES.map((p, i) => (
-          <option key={p} value={i < 15 ? String(i + 2) : "17"}>
-            {p}
+      <Select
+        label="Personen *"
+        name="party_size"
+        required
+        value={currentParty}
+        onChange={(e) => setPartySize(e.target.value)}
+      >
+        {partyOptions.map((p) => (
+          <option key={p.value} value={p.value}>
+            {p.label}
           </option>
         ))}
       </Select>
+
+      {ticketPrice > 0 && (
+        <div className="text-[12px] leading-snug text-[#1a1a1a] bg-white/70 border border-gold/40 rounded-lg px-3 py-2">
+          Ticketpreis: <strong>CHF {formatChf(ticketPrice)}</strong> pro Person
+          {currentParty !== "17" && (
+            <> — Total <strong>CHF {formatChf(ticketTotal)}</strong></>
+          )}
+          . Die Zahlung erfolgt direkt online, die Reservation ist danach sofort bestätigt.
+        </div>
+      )}
+
 
       {showEventDates ? (
         <Select
@@ -349,7 +441,7 @@ export function ReservationCard({
         disabled={submitting || (paid && !termsAccepted)}
         className="w-full rounded-full bg-gold px-6 py-3 text-sm font-bold uppercase tracking-widest text-[#0d0d0d] hover:bg-[#0d0d0d] hover:text-gold border border-gold active:scale-[0.99] transition disabled:opacity-50"
       >
-        {submitting ? "Wird gesendet …" : paid ? "Weiter zur Zahlungsmethode" : "Reservieren"}
+        {submitting ? "Wird gesendet …" : ticketPrice > 0 ? `Ticket bezahlen — CHF ${formatChf(ticketTotal)}` : paid ? "Weiter zur Zahlungsmethode" : "Reservieren"}
       </button>
     </form>
   );

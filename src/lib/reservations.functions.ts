@@ -26,6 +26,36 @@ async function isPaidOccasionServer(occasion: string): Promise<boolean> {
   return s.includes("99.- pro person") || s.includes("dinner & dance");
 }
 
+// --- Anlass-Konfiguration: Ticketpreis (CHF pro Person) + Mindestgäste ------
+function parseNumberMap(raw: string | null | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const line of (raw || "").split("\n")) {
+    const idx = line.indexOf("::");
+    if (idx < 0) continue;
+    const label = line.slice(0, idx).trim().toLowerCase();
+    const value = Number(line.slice(idx + 2).trim().replace(",", "."));
+    if (!label || !Number.isFinite(value)) continue;
+    out[label] = value;
+  }
+  return out;
+}
+
+async function loadOccasionConfig(occasion: string): Promise<{ pricePerPerson: number; minGuests: number }> {
+  const { data } = await supabaseAdmin
+    .from("site_content")
+    .select("key,value")
+    .in("key", ["reservation_occasion_prices", "reservation_occasion_min_guests"]);
+  const kv = new Map((data || []).map((r: { key: string; value: string }) => [r.key, r.value]));
+  const key = (occasion || "").trim().toLowerCase();
+  const prices = parseNumberMap(kv.get("reservation_occasion_prices"));
+  const mins = parseNumberMap(kv.get("reservation_occasion_min_guests"));
+  const pricePerPerson = prices[key] && prices[key] > 0 ? prices[key] : 0;
+  const minRaw = mins[key];
+  const minGuests = minRaw && minRaw >= 1 ? Math.floor(minRaw) : pricePerPerson > 0 ? 1 : 2;
+  return { pricePerPerson, minGuests };
+}
+
+
 const GERMAN_MONTHS: Record<string, number> = {
   januar: 1, februar: 2, märz: 3, april: 4, mai: 5, juni: 6,
   juli: 7, august: 8, september: 9, oktober: 10, november: 11, dezember: 12,
@@ -66,7 +96,7 @@ const createSchema = z.object({
   guest_email: z.string().trim().email().max(255),
   guest_phone: z.string().trim().max(40).default(""),
   country_code: z.string().trim().max(10).default(""),
-  party_size: z.number().int().min(2).max(99),
+  party_size: z.number().int().min(1).max(99),
   reservation_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).default("1970-01-01"),
   reservation_time: z.string().regex(/^\d{2}:\d{2}$/).default("00:00"),
   occasion: z.string().trim().max(120).default(""),
@@ -83,13 +113,19 @@ const createSchema = z.object({
 export const createReservation = createServerFn({ method: "POST" })
   .inputValidator((input) => createSchema.parse(input))
   .handler(async ({ data }) => {
-    const isPaid = await isPaidOccasionServer(data.occasion);
+    const cfg = await loadOccasionConfig(data.occasion);
+    const isTicket = cfg.pricePerPerson > 0;
+    if (data.party_size < cfg.minGuests) {
+      throw new Error(`Für diesen Anlass sind mindestens ${cfg.minGuests} Personen nötig.`);
+    }
+    const isPaid = !isTicket && (await isPaidOccasionServer(data.occasion));
 
     // Bei kostenpflichtigen Anlässen ist eine hinterlegte Zahlungsmethode + Zustimmung Pflicht.
     if (isPaid) {
       if (!data.stripe_customer_id || !data.stripe_payment_method_id || !data.stripe_setup_intent_id) {
         throw new Error("Für diesen Anlass ist eine hinterlegte Zahlungsmethode erforderlich.");
       }
+
       if (!data.cancellation_terms_accepted) {
         throw new Error("Bitte akzeptiere die Stornierungsbedingungen.");
       }
@@ -713,4 +749,120 @@ export const deleteReservation = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+// ---------------------------------------------------------------------------
+// Ticket-Anlässe: sofortige Zahlung via Stripe Checkout
+// ---------------------------------------------------------------------------
+
+const ticketSchema = z.object({
+  guest_name: z.string().trim().min(2).max(120),
+  guest_email: z.string().trim().email().max(255),
+  guest_phone: z.string().trim().max(40).default(""),
+  country_code: z.string().trim().max(10).default(""),
+  party_size: z.number().int().min(1).max(99),
+  occasion: z.string().trim().max(120),
+  event_date: z.string().trim().max(200).default(""),
+  event_date_label: z.string().trim().max(200).default(""),
+  notes: z.string().trim().max(1000).default(""),
+  returnUrl: z.string().url().max(500),
+  environment: z.enum(["sandbox", "live"]),
+});
+
+type TicketCheckoutResult = { clientSecret: string } | { error: string };
+
+export const createTicketReservationCheckout = createServerFn({ method: "POST" })
+  .inputValidator((input) => ticketSchema.parse(input))
+  .handler(async ({ data }): Promise<TicketCheckoutResult> => {
+    const cfg = await loadOccasionConfig(data.occasion);
+    if (cfg.pricePerPerson <= 0) {
+      return { error: "Für diesen Anlass ist kein Ticketpreis hinterlegt." };
+    }
+    if (data.party_size < cfg.minGuests) {
+      return { error: `Für diesen Anlass sind mindestens ${cfg.minGuests} Personen nötig.` };
+    }
+
+    const unitAmount = Math.round(cfg.pricePerPerson * 100);
+    const totalAmount = unitAmount * data.party_size;
+
+    const parsedEvent = parseEventDateLabel(data.event_date) || parseEventDateLabel(data.event_date_label);
+    const cancellationToken = generateSecureToken(48);
+
+    const { data: row, error } = await supabaseAdmin
+      .from("reservations")
+      .insert({
+        guest_name: data.guest_name,
+        guest_email: data.guest_email,
+        guest_phone: data.guest_phone,
+        country_code: data.country_code,
+        party_size: data.party_size,
+        reservation_date: parsedEvent?.date ?? "1970-01-01",
+        reservation_time: parsedEvent?.time ?? "00:00",
+        occasion: data.occasion,
+        event_date_label: data.event_date_label,
+        notes: data.notes,
+        status: "pending" as const,
+        is_paid_occasion: true,
+        ticket_price_rappen: unitAmount,
+        ticket_total_rappen: totalAmount,
+        ticket_payment_status: "pending",
+        cancellation_token: cancellationToken,
+      })
+      .select()
+      .single();
+    if (error || !row) return { error: error?.message ?? "Reservation konnte nicht erstellt werden." };
+
+    try {
+      const stripe = createStripeClient(data.environment as StripeEnv);
+      const session = await stripe.checkout.sessions.create({
+        line_items: [
+          {
+            price_data: {
+              currency: "chf",
+              product_data: { name: `${data.occasion} — Ticket` },
+              unit_amount: unitAmount,
+            },
+            quantity: data.party_size,
+          },
+        ],
+        mode: "payment",
+        ui_mode: "embedded_page",
+        return_url: data.returnUrl,
+        customer_email: data.guest_email,
+        payment_intent_data: { description: `Balkaneros Ticket — ${data.occasion}` },
+        metadata: {
+          purpose: "reservation_ticket",
+          reservation_id: row.id,
+          occasion: data.occasion,
+          party_size: String(data.party_size),
+        },
+      });
+
+      await supabaseAdmin
+        .from("reservations")
+        .update({ stripe_checkout_session_id: session.id })
+        .eq("id", row.id);
+
+      return { clientSecret: session.client_secret ?? "" };
+    } catch (e) {
+      await supabaseAdmin
+        .from("reservations")
+        .update({ ticket_payment_status: "failed" })
+        .eq("id", row.id);
+      console.error("[reservation-ticket] checkout failed", e);
+      return { error: getStripeErrorMessage(e) };
+    }
+  });
+
+/** Status einer Ticket-Reservation nach der Zahlung (für die Danke-Seite). */
+export const getReservationBySessionId = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ sessionId: z.string().trim().min(5).max(200) }).parse(input))
+  .handler(async ({ data }) => {
+    const { data: row } = await supabaseAdmin
+      .from("reservations")
+      .select("guest_name, guest_email, occasion, party_size, event_date_label, status, ticket_total_rappen, ticket_payment_status")
+      .eq("stripe_checkout_session_id", data.sessionId)
+      .maybeSingle();
+    if (!row) return { found: false as const };
+    return { found: true as const, reservation: row };
   });
