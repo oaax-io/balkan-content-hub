@@ -216,31 +216,20 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
               placeholder="z.B. Ticket ab 21:30 Uhr (CHF 15.-)"
               className="flex-1 bg-card border border-border rounded-sm px-3 py-2 focus:border-primary outline-none text-sm"
             />
-            <label className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <span className="whitespace-nowrap">Ticket CHF</span>
-              <input
-                type="number" min={0} step="0.05" inputMode="decimal"
-                value={it.price || ""}
-                onChange={(e) => update(i, { price: Number(e.target.value) || 0 })}
-                placeholder="0"
-                className="w-20 bg-card border border-border rounded-sm px-2 py-2 focus:border-primary outline-none text-sm text-foreground"
-              />
-            </label>
-            <label className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <span className="whitespace-nowrap">Min. Gäste</span>
-              <input
-                type="number" min={0} max={99} step={1}
-                value={it.minGuests || ""}
-                onChange={(e) => update(i, { minGuests: Number(e.target.value) || 0 })}
-                placeholder={it.price > 0 ? "1" : "2"}
-                className="w-16 bg-card border border-border rounded-sm px-2 py-2 focus:border-primary outline-none text-sm text-foreground"
-              />
-            </label>
             <label className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border cursor-pointer select-none ${it.paid ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
-              <input type="checkbox" className="sr-only" checked={it.paid} onChange={(e) => update(i, { paid: e.target.checked })} />
+              <input type="checkbox" className="sr-only" checked={it.paid} onChange={(e) => togglePaid(i, e.target.checked)} />
               <CreditCard className="w-3.5 h-3.5" />
               Kostenpflichtig
             </label>
+            {it.paid && (
+              <button type="button" onClick={() => setSettingsIndex(i)}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+                title="Preis & Gäste-Einstellungen">
+                <Settings2 className="w-3.5 h-3.5" />
+                {it.price > 0 ? `CHF ${it.price.toFixed(2)} / Pers.` : "Storno CHF 50 / Pers."}
+                {` · Min. ${it.minGuests > 0 ? it.minGuests : (it.price > 0 ? 1 : 2)}`}
+              </button>
+            )}
             <label className={`inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border cursor-pointer select-none ${it.hasDates ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}>
               <input type="checkbox" className="sr-only" checked={it.hasDates} onChange={(e) => update(i, { hasDates: e.target.checked })} />
               <CalendarIcon className="w-3.5 h-3.5" />
