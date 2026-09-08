@@ -3,18 +3,44 @@ import type { ContactInfo, OpeningHour } from "@/lib/public.functions";
 import { Instagram, Facebook, Youtube, MapPin, Phone, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { subscribeNewsletter } from "@/lib/newsletter.functions";
 import logo from "@/assets/logo.webp";
 
 export function SiteFooter({ contact, hours: _hours }: { contact: ContactInfo; hours: OpeningHour[] }) {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [busy, setBusy] = useState(false);
+  const subscribe = useServerFn(subscribeNewsletter);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    toast.success("Danke für deine Anmeldung!");
-    setEmail("");
+    setError("");
+    setSuccess("");
+    const value = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) {
+      setError("Bitte eine gültige E-Mail-Adresse eingeben.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const r = await subscribe({ data: { email: value, name: name.trim() } });
+      setSuccess(
+        r.alreadySubscribed
+          ? "Diese E-Mail-Adresse ist bereits angemeldet."
+          : "Danke schön! Du erhältst gleich eine Bestätigungs-E-Mail.",
+      );
+      setEmail("");
+      setName("");
+    } catch {
+      setError("Anmeldung fehlgeschlagen. Bitte versuche es später erneut.");
+    } finally {
+      setBusy(false);
+    }
   };
+
 
   const instagramUrl = contact.instagram_url || "https://instagram.com";
   const facebookUrl = contact.facebook_url || "https://facebook.com";
