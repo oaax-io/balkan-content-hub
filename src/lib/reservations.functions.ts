@@ -40,11 +40,16 @@ function parseNumberMap(raw: string | null | undefined): Record<string, number> 
   return out;
 }
 
-async function loadOccasionConfig(occasion: string): Promise<{ pricePerPerson: number; minGuests: number }> {
+async function loadOccasionConfig(occasion: string): Promise<{ pricePerPerson: number; minGuests: number; cancelFeeRappen: number; noShowFeeRappen: number }> {
   const { data } = await supabaseAdmin
     .from("site_content")
     .select("key,value")
-    .in("key", ["reservation_occasion_prices", "reservation_occasion_min_guests"]);
+    .in("key", [
+      "reservation_occasion_prices",
+      "reservation_occasion_min_guests",
+      "reservation_occasion_cancel_fees",
+      "reservation_occasion_noshow_fees",
+    ]);
   const kv = new Map((data || []).map((r: { key: string; value: string }) => [r.key, r.value]));
   const key = (occasion || "").trim().toLowerCase();
   const prices = parseNumberMap(kv.get("reservation_occasion_prices"));
@@ -52,7 +57,16 @@ async function loadOccasionConfig(occasion: string): Promise<{ pricePerPerson: n
   const pricePerPerson = prices[key] && prices[key] > 0 ? prices[key] : 0;
   const minRaw = mins[key];
   const minGuests = minRaw && minRaw >= 1 ? Math.floor(minRaw) : pricePerPerson > 0 ? 1 : 2;
-  return { pricePerPerson, minGuests };
+  const cancelFees = parseNumberMap(kv.get("reservation_occasion_cancel_fees"));
+  const noShowFees = parseNumberMap(kv.get("reservation_occasion_noshow_fees"));
+  const cancelChf = cancelFees[key] && cancelFees[key] > 0 ? cancelFees[key] : 50;
+  const noShowChf = noShowFees[key] && noShowFees[key] > 0 ? noShowFees[key] : cancelChf;
+  return {
+    pricePerPerson,
+    minGuests,
+    cancelFeeRappen: Math.round(cancelChf * 100),
+    noShowFeeRappen: Math.round(noShowChf * 100),
+  };
 }
 
 
@@ -160,6 +174,8 @@ export const createReservation = createServerFn({ method: "POST" })
         isPaid && data.cancellation_terms_accepted ? new Date().toISOString() : null,
       cancellation_token: cancellationToken,
       cancellation_token_expires_at: null,
+      cancellation_fee_amount: cfg.cancelFeeRappen,
+      no_show_fee_amount: cfg.noShowFeeRappen,
     };
 
     const { data: row, error } = await supabaseAdmin
@@ -482,7 +498,7 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
       return { ok: false, error: "Keine hinterlegte Zahlungsmethode gefunden." };
     }
 
-    const perPerson = r.cancellation_fee_amount ?? 5000;
+    const perPerson = r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000;
     const partySize = Math.max(1, r.party_size ?? 1);
     const amount = perPerson * partySize;
     const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();

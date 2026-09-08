@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { HeroSlider } from "@/components/site/HeroSlider";
 import { ReservationCard } from "@/components/site/ReservationCard";
-import { parseOccasionNumberMap } from "@/lib/occasions";
+import { parseOccasionNumberMap, parseOccasionTextMap } from "@/lib/occasions";
 import offerBrunch from "@/assets/offer-brunch.jpg";
 import offerDinner from "@/assets/offer-dinner.jpg";
 import offerEvents from "@/assets/offer-events.jpg";
@@ -53,6 +53,7 @@ function Home() {
     .filter(Boolean);
   const occasionPrices = parseOccasionNumberMap(content.reservation_occasion_prices);
   const occasionMinGuests = parseOccasionNumberMap(content.reservation_occasion_min_guests);
+  const occasionDisclaimers = parseOccasionTextMap(content.reservation_occasion_disclaimers);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -72,6 +73,7 @@ function Home() {
           paidOccasions={paidOccasions}
           occasionPrices={occasionPrices}
           occasionMinGuests={occasionMinGuests}
+          occasionDisclaimers={occasionDisclaimers}
           variant="overlay"
         />
       </HeroSlider>

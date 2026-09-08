@@ -4,7 +4,7 @@ import { publicDataQuery } from "@/lib/queries";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { ReservationCard } from "@/components/site/ReservationCard";
-import { parseOccasionNumberMap } from "@/lib/occasions";
+import { parseOccasionNumberMap, parseOccasionTextMap } from "@/lib/occasions";
 
 import { buildSeoMeta } from "@/lib/seo-head";
 
@@ -42,6 +42,7 @@ function Reserve() {
     .filter(Boolean);
   const occasionPrices = parseOccasionNumberMap(content.reservation_occasion_prices);
   const occasionMinGuests = parseOccasionNumberMap(content.reservation_occasion_min_guests);
+  const occasionDisclaimers = parseOccasionTextMap(content.reservation_occasion_disclaimers);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -58,6 +59,7 @@ function Reserve() {
             paidOccasions={paidOccasions}
             occasionPrices={occasionPrices}
             occasionMinGuests={occasionMinGuests}
+          occasionDisclaimers={occasionDisclaimers}
             variant="page"
           />
         </div>
