@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UeberUnsRouteImport } from './routes/ueber-uns'
 import { Route as ReservierenRouteImport } from './routes/reservieren'
+import { Route as ReservationDankeRouteImport } from './routes/reservation-danke'
 import { Route as NewsletterAbmeldenRouteImport } from './routes/newsletter-abmelden'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as GutscheinDankeRouteImport } from './routes/gutschein-danke'
@@ -33,6 +34,11 @@ const UeberUnsRoute = UeberUnsRouteImport.update({
 const ReservierenRoute = ReservierenRouteImport.update({
   id: '/reservieren',
   path: '/reservieren',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReservationDankeRoute = ReservationDankeRouteImport.update({
+  id: '/reservation-danke',
+  path: '/reservation-danke',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewsletterAbmeldenRoute = NewsletterAbmeldenRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
   '/newsletter-abmelden': typeof NewsletterAbmeldenRoute
+  '/reservation-danke': typeof ReservationDankeRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
   '/newsletter-abmelden': typeof NewsletterAbmeldenRoute
+  '/reservation-danke': typeof ReservationDankeRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/gutschein-danke': typeof GutscheinDankeRoute
   '/kontakt': typeof KontaktRoute
   '/newsletter-abmelden': typeof NewsletterAbmeldenRoute
+  '/reservation-danke': typeof ReservationDankeRoute
   '/reservieren': typeof ReservierenRoute
   '/ueber-uns': typeof UeberUnsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/gutschein-danke'
     | '/kontakt'
     | '/newsletter-abmelden'
+    | '/reservation-danke'
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/gutschein-danke'
     | '/kontakt'
     | '/newsletter-abmelden'
+    | '/reservation-danke'
     | '/reservieren'
     | '/ueber-uns'
     | '/admin'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/gutschein-danke'
     | '/kontakt'
     | '/newsletter-abmelden'
+    | '/reservation-danke'
     | '/reservieren'
     | '/ueber-uns'
     | '/_authenticated/admin'
@@ -214,6 +226,7 @@ export interface RootRouteChildren {
   GutscheinDankeRoute: typeof GutscheinDankeRoute
   KontaktRoute: typeof KontaktRoute
   NewsletterAbmeldenRoute: typeof NewsletterAbmeldenRoute
+  ReservationDankeRoute: typeof ReservationDankeRoute
   ReservierenRoute: typeof ReservierenRoute
   UeberUnsRoute: typeof UeberUnsRoute
   ReservationCancelTokenRoute: typeof ReservationCancelTokenRoute
@@ -234,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/reservieren'
       fullPath: '/reservieren'
       preLoaderRoute: typeof ReservierenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reservation-danke': {
+      id: '/reservation-danke'
+      path: '/reservation-danke'
+      fullPath: '/reservation-danke'
+      preLoaderRoute: typeof ReservationDankeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/newsletter-abmelden': {
@@ -352,6 +372,7 @@ const rootRouteChildren: RootRouteChildren = {
   GutscheinDankeRoute: GutscheinDankeRoute,
   KontaktRoute: KontaktRoute,
   NewsletterAbmeldenRoute: NewsletterAbmeldenRoute,
+  ReservationDankeRoute: ReservationDankeRoute,
   ReservierenRoute: ReservierenRoute,
   UeberUnsRoute: UeberUnsRoute,
   ReservationCancelTokenRoute: ReservationCancelTokenRoute,
