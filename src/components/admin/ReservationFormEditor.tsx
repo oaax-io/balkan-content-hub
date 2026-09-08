@@ -4,8 +4,9 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { listSiteContent, updateSiteContent, updateSiteContentBulk } from "@/lib/admin.functions";
 import { toast } from "sonner";
-import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X, Settings2 } from "lucide-react";
+import { CalendarDays, Plus, Trash2, CreditCard, Calendar as CalendarIcon, X, Settings2, Users } from "lucide-react";
 import { parseOccasionNumberMap, serializeOccasionNumberMap, parseOccasionTextMap, serializeOccasionTextMap } from "@/lib/occasions";
+import { OccasionLoadPanel } from "./OccasionLoad";
 
 type Row = { key: string; value: string; label: string; kind: string; sort_order: number; preview_url: string };
 type Occasion = { label: string; paid: boolean; hasDates: boolean; price: number; minGuests: number; cancelFee: number; noShowFee: number; policy: string };
