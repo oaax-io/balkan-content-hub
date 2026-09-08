@@ -228,10 +228,10 @@ export function ReservationsTab() {
           </div>
           <button
             onClick={() => setEditorOpen(true)}
-            className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-card hover:bg-accent px-4 py-2 text-xs uppercase tracking-widest text-foreground transition-colors"
+            className="shrink-0 inline-flex items-center gap-2 rounded-full bg-orange-500 hover:bg-orange-600 px-4 py-2 text-xs uppercase tracking-widest text-white transition-colors shadow-sm"
           >
             <Pencil className="w-3.5 h-3.5" />
-            Formular bearbeiten
+            Bearbeiten
           </button>
         </header>
 
