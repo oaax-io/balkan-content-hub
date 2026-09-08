@@ -139,6 +139,8 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
   const [items, setItems] = useState<Occasion[]>(initial);
   const [saving, setSaving] = useState(false);
   const [settingsIndex, setSettingsIndex] = useState<number | null>(null);
+  const [payMode, setPayMode] = useState<"fee" | "ticket">("fee");
+  const openSettings = (i: number, price: number) => { setPayMode(price > 0 ? "ticket" : "fee"); setSettingsIndex(i); };
   useEffect(() => { setItems(initial); }, [initial]);
 
   const dirty = JSON.stringify(items) !== JSON.stringify(initial);
@@ -150,7 +152,7 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
 
   const togglePaid = (i: number, checked: boolean) => {
     update(i, { paid: checked });
-    if (checked) setSettingsIndex(i);
+    if (checked) openSettings(i, items[i]?.price ?? 0);
   };
 
   const move = (i: number, dir: -1 | 1) =>
@@ -222,7 +224,7 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
               Kostenpflichtig
             </label>
             {it.paid && (
-              <button type="button" onClick={() => setSettingsIndex(i)}
+              <button type="button" onClick={() => openSettings(i, it.price)}
                 className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
                 title="Preis & Gäste-Einstellungen">
                 <Settings2 className="w-3.5 h-3.5" />
@@ -271,20 +273,44 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
             </div>
             <div className="p-5 space-y-5">
               <div>
-                <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Ticketpreis pro Person (CHF)</label>
-                <input
-                  type="number" min={0} step="0.05" inputMode="decimal"
-                  value={items[settingsIndex].price || ""}
-                  onChange={(e) => update(settingsIndex, { price: Number(e.target.value) || 0 })}
-                  placeholder="0.00"
-                  className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  {items[settingsIndex].price > 0
-                    ? <>Sofortzahlung: Der Gast bezahlt <strong className="text-foreground">CHF {items[settingsIndex].price.toFixed(2)} × Personen</strong> direkt bei der Reservation.</>
-                    : <>Kein Ticketpreis: Zahlungsmethode nur als Sicherheit. Bei Storno innert 7 Tagen oder No-Show wird <strong className="text-foreground">CHF 50.– pro Person</strong> belastet.</>}
-                </p>
+                <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-2">Zahlungsart</label>
+                <div className="grid gap-2">
+                  <button type="button"
+                    onClick={() => { setPayMode("fee"); update(settingsIndex, { price: 0 }); }}
+                    className={`text-left p-3 rounded-md border transition-colors ${payMode === "fee" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
+                    <span className="block text-sm text-foreground">Nur Stornogebühr</span>
+                    <span className="block text-xs text-muted-foreground mt-1">
+                      Bei der Reservation wird nichts belastet. Zahlungsmethode als Sicherheit; bei Storno innert 7 Tagen oder No-Show CHF 50.– pro Person.
+                    </span>
+                  </button>
+                  <button type="button"
+                    onClick={() => setPayMode("ticket")}
+                    className={`text-left p-3 rounded-md border transition-colors ${payMode === "ticket" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"}`}>
+                    <span className="block text-sm text-foreground">Sofortzahlung (Ticket)</span>
+                    <span className="block text-xs text-muted-foreground mt-1">
+                      Der Gast bezahlt den Ticketpreis direkt online bei der Reservation.
+                    </span>
+                  </button>
+                </div>
               </div>
+              {payMode === "ticket" && (
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Ticketpreis pro Person (CHF)</label>
+                  <input
+                    type="number" min={0} step="0.05" inputMode="decimal"
+                    value={items[settingsIndex].price || ""}
+                    onChange={(e) => update(settingsIndex, { price: Number(e.target.value) || 0 })}
+                    placeholder="z.B. 15.00"
+                    className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {items[settingsIndex].price > 0
+                      ? <>Total: <strong className="text-foreground">CHF {items[settingsIndex].price.toFixed(2)} × Personen</strong>, sofort online bezahlt.</>
+                      : <>Bitte Preis eintragen – ohne Preis gilt automatisch die Stornogebühr-Variante.</>}
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-1.5">Mindestanzahl Gäste</label>
                 <input
