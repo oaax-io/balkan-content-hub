@@ -26,6 +26,36 @@ async function isPaidOccasionServer(occasion: string): Promise<boolean> {
   return s.includes("99.- pro person") || s.includes("dinner & dance");
 }
 
+// --- Anlass-Konfiguration: Ticketpreis (CHF pro Person) + Mindestgäste ------
+function parseNumberMap(raw: string | null | undefined): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const line of (raw || "").split("\n")) {
+    const idx = line.indexOf("::");
+    if (idx < 0) continue;
+    const label = line.slice(0, idx).trim().toLowerCase();
+    const value = Number(line.slice(idx + 2).trim().replace(",", "."));
+    if (!label || !Number.isFinite(value)) continue;
+    out[label] = value;
+  }
+  return out;
+}
+
+async function loadOccasionConfig(occasion: string): Promise<{ pricePerPerson: number; minGuests: number }> {
+  const { data } = await supabaseAdmin
+    .from("site_content")
+    .select("key,value")
+    .in("key", ["reservation_occasion_prices", "reservation_occasion_min_guests"]);
+  const kv = new Map((data || []).map((r: { key: string; value: string }) => [r.key, r.value]));
+  const key = (occasion || "").trim().toLowerCase();
+  const prices = parseNumberMap(kv.get("reservation_occasion_prices"));
+  const mins = parseNumberMap(kv.get("reservation_occasion_min_guests"));
+  const pricePerPerson = prices[key] && prices[key] > 0 ? prices[key] : 0;
+  const minRaw = mins[key];
+  const minGuests = minRaw && minRaw >= 1 ? Math.floor(minRaw) : pricePerPerson > 0 ? 1 : 2;
+  return { pricePerPerson, minGuests };
+}
+
+
 const GERMAN_MONTHS: Record<string, number> = {
   januar: 1, februar: 2, märz: 3, april: 4, mai: 5, juni: 6,
   juli: 7, august: 8, september: 9, oktober: 10, november: 11, dezember: 12,
