@@ -434,6 +434,7 @@ function OccasionsPanel({ rows, onSaved, onFilterByOccasion }: {
   const setCapFn = useServerFn(setOccasionCapacity);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [open, setOpen] = useState(true);
 
   // Reset drafts when rows change (keep edits in progress though)
   useEffect(() => {
@@ -458,8 +459,6 @@ function OccasionsPanel({ rows, onSaved, onFilterByOccasion }: {
     } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
     finally { setSavingKey(null); }
   }
-
-  const [open, setOpen] = useState(true);
 
   if (rows.length === 0) {
     return (
