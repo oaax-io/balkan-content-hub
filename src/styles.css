@@ -100,13 +100,13 @@
   --ring: oklch(0.52 0.14 48);
   --gold: oklch(0.55 0.14 55);
   --gold-foreground: oklch(1 0 0);
-  --sidebar: oklch(0.52 0.15 46);
-  --sidebar-foreground: oklch(1 0 0);
+  --sidebar: oklch(0.42 0.07 60);
+  --sidebar-foreground: oklch(0.96 0.01 80);
   --sidebar-primary: oklch(0.15 0.005 60);
-  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-primary-foreground: oklch(0.96 0.01 80);
   --sidebar-accent: oklch(0.15 0.005 60);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.42 0.12 46);
+  --sidebar-accent-foreground: oklch(0.96 0.01 80);
+  --sidebar-border: oklch(0.35 0.05 60);
   --sidebar-ring: oklch(0.15 0.005 60);
 }
 
