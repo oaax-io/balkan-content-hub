@@ -441,7 +441,7 @@ export function ReservationCard({
         disabled={submitting || (paid && !termsAccepted)}
         className="w-full rounded-full bg-gold px-6 py-3 text-sm font-bold uppercase tracking-widest text-[#0d0d0d] hover:bg-[#0d0d0d] hover:text-gold border border-gold active:scale-[0.99] transition disabled:opacity-50"
       >
-        {submitting ? "Wird gesendet …" : paid ? "Weiter zur Zahlungsmethode" : "Reservieren"}
+        {submitting ? "Wird gesendet …" : ticketPrice > 0 ? `Ticket bezahlen — CHF ${formatChf(ticketTotal)}` : paid ? "Weiter zur Zahlungsmethode" : "Reservieren"}
       </button>
     </form>
   );
