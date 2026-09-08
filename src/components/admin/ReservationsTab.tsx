@@ -219,24 +219,63 @@ export function ReservationsTab() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={CalendarDays} label="Aktive Reservierungen" value={totals.reservations} hint="Bestätigt + offen" />
-          <Stat icon={Users} label="Personen gesamt" value={totals.persons} hint="Summe aller Gäste" />
+          <Stat icon={Users} label="Personen gesamt" value={totals.persons} hint={`Ø ${avgParty} pro Reservierung`} />
           <Stat icon={Sparkles} label="Offene Anfragen" value={totals.pending} hint="Noch zu bestätigen" accent={totals.pending > 0} />
           <Stat icon={Check} label="Bestätigt" value={totals.confirmed} hint="Insgesamt" />
         </div>
 
-        {/* Storno-Statistik */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Stat icon={TrendingUp} label="Storno-Einnahmen" value={feeRevenue} hint={`${chargedFees.length} belastete Gebühr(en)`} accent={feeRevenue > 0} currency />
-          <Stat icon={Ban} label="Stornierungen (kostenpflichtig)" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
-          <Stat icon={X} label="Stornierungen (kostenlos)" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
-        </div>
+        {/* Auslastung */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="rounded-sm border border-border bg-card p-5 lg:col-span-2">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">Gesamt-Auslastung</span>
+              <TrendingUp className={`h-4 w-4 ${overallPct >= 80 ? "text-gold" : "text-muted-foreground"}`} />
+            </div>
+            {totalMax > 0 ? (
+              <>
+                <div className="flex items-end gap-3">
+                  <div className={`font-display text-3xl ${overallPct >= 80 ? "text-gold" : ""}`}>{overallPct}%</div>
+                  <div className="pb-1 text-xs text-muted-foreground">
+                    {resWithLimit} von {totalMax} Plätzen belegt · {Math.max(0, totalMax - resWithLimit)} frei
+                  </div>
+                </div>
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
+                  <div className={`h-full ${barColor(overallPct)} transition-all`} style={{ width: `${overallPct}%` }} />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Noch keine Limiten gesetzt — im Fenster «Formular bearbeiten» unter «Pro Anlass / Auslastung» festlegen.
+              </p>
+            )}
 
-        <OccasionsPanel
-          rows={perOccasion}
-          onSaved={() => qc.invalidateQueries({ queryKey: ["occasion-capacities"] })}
-          onFilterByOccasion={(name) => setOccasionFilter(name)}
-        />
+            <div className="mt-5 space-y-3">
+              {perOccasion.slice(0, 5).map((r) => (
+                <button key={r.name} type="button" onClick={() => setOccasionFilter(r.name)}
+                  className="block w-full text-left group">
+                  <div className="flex items-baseline justify-between gap-3 text-xs">
+                    <span className="truncate font-medium group-hover:text-gold">{r.name}</span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {r.reservations} Res. · {r.persons} Pers.{r.max > 0 ? ` · ${r.pct}%` : ""}
+                    </span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div className={`h-full ${r.max > 0 ? barColor(r.pct) : "bg-muted-foreground/40"} transition-all`}
+                      style={{ width: `${r.max > 0 ? r.pct : (maxPersons > 0 ? Math.round((r.persons / maxPersons) * 100) : 0)}%` }} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            <Stat icon={TrendingUp} label="Storno-Einnahmen" value={feeRevenue} hint={`${chargedFees.length} belastete Gebühr(en)`} accent={feeRevenue > 0} currency />
+            <Stat icon={Ban} label="Storno kostenpflichtig" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
+            <Stat icon={X} label="Storno kostenlos" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
+          </div>
+        </div>
       </section>
+
 
 
       {/* ───────────── Filters ───────────── */}
