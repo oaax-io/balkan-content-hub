@@ -230,8 +230,38 @@ export function ReservationCard({
     );
   }
 
+  // Ticket-Anlass: Sofortzahlung im eingebetteten Stripe Checkout
+  if (ticketStage) {
+    return (
+      <div className={wrapperClass}>
+        <div className="text-center pb-3">
+          <p className="text-[#8a6a14] tracking-[0.3em] uppercase text-[10px] mb-1 font-bold">Ticket bezahlen</p>
+          <h3 className="font-display text-xl text-[#1a1a1a]">
+            {ticketStage.occasion} — CHF {formatChf(ticketStage.total)}
+          </h3>
+        </div>
+        <div className="rounded-xl overflow-hidden bg-white">
+          <EmbeddedCheckoutProvider
+            stripe={getStripe()}
+            options={{ fetchClientSecret: async () => ticketStage.clientSecret }}
+          >
+            <EmbeddedCheckout />
+          </EmbeddedCheckoutProvider>
+        </div>
+        <button
+          type="button"
+          onClick={() => setTicketStage(null)}
+          className="mt-3 w-full rounded-full border border-gold/50 px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#1a1a1a] hover:bg-white/60 transition"
+        >
+          Abbrechen
+        </button>
+      </div>
+    );
+  }
+
   // Stage 2: Payment method entry
   if (stripeStage) {
+
     return (
       <div className={wrapperClass}>
         <div className="text-center pb-3">
