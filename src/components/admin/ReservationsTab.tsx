@@ -156,6 +156,13 @@ export function ReservationsTab() {
   const cancelledCount = all.filter((r) => r.status === "cancelled").length;
   const cancelledFree = cancelledCount - chargedFees.length;
 
+  const avgParty = totals.reservations > 0 ? (totals.persons / totals.reservations).toFixed(1) : "0";
+  const withLimit = perOccasion.filter((r) => r.max > 0);
+  const totalMax = withLimit.reduce((s, r) => s + r.max, 0);
+  const resWithLimit = withLimit.reduce((s, r) => s + r.reservations, 0);
+  const overallPct = totalMax > 0 ? Math.min(100, Math.round((resWithLimit / totalMax) * 100)) : 0;
+  const maxPersons = perOccasion.reduce((m, r) => Math.max(m, r.persons), 0);
+
 
   const filtered = all
     .filter((r) => filter === "all" || r.status === filter)
