@@ -157,6 +157,16 @@ export function ReservationsTab() {
   const cancelledCount = all.filter((r) => r.status === "cancelled").length;
   const cancelledFree = cancelledCount - chargedFees.length;
 
+  // Sofortzahlungen (Tickets)
+  const paidTickets = all.filter((r) => r.ticket_payment_status === "paid");
+  const ticketRevenue = paidTickets.reduce((s, r) => s + ((r.ticket_total_rappen ?? 0) / 100), 0);
+  const ticketPersons = paidTickets.reduce((s, r) => s + (r.party_size || 0), 0);
+  const pendingTickets = all.filter(
+    (r) => (r.ticket_total_rappen ?? 0) > 0 && r.ticket_payment_status !== "paid" && r.status !== "cancelled",
+  );
+  const pendingTicketAmount = pendingTickets.reduce((s, r) => s + ((r.ticket_total_rappen ?? 0) / 100), 0);
+  const totalRevenue = ticketRevenue + feeRevenue;
+
   const avgParty = totals.reservations > 0 ? (totals.persons / totals.reservations).toFixed(1) : "0";
   const withLimit = perOccasion.filter((r) => r.max > 0);
   const totalMax = withLimit.reduce((s, r) => s + r.max, 0);
@@ -277,10 +287,17 @@ export function ReservationsTab() {
           </div>
 
           <div className="grid gap-4">
+            <Stat icon={CircleDollarSign} label="Ticket-Einnahmen" value={ticketRevenue} hint={`${paidTickets.length} bezahlte Reservierung(en) · ${ticketPersons} Pers.`} accent={ticketRevenue > 0} currency />
             <Stat icon={TrendingUp} label="Storno-Einnahmen" value={feeRevenue} hint={`${chargedFees.length} belastete Gebühr(en)`} accent={feeRevenue > 0} currency />
-            <Stat icon={Ban} label="Storno kostenpflichtig" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
-            <Stat icon={X} label="Storno kostenlos" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
+            <Stat icon={Clock} label="Offene Zahlungen" value={pendingTicketAmount} hint={`${pendingTickets.length} noch nicht bezahlt`} accent={pendingTickets.length > 0} currency />
           </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat icon={CreditCard} label="Einnahmen gesamt" value={totalRevenue} hint="Tickets + Stornogebühren" accent={totalRevenue > 0} currency />
+          <Stat icon={ShieldCheck} label="Ø pro Ticket-Reservierung" value={paidTickets.length > 0 ? ticketRevenue / paidTickets.length : 0} hint="Sofortzahlungen" currency />
+          <Stat icon={Ban} label="Storno kostenpflichtig" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
+          <Stat icon={X} label="Storno kostenlos" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
         </div>
       </section>
 
