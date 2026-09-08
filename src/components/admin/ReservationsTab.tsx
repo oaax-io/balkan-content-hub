@@ -439,39 +439,63 @@ export function ReservationsTab() {
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {r.status === "pending" && (
-                      <div className="flex gap-2">
-                        <button onClick={() => setStatus(r.id, "confirmed")} disabled={busy === r.id}
-                          className="rounded-full bg-green-600/90 hover:bg-green-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
-                          <Check className="w-4 h-4" /> Bestätigen
+                  <div className="flex flex-col items-end gap-1.5">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          disabled={busy === r.id}
+                          aria-label="Aktionen"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background hover:bg-accent text-foreground disabled:opacity-50 transition-colors"
+                        >
+                          <EllipsisVertical className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setStatus(r.id, "declined")} disabled={busy === r.id}
-                          className="rounded-full bg-red-600/90 hover:bg-red-600 px-4 py-2 text-xs uppercase tracking-widest text-white disabled:opacity-50 flex items-center gap-1.5">
-                          <X className="w-4 h-4" /> Ablehnen
-                        </button>
-                      </div>
-                    )}
-                    {r.status === "confirmed"
-                      && r.is_paid_occasion
-                      && r.stripe_customer_id
-                      && r.stripe_payment_method_id
-                      && !r.cancellation_fee_charged_at && (
-                      <button onClick={() => setNoShowTarget(r.id)} disabled={busy === r.id}
-                        className="rounded-full border border-red-300 bg-red-50 hover:bg-red-100 text-red-700 px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
-                        <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
-                      </button>
-                    )}
-                    {r.status !== "cancelled" && r.status !== "declined" && (
-                      <button onClick={() => setCancelTarget({ id: r.id, isPaid: !!r.is_paid_occasion, daysUntil })} disabled={busy === r.id}
-                        className="rounded-full border border-border bg-background hover:bg-accent text-foreground px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
-                        <Ban className="w-4 h-4" /> Stornieren
-                      </button>
-                    )}
-                    <button onClick={() => setDeleteTarget({ id: r.id, name: r.guest_name })} disabled={busy === r.id}
-                      className="rounded-full border border-destructive/40 text-destructive hover:bg-destructive/10 px-4 py-2 text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-1.5">
-                      <Trash2 className="w-4 h-4" /> Löschen
-                    </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-52">
+                        {r.status === "pending" && (
+                          <>
+                            <DropdownMenuItem
+                              onSelect={() => setStatusTarget({ id: r.id, status: "confirmed" })}
+                              className="gap-2 text-emerald-700 focus:text-emerald-700"
+                            >
+                              <Check className="w-4 h-4" /> Bestätigen
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => setStatusTarget({ id: r.id, status: "declined" })}
+                              className="gap-2 text-red-700 focus:text-red-700"
+                            >
+                              <X className="w-4 h-4" /> Ablehnen
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
+                        {r.status === "confirmed"
+                          && r.is_paid_occasion
+                          && r.stripe_customer_id
+                          && r.stripe_payment_method_id
+                          && !r.cancellation_fee_charged_at && (
+                          <DropdownMenuItem
+                            onSelect={() => setNoShowTarget(r.id)}
+                            className="gap-2 text-red-700 focus:text-red-700"
+                          >
+                            <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
+                          </DropdownMenuItem>
+                        )}
+                        {r.status !== "cancelled" && r.status !== "declined" && (
+                          <DropdownMenuItem
+                            onSelect={() => setCancelTarget({ id: r.id, isPaid: !!r.is_paid_occasion, daysUntil })}
+                            className="gap-2"
+                          >
+                            <Ban className="w-4 h-4" /> Stornieren
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onSelect={() => setDeleteTarget({ id: r.id, name: r.guest_name })}
+                          className="gap-2 text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" /> Löschen
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </li>
