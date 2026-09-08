@@ -107,6 +107,11 @@ export function ContentTab() {
     s.add("reservation_occasions_with_dates");
     s.add("reservation_paid_occasions");
     s.add("reservation_event_dates");
+    s.add("reservation_occasion_prices");
+    s.add("reservation_occasion_min_guests");
+    s.add("reservation_occasion_cancel_fees");
+    s.add("reservation_occasion_noshow_fees");
+    s.add("reservation_occasion_disclaimers");
 
     return s;
   }, []);
