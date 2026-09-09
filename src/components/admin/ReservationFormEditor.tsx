@@ -395,8 +395,11 @@ function OccasionsEditor({ rowMap, onSaved }: { rowMap: Map<string, Row>; onSave
                   placeholder="Leer lassen für den allgemeinen Standardtext."
                   className="w-full bg-card border border-border rounded-sm px-3 py-2.5 focus:border-primary outline-none text-sm text-foreground" />
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  Erscheint im Reservationsformular als Checkbox-Text, wenn dieser Anlass gewählt wird.
+                  {payMode === "ticket"
+                    ? <>Ersetzt den Hinweis-Text im Formular bei diesem Ticket-Anlass. Platzhalter: <code>{"{preis}"}</code>, <code>{"{total}"}</code>, <code>{"{personen}"}</code>.</>
+                    : <>Erscheint im Reservationsformular als Checkbox-Text, wenn dieser Anlass gewählt wird.</>}
                 </p>
+
               </div>
             </div>
             <div className="flex shrink-0 justify-end border-t border-border bg-background px-4 py-3 sm:px-5">

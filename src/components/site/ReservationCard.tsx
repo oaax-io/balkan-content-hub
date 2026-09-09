@@ -377,14 +377,24 @@ export function ReservationCard({
       </Select>
 
       {ticketPrice > 0 && (
-        <div className="text-[12px] leading-snug text-[#1a1a1a] bg-white/70 border border-gold/40 rounded-lg px-3 py-2">
-          Ticketpreis: <strong>CHF {formatChf(ticketPrice)}</strong> pro Person
-          {currentParty !== "17" && (
-            <> — Total <strong>CHF {formatChf(ticketTotal)}</strong></>
+        <div className="text-[12px] leading-snug text-[#1a1a1a] bg-white/70 border border-gold/40 rounded-lg px-3 py-2 whitespace-pre-line">
+          {getOccasionText(occasion, occasionDisclaimers).trim().length > 0 ? (
+            getOccasionText(occasion, occasionDisclaimers)
+              .replace(/\{preis\}/g, `CHF ${formatChf(ticketPrice)}`)
+              .replace(/\{total\}/g, currentParty === "17" ? "—" : `CHF ${formatChf(ticketTotal)}`)
+              .replace(/\{personen\}/g, currentParty === "17" ? "17+" : currentParty)
+          ) : (
+            <>
+              Ticketpreis: <strong>CHF {formatChf(ticketPrice)}</strong> pro Person
+              {currentParty !== "17" && (
+                <> — Total <strong>CHF {formatChf(ticketTotal)}</strong></>
+              )}
+              . Die Zahlung erfolgt direkt online, die Reservation ist danach sofort bestätigt.
+            </>
           )}
-          . Die Zahlung erfolgt direkt online, die Reservation ist danach sofort bestätigt.
         </div>
       )}
+
 
 
       {showEventDates ? (
