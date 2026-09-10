@@ -257,6 +257,15 @@ export function ReservationsTab() {
         onConfirm={() => { if (statusTarget) setStatus(statusTarget.id, statusTarget.status); setStatusTarget(null); }}
       />
 
+      <ConfirmDialog
+        open={!!reminderTarget}
+        onOpenChange={(v) => !v && setReminderTarget(null)}
+        title="Zahlungserinnerung senden?"
+        description={`${reminderTarget?.name ?? "Der Gast"} erhält eine E-Mail an ${reminderTarget?.email ?? ""} mit einem neuen Zahlungslink (24 Stunden gültig).`}
+        confirmLabel="Erinnerung senden"
+        onConfirm={() => { if (reminderTarget) doSendReminder(reminderTarget.id); setReminderTarget(null); }}
+      />
+
       {/* ───────────── Overview ───────────── */}
       <section className="space-y-4">
         <header className="flex items-start justify-between gap-4">
