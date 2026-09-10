@@ -394,6 +394,51 @@ export async function sendReservationStatusUpdate(r: Reservation) {
 }
 
 // ---------------------------------------------------------------------------
+// Erinnerung: Ticket-Zahlung noch nicht abgeschlossen
+// ---------------------------------------------------------------------------
+
+export async function sendTicketPaymentReminder(r: Reservation, payUrl: string, totalRappen: number) {
+  const contact = await getContact();
+  const restaurant = contact?.restaurant_name ?? "Balkaneros";
+  const datum = fmtDate(r.reservation_date);
+  const uhrzeit = hasTime(r.reservation_time) ? ` um ${r.reservation_time}` : "";
+  const total = (totalRappen / 100).toFixed(2).replace(/\.00$/, ".–");
+  const html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;padding:32px 0;font-family:Arial,Helvetica,sans-serif;">
+  <tr><td align="center">
+    <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#141414;border:1px solid #2a2a2a;border-radius:12px;">
+      <tr><td style="padding:32px 32px 8px;text-align:center;">
+        <div style="letter-spacing:6px;font-size:15px;color:#c9a227;font-weight:bold;">BALKANEROS</div>
+        <div style="letter-spacing:3px;font-size:10px;color:#8a8a8a;margin-top:6px;">EVENTS</div>
+      </td></tr>
+      <tr><td style="padding:20px 32px 0;">
+        <h1 style="color:#f3f3f3;font-size:21px;margin:0 0 14px;">Ihre Reservation ist noch nicht abgeschlossen</h1>
+        <p style="color:#cfcfcf;font-size:14px;line-height:22px;margin:0 0 12px;">Liebe/r ${r.guest_name || "Gast"}, wir haben Ihre Anmeldung erhalten – die Online-Zahlung wurde jedoch nicht abgeschlossen. Erst nach der Zahlung ist Ihr Platz verbindlich reserviert.</p>
+        <div style="margin:16px 0 20px;padding:16px 18px;background:#1a1a1a;border-left:2px solid #c9a227;color:#c8c2b6;font-size:14px;line-height:1.7;">
+          ${r.occasion ? `<div><strong style="color:#f3f3f3;">${r.occasion}</strong></div>` : ""}
+          <div>${datum || "Datum offen"}${uhrzeit} · ${r.party_size} Personen</div>
+          <div style="color:#e8c96a;margin-top:6px;">Offener Betrag: CHF ${total}</div>
+        </div>
+      </td></tr>
+      <tr><td style="padding:0 32px 28px;">
+        <a href="${payUrl}" style="display:inline-block;background:#c9a227;color:#141414;text-decoration:none;font-weight:bold;font-size:14px;padding:13px 24px;border-radius:8px;">Jetzt Zahlung abschliessen</a>
+        <p style="color:#8a8a8a;font-size:11px;line-height:18px;margin:14px 0 0;">Der Zahlungslink ist 24 Stunden gültig. Bei Fragen antworten Sie einfach auf diese E-Mail.</p>
+      </td></tr>
+      <tr><td style="padding:18px 32px 26px;border-top:1px solid #2a2a2a;">
+        <p style="color:#6f6f6f;font-size:11px;line-height:18px;margin:0;">${restaurant} · Fine Moments GmbH · Kaspar-Koppstrasse 90 · CH-6030 Ebikon</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>`;
+  await sendEmail({
+    to: r.guest_email,
+    subject: `Erinnerung: Zahlung für Ihre Reservation bei ${restaurant}`,
+    html,
+    templateKey: "ticket_payment_reminder",
+    reservationId: r.id ?? null,
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Newsletter
 // ---------------------------------------------------------------------------
 
