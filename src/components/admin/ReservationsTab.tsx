@@ -329,7 +329,27 @@ export function ReservationsTab() {
       <section>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h3 className="font-display text-xl">Alle Reservierungen</h3>
-          <div className="flex flex-wrap gap-1 text-xs">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <select
+              value={occasionFilter}
+              onChange={(e) => setOccasionFilter(e.target.value)}
+              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+            >
+              <option value="all">Alle Anlässe ({all.length})</option>
+              {occKeys
+                .slice()
+                .sort((a, b) => a.localeCompare(b))
+                .map((name) => {
+                  const count = all.filter(
+                    (r) => ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === name,
+                  ).length;
+                  return (
+                    <option key={name} value={name}>
+                      {name} ({count})
+                    </option>
+                  );
+                })}
+            </select>
             {["all", "pending", "confirmed", "declined"].map((f) => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`px-3 py-1.5 rounded-full border ${filter === f ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}>
@@ -337,6 +357,7 @@ export function ReservationsTab() {
               </button>
             ))}
           </div>
+
         </div>
 
         {occasionFilter !== "all" && (
