@@ -9,10 +9,12 @@ import {
   chargeNoShowFee,
   cancelReservation,
   deleteReservation,
+  sendTicketPaymentReminderMail,
 } from "@/lib/reservations.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp, Trash2, EllipsisVertical } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp, Trash2, EllipsisVertical, Send } from "lucide-react";
 import { ReservationFormEditorDialog } from "./ReservationFormEditor";
 import { ConfirmDialog, PromptDialog } from "./InAppDialogs";
 import { barColor } from "./OccasionLoad";
