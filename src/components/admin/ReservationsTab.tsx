@@ -526,6 +526,17 @@ export function ReservationsTab() {
                             <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
                           </DropdownMenuItem>
                         )}
+                        {(r.ticket_total_rappen ?? 0) > 0
+                          && r.ticket_payment_status !== "paid"
+                          && r.status !== "cancelled"
+                          && r.status !== "declined" && (
+                          <DropdownMenuItem
+                            onSelect={() => setReminderTarget({ id: r.id, name: r.guest_name, email: r.guest_email })}
+                            className="gap-2 text-gold focus:text-gold"
+                          >
+                            <Send className="w-4 h-4" /> Zahlungserinnerung senden
+                          </DropdownMenuItem>
+                        )}
                         {r.status !== "cancelled" && r.status !== "declined" && (
                           <DropdownMenuItem
                             onSelect={() => setCancelTarget({ id: r.id, isPaid: !!r.is_paid_occasion, daysUntil })}
