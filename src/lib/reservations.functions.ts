@@ -870,6 +870,83 @@ export const createTicketReservationCheckout = createServerFn({ method: "POST" }
     }
   });
 
+/**
+ * Erinnerung an eine offene Ticket-Zahlung: erstellt einen neuen Stripe-
+ * Zahlungslink und schickt dem Gast eine E-Mail. Nur für Admins.
+ */
+export const sendTicketPaymentReminderMail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        environment: z.enum(["sandbox", "live"]),
+        baseUrl: z.string().url().max(300),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.userId);
+
+    const { data: row, error } = await supabaseAdmin
+      .from("reservations")
+      .select("*")
+      .eq("id", data.id)
+      .single();
+    if (error || !row) return { ok: false as const, error: "Reservation nicht gefunden." };
+    if (!row.guest_email) return { ok: false as const, error: "Keine E-Mail-Adresse hinterlegt." };
+    if (row.ticket_payment_status === "paid") {
+      return { ok: false as const, error: "Diese Reservation ist bereits bezahlt." };
+    }
+    const unitAmount = row.ticket_price_rappen || 0;
+    const totalAmount = row.ticket_total_rappen || unitAmount * (row.party_size || 1);
+    if (totalAmount <= 0) {
+      return { ok: false as const, error: "Für diese Reservation ist kein Ticketpreis hinterlegt." };
+    }
+
+    const base = data.baseUrl.replace(/\/$/, "");
+    try {
+      const stripe = createStripeClient(data.environment as StripeEnv);
+      const session = await stripe.checkout.sessions.create({
+        line_items: [
+          {
+            price_data: {
+              currency: "chf",
+              product_data: { name: `${row.occasion || "Anlass"} — Ticket` },
+              unit_amount: unitAmount > 0 ? unitAmount : Math.round(totalAmount / (row.party_size || 1)),
+            },
+            quantity: row.party_size || 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${base}/reservation-danke?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${base}/reservieren`,
+        customer_email: row.guest_email,
+        expires_at: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+        payment_intent_data: { description: `Balkaneros Ticket — ${row.occasion ?? ""}` },
+        metadata: {
+          purpose: "reservation_ticket",
+          reservation_id: row.id,
+          occasion: row.occasion ?? "",
+          party_size: String(row.party_size ?? 1),
+        },
+      });
+
+      if (!session.url) return { ok: false as const, error: "Zahlungslink konnte nicht erstellt werden." };
+
+      await supabaseAdmin
+        .from("reservations")
+        .update({ stripe_checkout_session_id: session.id, ticket_payment_status: "pending" })
+        .eq("id", row.id);
+
+      await sendTicketPaymentReminder(row, session.url, totalAmount);
+      return { ok: true as const };
+    } catch (e) {
+      console.error("[ticket-reminder] failed", e);
+      return { ok: false as const, error: getStripeErrorMessage(e) };
+    }
+  });
+
 /** Status einer Ticket-Reservation nach der Zahlung (für die Danke-Seite). */
 export const getReservationBySessionId = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ sessionId: z.string().trim().min(5).max(200) }).parse(input))
