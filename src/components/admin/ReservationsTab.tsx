@@ -46,6 +46,7 @@ export function ReservationsTab() {
   const noShowFn = useServerFn(chargeNoShowFee);
   const cancelFn = useServerFn(cancelReservation);
   const deleteFn = useServerFn(deleteReservation);
+  const reminderFn = useServerFn(sendTicketPaymentReminderMail);
   const qc = useQueryClient();
 
 
@@ -77,6 +78,19 @@ export function ReservationsTab() {
   >(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [statusTarget, setStatusTarget] = useState<{ id: string; status: "confirmed" | "declined" } | null>(null);
+  const [reminderTarget, setReminderTarget] = useState<{ id: string; name: string; email: string } | null>(null);
+
+  async function doSendReminder(id: string) {
+    setBusy(id);
+    try {
+      const res = await reminderFn({
+        data: { id, environment: getStripeEnvironment(), baseUrl: window.location.origin },
+      });
+      if (res.ok) toast.success("Erinnerung mit Zahlungslink gesendet.");
+      else toast.error(res.error);
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setBusy(null); }
+  }
 
   async function setStatus(id: string, status: "confirmed" | "declined" | "pending" | "cancelled") {
     setBusy(id);
