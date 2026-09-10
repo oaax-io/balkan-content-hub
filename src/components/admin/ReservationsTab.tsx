@@ -9,10 +9,12 @@ import {
   chargeNoShowFee,
   cancelReservation,
   deleteReservation,
+  sendTicketPaymentReminderMail,
 } from "@/lib/reservations.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, X, Phone, Mail, Users, Calendar, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp, Trash2, EllipsisVertical } from "lucide-react";
+import { Check, X, Phone, Mail, Users, Calendar, CalendarDays, Sparkles, CreditCard, ShieldCheck, AlertTriangle, CircleDollarSign, Pencil, Ban, Clock, TrendingUp, Trash2, EllipsisVertical, Send } from "lucide-react";
 import { ReservationFormEditorDialog } from "./ReservationFormEditor";
 import { ConfirmDialog, PromptDialog } from "./InAppDialogs";
 import { barColor } from "./OccasionLoad";
@@ -44,6 +46,7 @@ export function ReservationsTab() {
   const noShowFn = useServerFn(chargeNoShowFee);
   const cancelFn = useServerFn(cancelReservation);
   const deleteFn = useServerFn(deleteReservation);
+  const reminderFn = useServerFn(sendTicketPaymentReminderMail);
   const qc = useQueryClient();
 
 
@@ -75,6 +78,19 @@ export function ReservationsTab() {
   >(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [statusTarget, setStatusTarget] = useState<{ id: string; status: "confirmed" | "declined" } | null>(null);
+  const [reminderTarget, setReminderTarget] = useState<{ id: string; name: string; email: string } | null>(null);
+
+  async function doSendReminder(id: string) {
+    setBusy(id);
+    try {
+      const res = await reminderFn({
+        data: { id, environment: getStripeEnvironment(), baseUrl: window.location.origin },
+      });
+      if (res.ok) toast.success("Erinnerung mit Zahlungslink gesendet.");
+      else toast.error(res.error);
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Fehler"); }
+    finally { setBusy(null); }
+  }
 
   async function setStatus(id: string, status: "confirmed" | "declined" | "pending" | "cancelled") {
     setBusy(id);
@@ -239,6 +255,15 @@ export function ReservationsTab() {
         confirmLabel={statusTarget?.status === "confirmed" ? "Bestätigen" : "Ablehnen"}
         destructive={statusTarget?.status === "declined"}
         onConfirm={() => { if (statusTarget) setStatus(statusTarget.id, statusTarget.status); setStatusTarget(null); }}
+      />
+
+      <ConfirmDialog
+        open={!!reminderTarget}
+        onOpenChange={(v) => !v && setReminderTarget(null)}
+        title="Zahlungserinnerung senden?"
+        description={`${reminderTarget?.name ?? "Der Gast"} erhält eine E-Mail an ${reminderTarget?.email ?? ""} mit einem neuen Zahlungslink (24 Stunden gültig).`}
+        confirmLabel="Erinnerung senden"
+        onConfirm={() => { if (reminderTarget) doSendReminder(reminderTarget.id); setReminderTarget(null); }}
       />
 
       {/* ───────────── Overview ───────────── */}
@@ -499,6 +524,17 @@ export function ReservationsTab() {
                             className="gap-2 text-red-700 focus:text-red-700"
                           >
                             <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
+                          </DropdownMenuItem>
+                        )}
+                        {(r.ticket_total_rappen ?? 0) > 0
+                          && r.ticket_payment_status !== "paid"
+                          && r.status !== "cancelled"
+                          && r.status !== "declined" && (
+                          <DropdownMenuItem
+                            onSelect={() => setReminderTarget({ id: r.id, name: r.guest_name, email: r.guest_email })}
+                            className="gap-2 text-gold focus:text-gold"
+                          >
+                            <Send className="w-4 h-4" /> Zahlungserinnerung senden
                           </DropdownMenuItem>
                         )}
                         {r.status !== "cancelled" && r.status !== "declined" && (
