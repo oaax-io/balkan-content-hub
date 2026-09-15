@@ -187,6 +187,17 @@ export function ReservationsTab() {
   const cancelledCount = all.filter((r) => r.status === "cancelled").length;
   const cancelledFree = cancelledCount - chargedFees.length;
 
+  // No-Show-Belastungen: erfolgreich vs. von der Bank abgelehnt
+  const feeOf = (r: Reservation) =>
+    ((r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1);
+  const noShowOk = all.filter((r) => !!r.cancellation_fee_charged_at);
+  const noShowFailed = all.filter(
+    (r) => !r.cancellation_fee_charged_at && !!r.cancellation_fee_charge_status,
+  );
+  const noShowOkTotal = noShowOk.reduce((s, r) => s + feeOf(r), 0);
+  const noShowFailedTotal = noShowFailed.reduce((s, r) => s + feeOf(r), 0);
+
+
   // Sofortzahlungen (Tickets)
   const paidTickets = all.filter((r) => r.ticket_payment_status === "paid");
   const ticketRevenue = paidTickets.reduce((s, r) => s + ((r.ticket_total_rappen ?? 0) / 100), 0);
