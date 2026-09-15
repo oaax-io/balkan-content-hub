@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireAdmin } from "./admin.server";
 import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification, sendAdminCancellationNotification, sendTicketPaymentReminder, sendAdminNoShowChargeNotification } from "./email.server";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "./stripe.server";
+import { attemptFeeCharge } from "./fee-charge.server";
 import { randomBytes } from "node:crypto";
 
 function generateSecureToken(bytes = 48): string {
