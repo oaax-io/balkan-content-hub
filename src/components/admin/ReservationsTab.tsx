@@ -68,9 +68,12 @@ export function ReservationsTab() {
 
   const [filter, setFilter] = useState<string>("all");
   const [occasionFilter, setOccasionFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("all");
+  const [search, setSearch] = useState<string>("");
+  const [view, setView] = useState<"current" | "past">("current");
   const [busy, setBusy] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [noShowDetails, setNoShowDetails] = useState(false);
+  const [feeDetails, setFeeDetails] = useState<null | "cancellation" | "no_show">(null);
 
   // In-App-Dialoge (ersetzen window.confirm / window.prompt)
   const [noShowTarget, setNoShowTarget] = useState<
