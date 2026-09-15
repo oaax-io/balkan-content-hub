@@ -67,7 +67,6 @@ export function ReservationsTab() {
   });
 
   const [filter, setFilter] = useState<string>("all");
-  const [occasionFilter, setOccasionFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
   const [view, setView] = useState<"current" | "past">("current");
@@ -257,8 +256,6 @@ export function ReservationsTab() {
   const filtered = all
     .filter((r) => (view === "past" ? isPastRes(r) : !isPastRes(r)))
     .filter((r) => filter === "all" || r.status === filter)
-    .filter((r) => occasionFilter === "all"
-      || ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === occasionFilter)
     .filter((r) => dateFilter === "all" || dateKeyOf(r) === dateFilter)
     .filter((r) => !needle
       || r.guest_name.toLowerCase().includes(needle)
@@ -392,12 +389,11 @@ export function ReservationsTab() {
               </p>
             )}
 
-            <div className="mt-5 space-y-3">
-              {perOccasion.slice(0, 5).map((r) => (
-                <button key={r.name} type="button" onClick={() => setOccasionFilter(r.name)}
-                  className="block w-full text-left group">
+            <div className="mt-5 space-y-3 max-h-56 overflow-y-auto pr-1">
+              {perOccasion.map((r) => (
+                <div key={r.name} className="block w-full text-left">
                   <div className="flex items-baseline justify-between gap-3 text-xs">
-                    <span className="truncate font-medium group-hover:text-gold">{r.name}</span>
+                    <span className="truncate font-medium">{r.name}</span>
                     <span className="shrink-0 tabular-nums text-muted-foreground">
                       {r.reservations} Res. · {r.persons} Pers.{r.max > 0 ? ` · ${r.pct}%` : ""}
                     </span>
@@ -406,7 +402,7 @@ export function ReservationsTab() {
                     <div className={`h-full ${r.max > 0 ? barColor(r.pct) : "bg-muted-foreground/40"} transition-all`}
                       style={{ width: `${r.max > 0 ? r.pct : (maxPersons > 0 ? Math.round((r.persons / maxPersons) * 100) : 0)}%` }} />
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -555,65 +551,37 @@ export function ReservationsTab() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Name suchen …"
-              className="min-w-[200px] flex-1 rounded-full border border-border bg-card px-4 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
-            />
-            <select
-              value={occasionFilter}
-              onChange={(e) => setOccasionFilter(e.target.value)}
-              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
-            >
-              <option value="all">Alle Anlässe ({all.length})</option>
-              {occKeys
-                .slice()
-                .sort((a, b) => a.localeCompare(b))
-                .map((name) => {
-                  const count = all.filter(
-                    (r) => ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === name,
-                  ).length;
-                  return (
-                    <option key={name} value={name}>
-                      {name} ({count})
-                    </option>
-                  );
-                })}
-            </select>
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-3 text-xs shadow-sm">
+            <div className="relative min-w-[200px] flex-1">
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Name, E-Mail oder Telefon suchen …"
+                className="w-full rounded-full border border-border bg-background px-4 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+              />
+            </div>
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+              className="rounded-full border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
             >
               <option value="all">Alle Anlass-Daten</option>
               {dateKeys.map((d) => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
-            {["all", "pending", "confirmed", "declined"].map((f) => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`px-3 py-1.5 rounded-full border ${filter === f ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}>
-                {f === "all" ? "Alle Status" : STATUS_LABEL[f]}
-              </button>
-            ))}
-            <span className="text-muted-foreground">{filtered.length} Treffer</span>
+            <div className="flex items-center gap-1 rounded-full border border-border bg-background p-1">
+              {["all", "pending", "confirmed", "declined"].map((f) => (
+                <button key={f} onClick={() => setFilter(f)}
+                  className={`px-3 py-1 rounded-full transition-colors ${filter === f ? "bg-gold text-gold-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                  {f === "all" ? "Alle" : STATUS_LABEL[f]}
+                </button>
+              ))}
+            </div>
+            <span className="ml-auto pl-2 text-muted-foreground tabular-nums">{filtered.length} Treffer</span>
           </div>
         </div>
-
-        {occasionFilter !== "all" && (
-          <div className="mb-4 flex items-center gap-2 text-xs">
-            <span className="text-muted-foreground">Anlass:</span>
-            <span className="inline-flex items-center gap-2 rounded-full bg-gold/10 border border-gold/30 px-3 py-1">
-              {occasionFilter}
-              <button onClick={() => setOccasionFilter("all")} className="hover:text-gold">
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          </div>
-        )}
 
         {filtered.length === 0 ? (
           <p className="text-muted-foreground text-center py-12">Keine Reservierungen.</p>
