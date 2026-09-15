@@ -568,7 +568,7 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
         .eq("id", data.id);
       if (updErr) return { ok: false, error: updErr.message };
 
-      await notify(true, null, paymentIntent.id);
+      await notify(true, undefined, paymentIntent.id);
       return { ok: true, payment_intent_id: paymentIntent.id };
     } catch (error) {
       const message = getStripeErrorMessage(error);
