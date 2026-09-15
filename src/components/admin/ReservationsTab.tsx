@@ -70,6 +70,7 @@ export function ReservationsTab() {
   const [occasionFilter, setOccasionFilter] = useState<string>("all");
   const [busy, setBusy] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [noShowDetails, setNoShowDetails] = useState(false);
 
   // In-App-Dialoge (ersetzen window.confirm / window.prompt)
   const [noShowTarget, setNoShowTarget] = useState<
@@ -186,6 +187,17 @@ export function ReservationsTab() {
     (s, r) => s + ((r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1), 0);
   const cancelledCount = all.filter((r) => r.status === "cancelled").length;
   const cancelledFree = cancelledCount - chargedFees.length;
+
+  // No-Show-Belastungen: erfolgreich vs. von der Bank abgelehnt
+  const feeOf = (r: (typeof all)[number]) =>
+    ((r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1);
+  const noShowOk = all.filter((r) => !!r.cancellation_fee_charged_at);
+  const noShowFailed = all.filter(
+    (r) => !r.cancellation_fee_charged_at && !!r.cancellation_fee_charge_status,
+  );
+  const noShowOkTotal = noShowOk.reduce((s, r) => s + feeOf(r), 0);
+  const noShowFailedTotal = noShowFailed.reduce((s, r) => s + feeOf(r), 0);
+
 
   // Sofortzahlungen (Tickets)
   const paidTickets = all.filter((r) => r.ticket_payment_status === "paid");
@@ -365,10 +377,94 @@ export function ReservationsTab() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={CreditCard} label="Einnahmen gesamt" value={totalRevenue} hint="Tickets + Stornogebühren" accent={totalRevenue > 0} currency />
-          <Stat icon={ShieldCheck} label="Ø pro Ticket-Reservierung" value={paidTickets.length > 0 ? ticketRevenue / paidTickets.length : 0} hint="Sofortzahlungen" currency />
+          <Stat
+            icon={AlertTriangle}
+            label="No-Show belastet"
+            value={noShowOkTotal}
+            hint={`${noShowOk.length} belastet · ${noShowFailed.length} abgelehnt (CHF ${noShowFailedTotal.toFixed(2)}) — Details ansehen`}
+            accent={noShowOkTotal > 0}
+            currency
+            onClick={() => setNoShowDetails(true)}
+          />
           <Stat icon={Ban} label="Storno kostenpflichtig" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
           <Stat icon={X} label="Storno kostenlos" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
         </div>
+
+        {noShowDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setNoShowDetails(false)}>
+            <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-card p-6" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-display text-xl">No-Show-Belastungen</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Belastet CHF {noShowOkTotal.toFixed(2)} · Abgelehnt CHF {noShowFailedTotal.toFixed(2)}
+                  </p>
+                </div>
+                <button type="button" onClick={() => setNoShowDetails(false)} className="rounded p-1 hover:bg-muted">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <h4 className="mt-5 text-xs uppercase tracking-widest text-muted-foreground">Erfolgreich abgebucht</h4>
+              {noShowOk.length === 0 ? (
+                <p className="mt-2 text-sm text-muted-foreground">Keine Belastungen.</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {noShowOk.map((r) => (
+                    <li key={r.id} className="rounded border border-green-300 bg-green-50 p-3 text-sm">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="font-medium">{r.guest_name}</span>
+                        <span className="tabular-nums font-semibold">CHF {feeOf(r).toFixed(2)}</span>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {(r.occasion || "—")} · {Math.max(1, r.party_size || 1)} Pers. × CHF{" "}
+                        {((r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100).toFixed(2)}
+                        {r.cancellation_fee_charged_at
+                          ? ` · ${new Date(r.cancellation_fee_charged_at).toLocaleString("de-CH")}`
+                          : ""}
+                      </div>
+                      {r.cancellation_fee_payment_intent_id && (
+                        <div className="mt-1 text-[11px] text-muted-foreground break-all">
+                          Referenz: {r.cancellation_fee_payment_intent_id}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <h4 className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">
+                Abgelehnt (Bank / Karte)
+              </h4>
+              {noShowFailed.length === 0 ? (
+                <p className="mt-2 text-sm text-muted-foreground">Keine abgelehnten Belastungen.</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {noShowFailed.map((r) => (
+                    <li key={r.id} className="rounded border border-red-300 bg-red-50 p-3 text-sm">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="font-medium">{r.guest_name}</span>
+                        <span className="tabular-nums font-semibold">CHF {feeOf(r).toFixed(2)}</span>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {(r.occasion || "—")} · {Math.max(1, r.party_size || 1)} Pers. × CHF{" "}
+                        {((r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100).toFixed(2)}
+                      </div>
+                      <div className="mt-1 text-xs text-red-700 break-words">
+                        Grund: {r.cancellation_fee_charge_status}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-5 text-[11px] text-muted-foreground">
+                Bei jeder Belastung – erfolgreich oder abgelehnt – geht automatisch eine Benachrichtigung an die
+                hinterlegte Benachrichtigungs-Adresse.
+              </p>
+            </div>
+          </div>
+        )}
+
       </section>
 
 
@@ -610,22 +706,31 @@ function PayBadge({ icon: Icon, tone, children }: {
   );
 }
 
-function Stat({ icon: Icon, label, value, hint, accent, currency }: {
-  icon: typeof Users; label: string; value: number; hint: string; accent?: boolean; currency?: boolean;
+function Stat({ icon: Icon, label, value, hint, accent, currency, onClick }: {
+  icon: typeof Users; label: string; value: number; hint: string; accent?: boolean; currency?: boolean; onClick?: () => void;
 }) {
   const formatted = currency
     ? `CHF ${value.toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : value.toLocaleString("de-CH");
-  return (
-    <div className="rounded-sm border border-border bg-card p-5">
+  const inner = (
+    <>
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs uppercase tracking-widest text-muted-foreground">{label}</span>
         <Icon className={`w-4 h-4 ${accent ? "text-gold" : "text-muted-foreground"}`} />
       </div>
       <div className={`text-3xl font-display ${accent ? "text-gold" : ""}`}>{formatted}</div>
       <div className="text-xs text-muted-foreground mt-1">{hint}</div>
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick}
+        className="rounded-sm border border-border bg-card p-5 text-left transition hover:border-gold hover:shadow-md">
+        {inner}
+      </button>
+    );
+  }
+  return <div className="rounded-sm border border-border bg-card p-5">{inner}</div>;
 }
 
 

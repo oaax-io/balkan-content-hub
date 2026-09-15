@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireAdmin } from "./admin.server";
-import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification, sendAdminCancellationNotification, sendTicketPaymentReminder } from "./email.server";
+import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification, sendAdminCancellationNotification, sendTicketPaymentReminder, sendAdminNoShowChargeNotification } from "./email.server";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "./stripe.server";
 import { randomBytes } from "node:crypto";
 
@@ -524,6 +524,22 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
         },
       });
 
+      const notify = async (ok: boolean, err?: string, pi?: string | null) => {
+        try {
+          await sendAdminNoShowChargeNotification({
+            reservation: r as any,
+            ok,
+            perPersonRappen: perPerson,
+            partySize,
+            totalRappen: amount,
+            error: err ?? null,
+            paymentIntentId: pi ?? null,
+          });
+        } catch (e) {
+          console.error("[no-show notify failed]", e);
+        }
+      };
+
       if (paymentIntent.status !== "succeeded" && paymentIntent.status !== "processing") {
         await supabaseAdmin
           .from("reservations")
@@ -532,6 +548,7 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
             cancellation_fee_payment_intent_id: paymentIntent.id,
           })
           .eq("id", data.id);
+        await notify(false, `Zahlung fehlgeschlagen (Status: ${paymentIntent.status})`, paymentIntent.id);
         return {
           ok: false,
           error: `Zahlung fehlgeschlagen (Status: ${paymentIntent.status}).`,
@@ -551,6 +568,7 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
         .eq("id", data.id);
       if (updErr) return { ok: false, error: updErr.message };
 
+      await notify(true, undefined, paymentIntent.id);
       return { ok: true, payment_intent_id: paymentIntent.id };
     } catch (error) {
       const message = getStripeErrorMessage(error);
@@ -558,8 +576,21 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
         .from("reservations")
         .update({ cancellation_fee_charge_status: `failed: ${message.slice(0, 200)}` })
         .eq("id", data.id);
+      try {
+        await sendAdminNoShowChargeNotification({
+          reservation: r as any,
+          ok: false,
+          perPersonRappen: perPerson,
+          partySize,
+          totalRappen: amount,
+          error: message,
+        });
+      } catch (e) {
+        console.error("[no-show notify failed]", e);
+      }
       return { ok: false, error: `Stripe-Belastung fehlgeschlagen: ${message}` };
     }
+
   });
 
 // ==============================================================

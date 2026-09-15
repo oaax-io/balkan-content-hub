@@ -479,3 +479,81 @@ export async function sendNewsletterWelcome(opts: { to: string; name?: string; u
     templateKey: "newsletter_welcome",
   });
 }
+
+// ---------------------------------------------------------------------------
+// Admin-Benachrichtigung: No-Show-Belastung (erfolgreich oder abgelehnt)
+// ---------------------------------------------------------------------------
+export async function sendAdminNoShowChargeNotification(opts: {
+  reservation: Reservation;
+  ok: boolean;
+  perPersonRappen: number;
+  partySize: number;
+  totalRappen: number;
+  error?: string | null;
+  paymentIntentId?: string | null;
+}) {
+  const contact = await getContact();
+  const to = contact?.notification_email || contact?.email;
+  if (!to) return;
+  const restaurant = contact?.restaurant_name ?? "Balkaneros";
+  const r = opts.reservation;
+  const chf = (rp: number) => (rp / 100).toFixed(2);
+  const title = opts.ok
+    ? "No-Show-Gebühr erfolgreich belastet"
+    : "No-Show-Belastung von der Bank abgelehnt";
+  const intro = opts.ok
+    ? `Die No-Show-Gebühr wurde erfolgreich abgebucht.`
+    : `Die Abbuchung der No-Show-Gebühr wurde von der Bank bzw. dem Kartenaussteller <strong>abgelehnt</strong>. Es wurde kein Betrag eingezogen.`;
+  const rows: [string, string][] = [
+    ["Gast", `${r.guest_name} &lt;${r.guest_email}&gt;`],
+    ["Telefon", r.guest_phone || "—"],
+    ["Anlass", r.occasion || "—"],
+    ["Datum", `${fmtDate(r.reservation_date) || "offen"}${hasTime(r.reservation_time) ? ` · ${r.reservation_time}` : ""}`],
+    ["Personen", String(opts.partySize)],
+    ["Betrag pro Person", `CHF ${chf(opts.perPersonRappen)}`],
+    ["Total", `CHF ${chf(opts.totalRappen)}`],
+    ["Status", opts.ok ? "Belastet" : "Abgelehnt"],
+  ];
+  if (!opts.ok && opts.error) rows.push(["Grund", opts.error]);
+  if (opts.paymentIntentId) rows.push(["Stripe-Referenz", opts.paymentIntentId]);
+
+  const accent = opts.ok ? "#4ade80" : "#f87171";
+  const html = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0d;padding:24px 0;">
+  <tr><td align="center">
+    <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#141414;border:1px solid #2a2a2a;border-radius:12px;">
+      <tr><td style="padding:30px 32px 8px;text-align:center;">
+        <div style="letter-spacing:6px;font-size:15px;color:#c9a227;font-weight:bold;">BALKANEROS</div>
+        <div style="letter-spacing:3px;font-size:10px;color:#8a8a8a;margin-top:6px;">EVENTS</div>
+      </td></tr>
+      <tr><td style="padding:14px 32px 0;">
+        <h1 style="color:${accent};font-size:20px;margin:0 0 12px;">${title}</h1>
+        <p style="color:#cfcfcf;font-size:14px;line-height:22px;margin:0 0 18px;">${intro}</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+          ${rows
+            .map(
+              ([k, v]) =>
+                `<tr><td style="padding:7px 0;color:#8a8a8a;font-size:12px;width:42%;border-bottom:1px solid #222;">${k}</td><td style="padding:7px 0;color:#f3f3f3;font-size:13px;border-bottom:1px solid #222;">${v}</td></tr>`,
+            )
+            .join("")}
+        </table>
+      </td></tr>
+      <tr><td style="padding:20px 32px 28px;">
+        <a href="${getSiteBaseUrl()}/admin" style="display:inline-block;background:#c9a227;color:#141414;text-decoration:none;font-weight:bold;font-size:14px;padding:12px 22px;border-radius:8px;">Im Admin öffnen</a>
+      </td></tr>
+      <tr><td style="padding:16px 32px 24px;border-top:1px solid #2a2a2a;">
+        <p style="color:#6f6f6f;font-size:11px;line-height:18px;margin:0;">${restaurant} · Automatische Benachrichtigung</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>`;
+
+  await sendEmail({
+    to,
+    subject: opts.ok
+      ? `No-Show belastet: ${r.guest_name} — CHF ${chf(opts.totalRappen)}`
+      : `No-Show-Abbuchung abgelehnt: ${r.guest_name} — CHF ${chf(opts.totalRappen)}`,
+    html,
+    templateKey: "admin_no_show_charge",
+    reservationId: r.id ?? null,
+  });
+}
