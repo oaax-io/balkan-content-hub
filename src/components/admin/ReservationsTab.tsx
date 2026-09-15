@@ -230,10 +230,30 @@ export function ReservationsTab() {
   const maxPersons = perOccasion.reduce((m, r) => Math.max(m, r.persons), 0);
 
 
+  // Anlass-Datum (Label des Anlasses, sonst das Reservierungsdatum)
+  const dateKeyOf = (r: (typeof all)[number]) =>
+    ((r.event_date_label || "").trim() || fmt(r.reservation_date));
+  const isPastRes = (r: (typeof all)[number]) =>
+    daysUntilEvent(r.reservation_date, r.reservation_time) < 0;
+
+  const currentCount = all.filter((r) => !isPastRes(r)).length;
+  const pastCount = all.length - currentCount;
+
+  const dateKeys = Array.from(
+    new Set(all.filter((r) => (view === "past" ? isPastRes(r) : !isPastRes(r))).map(dateKeyOf)),
+  ).sort((a, b) => a.localeCompare(b));
+
+  const needle = search.trim().toLowerCase();
   const filtered = all
+    .filter((r) => (view === "past" ? isPastRes(r) : !isPastRes(r)))
     .filter((r) => filter === "all" || r.status === filter)
     .filter((r) => occasionFilter === "all"
-      || ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === occasionFilter);
+      || ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === occasionFilter)
+    .filter((r) => dateFilter === "all" || dateKeyOf(r) === dateFilter)
+    .filter((r) => !needle
+      || r.guest_name.toLowerCase().includes(needle)
+      || (r.guest_email || "").toLowerCase().includes(needle)
+      || (r.guest_phone || "").toLowerCase().includes(needle));
 
   return (
     <div className="space-y-8">
