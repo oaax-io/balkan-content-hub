@@ -390,80 +390,41 @@ export const cancelReservation = createServerFn({ method: "POST" })
     }
 
     const perPerson = r.cancellation_fee_amount ?? 5000;
-    const partySize = Math.max(1, r.party_size ?? 1);
-    const amount = perPerson * partySize;
-    const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
 
-    // 5) Stripe PaymentIntent off_session erstellen und sofort bestätigen
-    try {
-      const stripe = createStripeClient(data.environment as StripeEnv);
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency,
-        customer: r.stripe_customer_id,
-        payment_method: r.stripe_payment_method_id,
-        off_session: true,
-        confirm: true,
-        description: `Balkaneros Storno-Gebühr — ${r.occasion} (${r.guest_name})`,
-        metadata: {
-          reservation_id: r.id,
-          type: "cancellation_fee",
-          occasion: r.occasion,
-        },
-      });
+    // 5) Gebühr belasten (bei Ablehnung wird automatisch erneut versucht)
+    const charge = await attemptFeeCharge({
+      reservation: r as any,
+      environment: data.environment as StripeEnv,
+      perPersonRappen: perPerson,
+      kind: "cancellation",
+    });
 
-      if (paymentIntent.status !== "succeeded" && paymentIntent.status !== "processing") {
-        // Nicht als bezahlt markieren
-        const { error: updErr } = await supabaseAdmin
-          .from("reservations")
-          .update({
-            cancellation_fee_charge_status: paymentIntent.status,
-            cancellation_fee_payment_intent_id: paymentIntent.id,
-          })
-          .eq("id", data.id);
-        if (updErr) console.error(updErr.message);
-        return {
-          ok: false,
-          error: `Zahlung fehlgeschlagen (Status: ${paymentIntent.status}). Reservation wurde nicht storniert.`,
-        };
-      }
+    // 6) Reservation in jedem Fall stornieren — offene Gebühr bleibt in der
+    //    automatischen Wiederholung.
+    const { error: updErr } = await supabaseAdmin
+      .from("reservations")
+      .update({
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+        cancellation_reason: data.reason ?? null,
+      })
+      .eq("id", data.id);
+    if (updErr) return { ok: false, error: updErr.message };
 
-      // 6) Erfolg speichern
-      const { error: updErr } = await supabaseAdmin
-        .from("reservations")
-        .update({
-          status: "cancelled",
-          cancelled_at: new Date().toISOString(),
-          cancellation_reason: data.reason ?? null,
-          cancellation_fee_charged_at: new Date().toISOString(),
-          cancellation_fee_payment_intent_id: paymentIntent.id,
-          cancellation_fee_charge_status: paymentIntent.status,
-        })
-        .eq("id", data.id);
-      if (updErr) return { ok: false, error: updErr.message };
-
-      try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
-        console.error("cancel email failed", e);
-      }
-      try { await sendAdminCancellationNotification({ ...r, status: "cancelled" }, true); } catch (e) {
-        console.error("admin cancel email failed", e);
-      }
-
-      return {
-        ok: true,
-        fee_charged: true,
-        days_until: daysUntil,
-        payment_intent_id: paymentIntent.id,
-      };
-    } catch (error) {
-      const message = getStripeErrorMessage(error);
-      // Fehlschlag im Log festhalten, aber nicht als bezahlt markieren
-      await supabaseAdmin
-        .from("reservations")
-        .update({ cancellation_fee_charge_status: `failed: ${message.slice(0, 200)}` })
-        .eq("id", data.id);
-      return { ok: false, error: `Stripe-Belastung fehlgeschlagen: ${message}` };
+    try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
+      console.error("cancel email failed", e);
     }
+    try { await sendAdminCancellationNotification({ ...r, status: "cancelled" }, charge.ok); } catch (e) {
+      console.error("admin cancel email failed", e);
+    }
+
+    return {
+      ok: true,
+      fee_charged: charge.ok,
+      days_until: daysUntil,
+      payment_intent_id: charge.ok ? charge.payment_intent_id : undefined,
+      fee_error: charge.ok ? undefined : charge.error,
+    };
   });
 
 // ---- Storno- / No-Show-Gebühr belasten (Admin) ----
