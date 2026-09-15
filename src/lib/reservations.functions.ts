@@ -469,6 +469,8 @@ export const cancelReservation = createServerFn({ method: "POST" })
 const noShowSchema = z.object({
   id: z.string().uuid(),
   environment: z.enum(["sandbox", "live"]).default("sandbox"),
+  // Optionaler Betrag pro Person in CHF (überschreibt den Anlass-Standard)
+  fee_per_person_chf: z.number().positive().max(2000).optional(),
 });
 
 type NoShowResult =
