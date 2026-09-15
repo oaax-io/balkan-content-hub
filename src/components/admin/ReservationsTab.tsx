@@ -104,12 +104,16 @@ export function ReservationsTab() {
     finally { setBusy(null); }
   }
 
-  async function doChargeNoShow(id: string) {
+  async function doChargeNoShow(id: string, perPersonChf: number, partySize: number) {
     setBusy(id);
     try {
-      const res = await noShowFn({ data: { id, environment: "sandbox" } });
+      const res = await noShowFn({
+        data: { id, environment: getStripeEnvironment(), fee_per_person_chf: perPersonChf },
+      });
       if (res.ok) {
-        toast.success("CHF 50 belastet.");
+        toast.success(
+          `CHF ${(perPersonChf * partySize).toFixed(2)} belastet (${partySize} × CHF ${perPersonChf.toFixed(2)}).`,
+        );
         qc.invalidateQueries({ queryKey: ["reservations"] });
       } else {
         toast.error(res.error);
