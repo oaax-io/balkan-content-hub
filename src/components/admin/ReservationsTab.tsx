@@ -72,7 +72,9 @@ export function ReservationsTab() {
   const [editorOpen, setEditorOpen] = useState(false);
 
   // In-App-Dialoge (ersetzen window.confirm / window.prompt)
-  const [noShowTarget, setNoShowTarget] = useState<string | null>(null);
+  const [noShowTarget, setNoShowTarget] = useState<
+    { id: string; name: string; partySize: number; perPersonChf: number } | null
+  >(null);
   const [cancelTarget, setCancelTarget] = useState<
     { id: string; isPaid: boolean; daysUntil: number } | null
   >(null);
