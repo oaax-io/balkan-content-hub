@@ -188,7 +188,7 @@ export function ReservationsTab() {
   const cancelledFree = cancelledCount - chargedFees.length;
 
   // No-Show-Belastungen: erfolgreich vs. von der Bank abgelehnt
-  const feeOf = (r: Reservation) =>
+  const feeOf = (r: (typeof all)[number]) =>
     ((r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1);
   const noShowOk = all.filter((r) => !!r.cancellation_fee_charged_at);
   const noShowFailed = all.filter(
