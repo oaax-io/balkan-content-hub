@@ -544,6 +544,9 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
           cancellation_fee_charged_at: new Date().toISOString(),
           cancellation_fee_payment_intent_id: paymentIntent.id,
           cancellation_fee_charge_status: paymentIntent.status,
+          // tatsächlich belasteten Betrag pro Person festhalten
+          no_show_fee_amount: perPerson,
+          cancellation_fee_amount: perPerson,
         })
         .eq("id", data.id);
       if (updErr) return { ok: false, error: updErr.message };
