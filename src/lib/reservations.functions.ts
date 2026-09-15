@@ -500,7 +500,9 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
       return { ok: false, error: "Keine hinterlegte Zahlungsmethode gefunden." };
     }
 
-    const perPerson = r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000;
+    const perPerson = data.fee_per_person_chf
+      ? Math.round(data.fee_per_person_chf * 100)
+      : (r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000);
     const partySize = Math.max(1, r.party_size ?? 1);
     const amount = perPerson * partySize;
     const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
