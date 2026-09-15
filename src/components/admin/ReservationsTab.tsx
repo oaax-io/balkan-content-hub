@@ -112,7 +112,13 @@ export function ReservationsTab() {
     setBusy(id);
     try {
       const res = await noShowFn({
-        data: { id, environment: getStripeEnvironment(), fee_per_person_chf: perPersonChf },
+        data: {
+          id,
+          environment: getStripeEnvironment(),
+          fee_per_person_chf: perPersonChf,
+          kind: "no_show",
+          retry: true,
+        },
       });
       if (res.ok) {
         toast.success(
@@ -129,7 +135,9 @@ export function ReservationsTab() {
   async function doCancel(id: string, reason: string) {
     setBusy(id);
     try {
-      const res = await cancelFn({ data: { id, reason: reason || undefined, environment: "sandbox" } });
+      const res = await cancelFn({
+        data: { id, reason: reason || undefined, environment: getStripeEnvironment() },
+      });
       if (res.ok) {
         toast.success(res.fee_charged ? "Storniert · CHF 50 belastet" : "Storniert");
         qc.invalidateQueries({ queryKey: ["reservations"] });
