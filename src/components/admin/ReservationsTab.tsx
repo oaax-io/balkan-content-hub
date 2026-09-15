@@ -543,10 +543,15 @@ export function ReservationsTab() {
                           && r.stripe_payment_method_id
                           && !r.cancellation_fee_charged_at && (
                           <DropdownMenuItem
-                            onSelect={() => setNoShowTarget(r.id)}
+                            onSelect={() => setNoShowTarget({
+                              id: r.id,
+                              name: r.guest_name,
+                              partySize: Math.max(1, r.party_size || 1),
+                              perPersonChf: (r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100,
+                            })}
                             className="gap-2 text-red-700 focus:text-red-700"
                           >
-                            <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
+                            <CircleDollarSign className="w-4 h-4" /> No-Show belasten (pro Person)
                           </DropdownMenuItem>
                         )}
                         {(r.ticket_total_rappen ?? 0) > 0
