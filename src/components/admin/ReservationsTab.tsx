@@ -184,22 +184,32 @@ export function ReservationsTab() {
     confirmed: all.filter((r) => r.status === "confirmed").length,
   };
 
-  // Storno-Statistik (nur tatsächlich belastete Gebühren zählen)
+  // Gebühren-Statistik (nur tatsächlich belastete Gebühren zählen)
   const chargedFees = all.filter((r) => r.cancellation_fee_charged_at);
   const feeRevenue = chargedFees.reduce(
     (s, r) => s + ((r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1), 0);
   const cancelledCount = all.filter((r) => r.status === "cancelled").length;
-  const cancelledFree = cancelledCount - chargedFees.length;
+  const cancelledFree = cancelledCount - chargedFees.filter((r) => (r as any).fee_charge_kind !== "no_show").length;
 
-  // No-Show-Belastungen: erfolgreich vs. von der Bank abgelehnt
   const feeOf = (r: (typeof all)[number]) =>
-    ((r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1);
-  const noShowOk = all.filter((r) => !!r.cancellation_fee_charged_at);
-  const noShowFailed = all.filter(
-    (r) => !r.cancellation_fee_charged_at && !!r.cancellation_fee_charge_status,
-  );
-  const noShowOkTotal = noShowOk.reduce((s, r) => s + feeOf(r), 0);
-  const noShowFailedTotal = noShowFailed.reduce((s, r) => s + feeOf(r), 0);
+    (((r as any).no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1);
+  // Art der Belastung: Storno (Standard) oder No-Show
+  const kindOf = (r: (typeof all)[number]): "cancellation" | "no_show" =>
+    (r as any).fee_charge_kind === "no_show" ? "no_show" : "cancellation";
+  const okOf = (kind: "cancellation" | "no_show") =>
+    all.filter((r) => !!r.cancellation_fee_charged_at && kindOf(r) === kind);
+  const failedOf = (kind: "cancellation" | "no_show") =>
+    all.filter(
+      (r) => !r.cancellation_fee_charged_at && !!r.cancellation_fee_charge_status && kindOf(r) === kind,
+    );
+  const sum = (rows: typeof all) => rows.reduce((s, r) => s + feeOf(r), 0);
+
+  const cancelOk = okOf("cancellation");
+  const cancelFailed = failedOf("cancellation");
+  const noShowOk = okOf("no_show");
+  const noShowFailed = failedOf("no_show");
+  const detailsOk = feeDetails ? okOf(feeDetails) : [];
+  const detailsFailed = feeDetails ? failedOf(feeDetails) : [];
 
 
   // Sofortzahlungen (Tickets)
