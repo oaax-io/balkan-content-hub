@@ -67,7 +67,6 @@ export function ReservationsTab() {
   });
 
   const [filter, setFilter] = useState<string>("all");
-  const [occasionFilter, setOccasionFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
   const [view, setView] = useState<"current" | "past">("current");
@@ -257,8 +256,6 @@ export function ReservationsTab() {
   const filtered = all
     .filter((r) => (view === "past" ? isPastRes(r) : !isPastRes(r)))
     .filter((r) => filter === "all" || r.status === filter)
-    .filter((r) => occasionFilter === "all"
-      || ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === occasionFilter)
     .filter((r) => dateFilter === "all" || dateKeyOf(r) === dateFilter)
     .filter((r) => !needle
       || r.guest_name.toLowerCase().includes(needle)
