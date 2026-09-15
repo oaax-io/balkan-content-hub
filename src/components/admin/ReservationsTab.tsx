@@ -70,6 +70,7 @@ export function ReservationsTab() {
   const [occasionFilter, setOccasionFilter] = useState<string>("all");
   const [busy, setBusy] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [noShowDetails, setNoShowDetails] = useState(false);
 
   // In-App-Dialoge (ersetzen window.confirm / window.prompt)
   const [noShowTarget, setNoShowTarget] = useState<
@@ -705,22 +706,31 @@ function PayBadge({ icon: Icon, tone, children }: {
   );
 }
 
-function Stat({ icon: Icon, label, value, hint, accent, currency }: {
-  icon: typeof Users; label: string; value: number; hint: string; accent?: boolean; currency?: boolean;
+function Stat({ icon: Icon, label, value, hint, accent, currency, onClick }: {
+  icon: typeof Users; label: string; value: number; hint: string; accent?: boolean; currency?: boolean; onClick?: () => void;
 }) {
   const formatted = currency
     ? `CHF ${value.toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : value.toLocaleString("de-CH");
-  return (
-    <div className="rounded-sm border border-border bg-card p-5">
+  const inner = (
+    <>
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs uppercase tracking-widest text-muted-foreground">{label}</span>
         <Icon className={`w-4 h-4 ${accent ? "text-gold" : "text-muted-foreground"}`} />
       </div>
       <div className={`text-3xl font-display ${accent ? "text-gold" : ""}`}>{formatted}</div>
       <div className="text-xs text-muted-foreground mt-1">{hint}</div>
-    </div>
+    </>
   );
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick}
+        className="rounded-sm border border-border bg-card p-5 text-left transition hover:border-gold hover:shadow-md">
+        {inner}
+      </button>
+    );
+  }
+  return <div className="rounded-sm border border-border bg-card p-5">{inner}</div>;
 }
 
 
