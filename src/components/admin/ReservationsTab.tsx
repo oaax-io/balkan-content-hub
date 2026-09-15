@@ -214,15 +214,32 @@ export function ReservationsTab() {
     <div className="space-y-8">
       <ReservationFormEditorDialog open={editorOpen} onClose={() => setEditorOpen(false)} />
 
-      <ConfirmDialog
+      <PromptDialog
         open={!!noShowTarget}
         onOpenChange={(v) => !v && setNoShowTarget(null)}
-        title="CHF 50 No-Show Gebühr belasten?"
-        description="Diese Aktion kann nicht rückgängig gemacht werden."
+        title="No-Show Gebühr belasten"
+        description={
+          noShowTarget
+            ? `${noShowTarget.name} · ${noShowTarget.partySize} Person(en). Betrag pro Person in CHF eingeben — belastet wird Betrag × Anzahl Personen. Diese Aktion kann nicht rückgängig gemacht werden.`
+            : undefined
+        }
+        defaultValue={noShowTarget ? String(noShowTarget.perPersonChf) : ""}
+        placeholder="z.B. 99"
         confirmLabel="Belasten"
-        destructive
-        onConfirm={() => { if (noShowTarget) doChargeNoShow(noShowTarget); setNoShowTarget(null); }}
+        required
+        onSubmit={(v) => {
+          const t = noShowTarget;
+          setNoShowTarget(null);
+          if (!t) return;
+          const per = Number(String(v).replace(",", "."));
+          if (!Number.isFinite(per) || per <= 0) {
+            toast.error("Bitte einen gültigen Betrag pro Person eingeben.");
+            return;
+          }
+          doChargeNoShow(t.id, per, t.partySize);
+        }}
       />
+
 
       <PromptDialog
         open={!!cancelTarget}
