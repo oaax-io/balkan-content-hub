@@ -24,6 +24,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReservationCancelTokenRouteImport } from './routes/reservation-cancel.$token'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicRetryFeesRouteImport } from './routes/api/public/retry-fees'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const UeberUnsRoute = UeberUnsRouteImport.update({
@@ -100,6 +101,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicRetryFeesRoute = ApiPublicRetryFeesRouteImport.update({
+  id: '/api/public/retry-fees',
+  path: '/api/public/retry-fees',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
+  '/api/public/retry-fees': typeof ApiPublicRetryFeesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/ueber-uns': typeof UeberUnsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
+  '/api/public/retry-fees': typeof ApiPublicRetryFeesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/ueber-uns': typeof UeberUnsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/reservation-cancel/$token': typeof ReservationCancelTokenRoute
+  '/api/public/retry-fees': typeof ApiPublicRetryFeesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/ueber-uns'
     | '/admin'
     | '/reservation-cancel/$token'
+    | '/api/public/retry-fees'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/ueber-uns'
     | '/admin'
     | '/reservation-cancel/$token'
+    | '/api/public/retry-fees'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/ueber-uns'
     | '/_authenticated/admin'
     | '/reservation-cancel/$token'
+    | '/api/public/retry-fees'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -230,6 +242,7 @@ export interface RootRouteChildren {
   ReservierenRoute: typeof ReservierenRoute
   UeberUnsRoute: typeof UeberUnsRoute
   ReservationCancelTokenRoute: typeof ReservationCancelTokenRoute
+  ApiPublicRetryFeesRoute: typeof ApiPublicRetryFeesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -340,6 +353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/retry-fees': {
+      id: '/api/public/retry-fees'
+      path: '/api/public/retry-fees'
+      fullPath: '/api/public/retry-fees'
+      preLoaderRoute: typeof ApiPublicRetryFeesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -376,6 +396,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReservierenRoute: ReservierenRoute,
   UeberUnsRoute: UeberUnsRoute,
   ReservationCancelTokenRoute: ReservationCancelTokenRoute,
+  ApiPublicRetryFeesRoute: ApiPublicRetryFeesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport

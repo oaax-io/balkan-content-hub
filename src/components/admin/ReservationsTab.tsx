@@ -68,9 +68,12 @@ export function ReservationsTab() {
 
   const [filter, setFilter] = useState<string>("all");
   const [occasionFilter, setOccasionFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("all");
+  const [search, setSearch] = useState<string>("");
+  const [view, setView] = useState<"current" | "past">("current");
   const [busy, setBusy] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [noShowDetails, setNoShowDetails] = useState(false);
+  const [feeDetails, setFeeDetails] = useState<null | "cancellation" | "no_show">(null);
 
   // In-App-Dialoge (ersetzen window.confirm / window.prompt)
   const [noShowTarget, setNoShowTarget] = useState<
@@ -109,7 +112,13 @@ export function ReservationsTab() {
     setBusy(id);
     try {
       const res = await noShowFn({
-        data: { id, environment: getStripeEnvironment(), fee_per_person_chf: perPersonChf },
+        data: {
+          id,
+          environment: getStripeEnvironment(),
+          fee_per_person_chf: perPersonChf,
+          kind: "no_show",
+          retry: true,
+        },
       });
       if (res.ok) {
         toast.success(
@@ -126,9 +135,13 @@ export function ReservationsTab() {
   async function doCancel(id: string, reason: string) {
     setBusy(id);
     try {
-      const res = await cancelFn({ data: { id, reason: reason || undefined, environment: "sandbox" } });
+      const res = await cancelFn({
+        data: { id, reason: reason || undefined, environment: getStripeEnvironment() },
+      });
       if (res.ok) {
-        toast.success(res.fee_charged ? "Storniert · CHF 50 belastet" : "Storniert");
+        if (res.fee_charged) toast.success("Storniert · Stornogebühr belastet");
+        else if (res.fee_error) toast.warning("Storniert · Gebühr abgelehnt — wird automatisch erneut versucht");
+        else toast.success("Storniert");
         qc.invalidateQueries({ queryKey: ["reservations"] });
       } else {
         toast.error(res.error);
@@ -181,22 +194,32 @@ export function ReservationsTab() {
     confirmed: all.filter((r) => r.status === "confirmed").length,
   };
 
-  // Storno-Statistik (nur tatsächlich belastete Gebühren zählen)
+  // Gebühren-Statistik (nur tatsächlich belastete Gebühren zählen)
   const chargedFees = all.filter((r) => r.cancellation_fee_charged_at);
   const feeRevenue = chargedFees.reduce(
     (s, r) => s + ((r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1), 0);
   const cancelledCount = all.filter((r) => r.status === "cancelled").length;
-  const cancelledFree = cancelledCount - chargedFees.length;
+  const cancelledFree = cancelledCount - chargedFees.filter((r) => (r as any).fee_charge_kind !== "no_show").length;
 
-  // No-Show-Belastungen: erfolgreich vs. von der Bank abgelehnt
   const feeOf = (r: (typeof all)[number]) =>
-    ((r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1);
-  const noShowOk = all.filter((r) => !!r.cancellation_fee_charged_at);
-  const noShowFailed = all.filter(
-    (r) => !r.cancellation_fee_charged_at && !!r.cancellation_fee_charge_status,
-  );
-  const noShowOkTotal = noShowOk.reduce((s, r) => s + feeOf(r), 0);
-  const noShowFailedTotal = noShowFailed.reduce((s, r) => s + feeOf(r), 0);
+    (((r as any).no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1);
+  // Art der Belastung: Storno (Standard) oder No-Show
+  const kindOf = (r: (typeof all)[number]): "cancellation" | "no_show" =>
+    (r as any).fee_charge_kind === "no_show" ? "no_show" : "cancellation";
+  const okOf = (kind: "cancellation" | "no_show") =>
+    all.filter((r) => !!r.cancellation_fee_charged_at && kindOf(r) === kind);
+  const failedOf = (kind: "cancellation" | "no_show") =>
+    all.filter(
+      (r) => !r.cancellation_fee_charged_at && !!r.cancellation_fee_charge_status && kindOf(r) === kind,
+    );
+  const sum = (rows: typeof all) => rows.reduce((s, r) => s + feeOf(r), 0);
+
+  const cancelOk = okOf("cancellation");
+  const cancelFailed = failedOf("cancellation");
+  const noShowOk = okOf("no_show");
+  const noShowFailed = failedOf("no_show");
+  const detailsOk = feeDetails ? okOf(feeDetails) : [];
+  const detailsFailed = feeDetails ? failedOf(feeDetails) : [];
 
 
   // Sofortzahlungen (Tickets)
@@ -217,10 +240,30 @@ export function ReservationsTab() {
   const maxPersons = perOccasion.reduce((m, r) => Math.max(m, r.persons), 0);
 
 
+  // Anlass-Datum (Label des Anlasses, sonst das Reservierungsdatum)
+  const dateKeyOf = (r: (typeof all)[number]) =>
+    ((r.event_date_label || "").trim() || fmt(r.reservation_date));
+  const isPastRes = (r: (typeof all)[number]) =>
+    daysUntilEvent(r.reservation_date, r.reservation_time) < 0;
+
+  const currentCount = all.filter((r) => !isPastRes(r)).length;
+  const pastCount = all.length - currentCount;
+
+  const dateKeys = Array.from(
+    new Set(all.filter((r) => (view === "past" ? isPastRes(r) : !isPastRes(r))).map(dateKeyOf)),
+  ).sort((a, b) => a.localeCompare(b));
+
+  const needle = search.trim().toLowerCase();
   const filtered = all
+    .filter((r) => (view === "past" ? isPastRes(r) : !isPastRes(r)))
     .filter((r) => filter === "all" || r.status === filter)
     .filter((r) => occasionFilter === "all"
-      || ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === occasionFilter);
+      || ((r.occasion || "").trim() || OCCASION_LABEL_FALLBACK) === occasionFilter)
+    .filter((r) => dateFilter === "all" || dateKeyOf(r) === dateFilter)
+    .filter((r) => !needle
+      || r.guest_name.toLowerCase().includes(needle)
+      || (r.guest_email || "").toLowerCase().includes(needle)
+      || (r.guest_phone || "").toLowerCase().includes(needle));
 
   return (
     <div className="space-y-8">
@@ -376,41 +419,51 @@ export function ReservationsTab() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat icon={CreditCard} label="Einnahmen gesamt" value={totalRevenue} hint="Tickets + Stornogebühren" accent={totalRevenue > 0} currency />
+          <Stat icon={CreditCard} label="Einnahmen gesamt" value={totalRevenue} hint="Tickets + Gebühren" accent={totalRevenue > 0} currency />
+          <Stat
+            icon={Ban}
+            label="Storno belastet"
+            value={sum(cancelOk)}
+            hint={`${cancelOk.length} belastet · ${cancelFailed.length} abgelehnt (CHF ${sum(cancelFailed).toFixed(2)}) — Details ansehen`}
+            accent={sum(cancelOk) > 0}
+            currency
+            onClick={() => setFeeDetails("cancellation")}
+          />
           <Stat
             icon={AlertTriangle}
             label="No-Show belastet"
-            value={noShowOkTotal}
-            hint={`${noShowOk.length} belastet · ${noShowFailed.length} abgelehnt (CHF ${noShowFailedTotal.toFixed(2)}) — Details ansehen`}
-            accent={noShowOkTotal > 0}
+            value={sum(noShowOk)}
+            hint={`${noShowOk.length} belastet · ${noShowFailed.length} abgelehnt (CHF ${sum(noShowFailed).toFixed(2)}) — Details ansehen`}
+            accent={sum(noShowOk) > 0}
             currency
-            onClick={() => setNoShowDetails(true)}
+            onClick={() => setFeeDetails("no_show")}
           />
-          <Stat icon={Ban} label="Storno kostenpflichtig" value={chargedFees.length} hint="Kurzfristig < 7 Tage" />
           <Stat icon={X} label="Storno kostenlos" value={Math.max(0, cancelledFree)} hint="Rechtzeitig / ohne Gebühr" />
         </div>
 
-        {noShowDetails && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setNoShowDetails(false)}>
+        {feeDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setFeeDetails(null)}>
             <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-card p-6" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="font-display text-xl">No-Show-Belastungen</h3>
+                  <h3 className="font-display text-xl">
+                    {feeDetails === "cancellation" ? "Storno-Belastungen" : "No-Show-Belastungen"}
+                  </h3>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Belastet CHF {noShowOkTotal.toFixed(2)} · Abgelehnt CHF {noShowFailedTotal.toFixed(2)}
+                    Belastet CHF {sum(detailsOk).toFixed(2)} · Abgelehnt CHF {sum(detailsFailed).toFixed(2)}
                   </p>
                 </div>
-                <button type="button" onClick={() => setNoShowDetails(false)} className="rounded p-1 hover:bg-muted">
+                <button type="button" onClick={() => setFeeDetails(null)} className="rounded p-1 hover:bg-muted">
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               <h4 className="mt-5 text-xs uppercase tracking-widest text-muted-foreground">Erfolgreich abgebucht</h4>
-              {noShowOk.length === 0 ? (
+              {detailsOk.length === 0 ? (
                 <p className="mt-2 text-sm text-muted-foreground">Keine Belastungen.</p>
               ) : (
                 <ul className="mt-2 space-y-2">
-                  {noShowOk.map((r) => (
+                  {detailsOk.map((r) => (
                     <li key={r.id} className="rounded border border-green-300 bg-green-50 p-3 text-sm">
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <span className="font-medium">{r.guest_name}</span>
@@ -418,7 +471,7 @@ export function ReservationsTab() {
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
                         {(r.occasion || "—")} · {Math.max(1, r.party_size || 1)} Pers. × CHF{" "}
-                        {((r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100).toFixed(2)}
+                        {(((r as any).no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100).toFixed(2)}
                         {r.cancellation_fee_charged_at
                           ? ` · ${new Date(r.cancellation_fee_charged_at).toLocaleString("de-CH")}`
                           : ""}
@@ -436,11 +489,11 @@ export function ReservationsTab() {
               <h4 className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">
                 Abgelehnt (Bank / Karte)
               </h4>
-              {noShowFailed.length === 0 ? (
+              {detailsFailed.length === 0 ? (
                 <p className="mt-2 text-sm text-muted-foreground">Keine abgelehnten Belastungen.</p>
               ) : (
                 <ul className="mt-2 space-y-2">
-                  {noShowFailed.map((r) => (
+                  {detailsFailed.map((r) => (
                     <li key={r.id} className="rounded border border-red-300 bg-red-50 p-3 text-sm">
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <span className="font-medium">{r.guest_name}</span>
@@ -448,17 +501,27 @@ export function ReservationsTab() {
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
                         {(r.occasion || "—")} · {Math.max(1, r.party_size || 1)} Pers. × CHF{" "}
-                        {((r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100).toFixed(2)}
+                        {(((r as any).no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100).toFixed(2)}
                       </div>
                       <div className="mt-1 text-xs text-red-700 break-words">
                         Grund: {r.cancellation_fee_charge_status}
                       </div>
+                      {(r as any).fee_retry_enabled && (
+                        <div className="mt-1 text-xs text-amber-700">
+                          Automatischer nächster Versuch:{" "}
+                          {(r as any).fee_retry_next_at
+                            ? new Date((r as any).fee_retry_next_at).toLocaleDateString("de-CH")
+                            : "—"}{" "}
+                          · bisher {(r as any).fee_retry_attempts ?? 0} Versuch(e)
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
               )}
               <p className="mt-5 text-[11px] text-muted-foreground">
-                Bei jeder Belastung – erfolgreich oder abgelehnt – geht automatisch eine Benachrichtigung an die
+                Abgelehnte Belastungen werden automatisch an weiteren Tagen erneut versucht, bis die Zahlung
+                durchgeht. Bei jedem Versuch – erfolgreich oder abgelehnt – geht eine Benachrichtigung an die
                 hinterlegte Benachrichtigungs-Adresse.
               </p>
             </div>
@@ -471,9 +534,35 @@ export function ReservationsTab() {
 
       {/* ───────────── Filters ───────────── */}
       <section>
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 className="font-display text-xl">Alle Reservierungen</h3>
+        <div className="mb-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-display text-xl">
+              {view === "past" ? "Abgelaufene Reservierungen" : "Alle Reservierungen"}
+            </h3>
+            <div className="flex items-center gap-2 text-xs">
+              <button
+                onClick={() => { setView("current"); setDateFilter("all"); }}
+                className={`px-3 py-1.5 rounded-full border ${view === "current" ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}
+              >
+                Aktuell &amp; zukünftig ({currentCount})
+              </button>
+              <button
+                onClick={() => { setView("past"); setDateFilter("all"); }}
+                className={`px-3 py-1.5 rounded-full border ${view === "past" ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}
+              >
+                Abgelaufen ({pastCount})
+              </button>
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Name suchen …"
+              className="min-w-[200px] flex-1 rounded-full border border-border bg-card px-4 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+            />
             <select
               value={occasionFilter}
               onChange={(e) => setOccasionFilter(e.target.value)}
@@ -494,14 +583,24 @@ export function ReservationsTab() {
                   );
                 })}
             </select>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+            >
+              <option value="all">Alle Anlass-Daten</option>
+              {dateKeys.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
             {["all", "pending", "confirmed", "declined"].map((f) => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`px-3 py-1.5 rounded-full border ${filter === f ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}>
                 {f === "all" ? "Alle Status" : STATUS_LABEL[f]}
               </button>
             ))}
+            <span className="text-muted-foreground">{filtered.length} Treffer</span>
           </div>
-
         </div>
 
         {occasionFilter !== "all" && (

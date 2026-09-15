@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireAdmin } from "./admin.server";
 import { sendReservationConfirmation, sendReservationStatusUpdate, sendAdminNotification, sendAdminCancellationNotification, sendTicketPaymentReminder, sendAdminNoShowChargeNotification } from "./email.server";
 import { createStripeClient, getStripeErrorMessage, type StripeEnv } from "./stripe.server";
+import { attemptFeeCharge } from "./fee-charge.server";
 import { randomBytes } from "node:crypto";
 
 function generateSecureToken(bytes = 48): string {
@@ -326,7 +327,7 @@ const cancelSchema = z.object({
 });
 
 type CancelResult =
-  | { ok: true; fee_charged: boolean; days_until: number; payment_intent_id?: string }
+  | { ok: true; fee_charged: boolean; days_until: number; payment_intent_id?: string; fee_error?: string }
   | { ok: false; error: string };
 
 export const cancelReservation = createServerFn({ method: "POST" })
@@ -378,7 +379,7 @@ export const cancelReservation = createServerFn({ method: "POST" })
     }
 
     // 4) Kostenpflichtige Stornierung — Doppel-Belastung verhindern
-    if (r.cancellation_fee_charged_at || r.cancellation_fee_payment_intent_id) {
+    if (r.cancellation_fee_charged_at) {
       return { ok: false, error: "Für diese Reservation wurde bereits eine Gebühr belastet." };
     }
     if (!r.stripe_customer_id || !r.stripe_payment_method_id) {
@@ -389,88 +390,53 @@ export const cancelReservation = createServerFn({ method: "POST" })
     }
 
     const perPerson = r.cancellation_fee_amount ?? 5000;
-    const partySize = Math.max(1, r.party_size ?? 1);
-    const amount = perPerson * partySize;
-    const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
 
-    // 5) Stripe PaymentIntent off_session erstellen und sofort bestätigen
-    try {
-      const stripe = createStripeClient(data.environment as StripeEnv);
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency,
-        customer: r.stripe_customer_id,
-        payment_method: r.stripe_payment_method_id,
-        off_session: true,
-        confirm: true,
-        description: `Balkaneros Storno-Gebühr — ${r.occasion} (${r.guest_name})`,
-        metadata: {
-          reservation_id: r.id,
-          type: "cancellation_fee",
-          occasion: r.occasion,
-        },
-      });
+    // 5) Gebühr belasten (bei Ablehnung wird automatisch erneut versucht)
+    const charge = await attemptFeeCharge({
+      reservation: r as any,
+      environment: data.environment as StripeEnv,
+      perPersonRappen: perPerson,
+      kind: "cancellation",
+    });
 
-      if (paymentIntent.status !== "succeeded" && paymentIntent.status !== "processing") {
-        // Nicht als bezahlt markieren
-        const { error: updErr } = await supabaseAdmin
-          .from("reservations")
-          .update({
-            cancellation_fee_charge_status: paymentIntent.status,
-            cancellation_fee_payment_intent_id: paymentIntent.id,
-          })
-          .eq("id", data.id);
-        if (updErr) console.error(updErr.message);
-        return {
-          ok: false,
-          error: `Zahlung fehlgeschlagen (Status: ${paymentIntent.status}). Reservation wurde nicht storniert.`,
-        };
-      }
+    // 6) Reservation in jedem Fall stornieren — offene Gebühr bleibt in der
+    //    automatischen Wiederholung.
+    const { error: updErr } = await supabaseAdmin
+      .from("reservations")
+      .update({
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+        cancellation_reason: data.reason ?? null,
+      })
+      .eq("id", data.id);
+    if (updErr) return { ok: false, error: updErr.message };
 
-      // 6) Erfolg speichern
-      const { error: updErr } = await supabaseAdmin
-        .from("reservations")
-        .update({
-          status: "cancelled",
-          cancelled_at: new Date().toISOString(),
-          cancellation_reason: data.reason ?? null,
-          cancellation_fee_charged_at: new Date().toISOString(),
-          cancellation_fee_payment_intent_id: paymentIntent.id,
-          cancellation_fee_charge_status: paymentIntent.status,
-        })
-        .eq("id", data.id);
-      if (updErr) return { ok: false, error: updErr.message };
-
-      try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
-        console.error("cancel email failed", e);
-      }
-      try { await sendAdminCancellationNotification({ ...r, status: "cancelled" }, true); } catch (e) {
-        console.error("admin cancel email failed", e);
-      }
-
-      return {
-        ok: true,
-        fee_charged: true,
-        days_until: daysUntil,
-        payment_intent_id: paymentIntent.id,
-      };
-    } catch (error) {
-      const message = getStripeErrorMessage(error);
-      // Fehlschlag im Log festhalten, aber nicht als bezahlt markieren
-      await supabaseAdmin
-        .from("reservations")
-        .update({ cancellation_fee_charge_status: `failed: ${message.slice(0, 200)}` })
-        .eq("id", data.id);
-      return { ok: false, error: `Stripe-Belastung fehlgeschlagen: ${message}` };
+    try { await sendReservationStatusUpdate({ ...r, status: "cancelled" }); } catch (e) {
+      console.error("cancel email failed", e);
     }
+    try { await sendAdminCancellationNotification({ ...r, status: "cancelled" }, charge.ok); } catch (e) {
+      console.error("admin cancel email failed", e);
+    }
+
+    return {
+      ok: true,
+      fee_charged: charge.ok,
+      days_until: daysUntil,
+      payment_intent_id: charge.ok ? charge.payment_intent_id : undefined,
+      fee_error: charge.ok ? undefined : charge.error,
+    };
   });
 
-// ---- No-Show Gebühr (Admin) ----
+// ---- Storno- / No-Show-Gebühr belasten (Admin) ----
 const noShowSchema = z.object({
   id: z.string().uuid(),
   environment: z.enum(["sandbox", "live"]).default("sandbox"),
   // Optionaler Betrag pro Person in CHF (überschreibt den Anlass-Standard)
   fee_per_person_chf: z.number().positive().max(2000).optional(),
+  // Art der Belastung: Stornogebühr oder No-Show
+  kind: z.enum(["cancellation", "no_show"]).default("no_show"),
+  // Bei Ablehnung automatisch an weiteren Tagen erneut versuchen
+  retry: z.boolean().default(true),
 });
 
 type NoShowResult =
@@ -493,104 +459,43 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
     if (!r.is_paid_occasion) {
       return { ok: false, error: "Nur kostenpflichtige Anlässe können belastet werden." };
     }
-    if (r.cancellation_fee_charged_at || r.cancellation_fee_payment_intent_id) {
+    if (r.cancellation_fee_charged_at) {
       return { ok: false, error: "Für diese Reservation wurde bereits eine Gebühr belastet." };
-    }
-    if (!r.stripe_customer_id || !r.stripe_payment_method_id) {
-      return { ok: false, error: "Keine hinterlegte Zahlungsmethode gefunden." };
     }
 
     const perPerson = data.fee_per_person_chf
       ? Math.round(data.fee_per_person_chf * 100)
       : (r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000);
-    const partySize = Math.max(1, r.party_size ?? 1);
-    const amount = perPerson * partySize;
-    const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
 
-    try {
-      const stripe = createStripeClient(data.environment as StripeEnv);
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency,
-        customer: r.stripe_customer_id,
-        payment_method: r.stripe_payment_method_id,
-        off_session: true,
-        confirm: true,
-        description: `Balkaneros No-Show Gebühr — ${r.occasion} (${r.guest_name})`,
-        metadata: {
-          reservation_id: r.id,
-          type: "no_show_fee",
-          occasion: r.occasion,
-        },
-      });
+    return attemptFeeCharge({
+      reservation: r as any,
+      environment: data.environment as StripeEnv,
+      perPersonRappen: perPerson,
+      kind: data.kind,
+      retry: data.retry,
+    });
+  });
 
-      const notify = async (ok: boolean, err?: string, pi?: string | null) => {
-        try {
-          await sendAdminNoShowChargeNotification({
-            reservation: r as any,
-            ok,
-            perPersonRappen: perPerson,
-            partySize,
-            totalRappen: amount,
-            error: err ?? null,
-            paymentIntentId: pi ?? null,
-          });
-        } catch (e) {
-          console.error("[no-show notify failed]", e);
-        }
-      };
-
-      if (paymentIntent.status !== "succeeded" && paymentIntent.status !== "processing") {
-        await supabaseAdmin
-          .from("reservations")
-          .update({
-            cancellation_fee_charge_status: paymentIntent.status,
-            cancellation_fee_payment_intent_id: paymentIntent.id,
-          })
-          .eq("id", data.id);
-        await notify(false, `Zahlung fehlgeschlagen (Status: ${paymentIntent.status})`, paymentIntent.id);
-        return {
-          ok: false,
-          error: `Zahlung fehlgeschlagen (Status: ${paymentIntent.status}).`,
-        };
-      }
-
-      const { error: updErr } = await supabaseAdmin
-        .from("reservations")
-        .update({
-          cancellation_fee_charged_at: new Date().toISOString(),
-          cancellation_fee_payment_intent_id: paymentIntent.id,
-          cancellation_fee_charge_status: paymentIntent.status,
-          // tatsächlich belasteten Betrag pro Person festhalten
-          no_show_fee_amount: perPerson,
-          cancellation_fee_amount: perPerson,
-        })
-        .eq("id", data.id);
-      if (updErr) return { ok: false, error: updErr.message };
-
-      await notify(true, undefined, paymentIntent.id);
-      return { ok: true, payment_intent_id: paymentIntent.id };
-    } catch (error) {
-      const message = getStripeErrorMessage(error);
-      await supabaseAdmin
-        .from("reservations")
-        .update({ cancellation_fee_charge_status: `failed: ${message.slice(0, 200)}` })
-        .eq("id", data.id);
-      try {
-        await sendAdminNoShowChargeNotification({
-          reservation: r as any,
-          ok: false,
-          perPersonRappen: perPerson,
-          partySize,
-          totalRappen: amount,
-          error: message,
-        });
-      } catch (e) {
-        console.error("[no-show notify failed]", e);
-      }
-      return { ok: false, error: `Stripe-Belastung fehlgeschlagen: ${message}` };
-    }
-
+// ---- Automatische Wiederholung ein-/ausschalten (Admin) ----
+export const setFeeRetry = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) =>
+    z.object({ id: z.string().uuid(), enabled: z.boolean() }).parse(i),
+  )
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.userId);
+    const next = new Date();
+    next.setDate(next.getDate() + 1);
+    next.setHours(9, 0, 0, 0);
+    const { error } = await supabaseAdmin
+      .from("reservations")
+      .update({
+        fee_retry_enabled: data.enabled,
+        fee_retry_next_at: data.enabled ? next.toISOString() : null,
+      })
+      .eq("id", data.id);
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
   });
 
 // ==============================================================
