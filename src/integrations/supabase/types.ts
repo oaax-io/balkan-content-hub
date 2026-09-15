@@ -307,6 +307,11 @@ export type Database = {
           country_code: string
           created_at: string
           event_date_label: string
+          fee_charge_kind: string
+          fee_retry_attempts: number
+          fee_retry_enabled: boolean
+          fee_retry_last_error: string | null
+          fee_retry_next_at: string | null
           guest_email: string
           guest_name: string
           guest_phone: string
@@ -347,6 +352,11 @@ export type Database = {
           country_code?: string
           created_at?: string
           event_date_label?: string
+          fee_charge_kind?: string
+          fee_retry_attempts?: number
+          fee_retry_enabled?: boolean
+          fee_retry_last_error?: string | null
+          fee_retry_next_at?: string | null
           guest_email: string
           guest_name: string
           guest_phone?: string
@@ -387,6 +397,11 @@ export type Database = {
           country_code?: string
           created_at?: string
           event_date_label?: string
+          fee_charge_kind?: string
+          fee_retry_attempts?: number
+          fee_retry_enabled?: boolean
+          fee_retry_last_error?: string | null
+          fee_retry_next_at?: string | null
           guest_email?: string
           guest_name?: string
           guest_phone?: string
