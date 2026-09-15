@@ -139,7 +139,9 @@ export function ReservationsTab() {
         data: { id, reason: reason || undefined, environment: getStripeEnvironment() },
       });
       if (res.ok) {
-        toast.success(res.fee_charged ? "Storniert · CHF 50 belastet" : "Storniert");
+        if (res.fee_charged) toast.success("Storniert · Stornogebühr belastet");
+        else if (res.fee_error) toast.warning("Storniert · Gebühr abgelehnt — wird automatisch erneut versucht");
+        else toast.success("Storniert");
         qc.invalidateQueries({ queryKey: ["reservations"] });
       } else {
         toast.error(res.error);
