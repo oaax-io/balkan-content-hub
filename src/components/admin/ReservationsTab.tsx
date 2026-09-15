@@ -389,12 +389,11 @@ export function ReservationsTab() {
               </p>
             )}
 
-            <div className="mt-5 space-y-3">
-              {perOccasion.slice(0, 5).map((r) => (
-                <button key={r.name} type="button" onClick={() => setOccasionFilter(r.name)}
-                  className="block w-full text-left group">
+            <div className="mt-5 space-y-3 max-h-56 overflow-y-auto pr-1">
+              {perOccasion.map((r) => (
+                <div key={r.name} className="block w-full text-left">
                   <div className="flex items-baseline justify-between gap-3 text-xs">
-                    <span className="truncate font-medium group-hover:text-gold">{r.name}</span>
+                    <span className="truncate font-medium">{r.name}</span>
                     <span className="shrink-0 tabular-nums text-muted-foreground">
                       {r.reservations} Res. · {r.persons} Pers.{r.max > 0 ? ` · ${r.pct}%` : ""}
                     </span>
@@ -403,7 +402,7 @@ export function ReservationsTab() {
                     <div className={`h-full ${r.max > 0 ? barColor(r.pct) : "bg-muted-foreground/40"} transition-all`}
                       style={{ width: `${r.max > 0 ? r.pct : (maxPersons > 0 ? Math.round((r.persons / maxPersons) * 100) : 0)}%` }} />
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>
