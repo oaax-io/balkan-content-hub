@@ -183,7 +183,7 @@ export function ReservationsTab() {
   // Storno-Statistik (nur tatsächlich belastete Gebühren zählen)
   const chargedFees = all.filter((r) => r.cancellation_fee_charged_at);
   const feeRevenue = chargedFees.reduce(
-    (s, r) => s + ((r.cancellation_fee_amount ?? 5000) / 100), 0);
+    (s, r) => s + ((r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1), 0);
   const cancelledCount = all.filter((r) => r.status === "cancelled").length;
   const cancelledFree = cancelledCount - chargedFees.length;
 
