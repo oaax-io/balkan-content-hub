@@ -72,7 +72,9 @@ export function ReservationsTab() {
   const [editorOpen, setEditorOpen] = useState(false);
 
   // In-App-Dialoge (ersetzen window.confirm / window.prompt)
-  const [noShowTarget, setNoShowTarget] = useState<string | null>(null);
+  const [noShowTarget, setNoShowTarget] = useState<
+    { id: string; name: string; partySize: number; perPersonChf: number } | null
+  >(null);
   const [cancelTarget, setCancelTarget] = useState<
     { id: string; isPaid: boolean; daysUntil: number } | null
   >(null);
@@ -102,12 +104,16 @@ export function ReservationsTab() {
     finally { setBusy(null); }
   }
 
-  async function doChargeNoShow(id: string) {
+  async function doChargeNoShow(id: string, perPersonChf: number, partySize: number) {
     setBusy(id);
     try {
-      const res = await noShowFn({ data: { id, environment: "sandbox" } });
+      const res = await noShowFn({
+        data: { id, environment: getStripeEnvironment(), fee_per_person_chf: perPersonChf },
+      });
       if (res.ok) {
-        toast.success("CHF 50 belastet.");
+        toast.success(
+          `CHF ${(perPersonChf * partySize).toFixed(2)} belastet (${partySize} × CHF ${perPersonChf.toFixed(2)}).`,
+        );
         qc.invalidateQueries({ queryKey: ["reservations"] });
       } else {
         toast.error(res.error);
@@ -177,7 +183,7 @@ export function ReservationsTab() {
   // Storno-Statistik (nur tatsächlich belastete Gebühren zählen)
   const chargedFees = all.filter((r) => r.cancellation_fee_charged_at);
   const feeRevenue = chargedFees.reduce(
-    (s, r) => s + ((r.cancellation_fee_amount ?? 5000) / 100), 0);
+    (s, r) => s + ((r.cancellation_fee_amount ?? 5000) / 100) * Math.max(1, r.party_size || 1), 0);
   const cancelledCount = all.filter((r) => r.status === "cancelled").length;
   const cancelledFree = cancelledCount - chargedFees.length;
 
@@ -208,15 +214,32 @@ export function ReservationsTab() {
     <div className="space-y-8">
       <ReservationFormEditorDialog open={editorOpen} onClose={() => setEditorOpen(false)} />
 
-      <ConfirmDialog
+      <PromptDialog
         open={!!noShowTarget}
         onOpenChange={(v) => !v && setNoShowTarget(null)}
-        title="CHF 50 No-Show Gebühr belasten?"
-        description="Diese Aktion kann nicht rückgängig gemacht werden."
+        title="No-Show Gebühr belasten"
+        description={
+          noShowTarget
+            ? `${noShowTarget.name} · ${noShowTarget.partySize} Person(en). Betrag pro Person in CHF eingeben — belastet wird Betrag × Anzahl Personen. Diese Aktion kann nicht rückgängig gemacht werden.`
+            : undefined
+        }
+        defaultValue={noShowTarget ? String(noShowTarget.perPersonChf) : ""}
+        placeholder="z.B. 99"
         confirmLabel="Belasten"
-        destructive
-        onConfirm={() => { if (noShowTarget) doChargeNoShow(noShowTarget); setNoShowTarget(null); }}
+        required
+        onSubmit={(v) => {
+          const t = noShowTarget;
+          setNoShowTarget(null);
+          if (!t) return;
+          const per = Number(String(v).replace(",", "."));
+          if (!Number.isFinite(per) || per <= 0) {
+            toast.error("Bitte einen gültigen Betrag pro Person eingeben.");
+            return;
+          }
+          doChargeNoShow(t.id, per, t.partySize);
+        }}
       />
+
 
       <PromptDialog
         open={!!cancelTarget}
@@ -520,10 +543,15 @@ export function ReservationsTab() {
                           && r.stripe_payment_method_id
                           && !r.cancellation_fee_charged_at && (
                           <DropdownMenuItem
-                            onSelect={() => setNoShowTarget(r.id)}
+                            onSelect={() => setNoShowTarget({
+                              id: r.id,
+                              name: r.guest_name,
+                              partySize: Math.max(1, r.party_size || 1),
+                              perPersonChf: (r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000) / 100,
+                            })}
                             className="gap-2 text-red-700 focus:text-red-700"
                           >
-                            <CircleDollarSign className="w-4 h-4" /> CHF 50 No-Show belasten
+                            <CircleDollarSign className="w-4 h-4" /> No-Show belasten (pro Person)
                           </DropdownMenuItem>
                         )}
                         {(r.ticket_total_rappen ?? 0) > 0

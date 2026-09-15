@@ -469,6 +469,8 @@ export const cancelReservation = createServerFn({ method: "POST" })
 const noShowSchema = z.object({
   id: z.string().uuid(),
   environment: z.enum(["sandbox", "live"]).default("sandbox"),
+  // Optionaler Betrag pro Person in CHF (überschreibt den Anlass-Standard)
+  fee_per_person_chf: z.number().positive().max(2000).optional(),
 });
 
 type NoShowResult =
@@ -498,7 +500,9 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
       return { ok: false, error: "Keine hinterlegte Zahlungsmethode gefunden." };
     }
 
-    const perPerson = r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000;
+    const perPerson = data.fee_per_person_chf
+      ? Math.round(data.fee_per_person_chf * 100)
+      : (r.no_show_fee_amount ?? r.cancellation_fee_amount ?? 5000);
     const partySize = Math.max(1, r.party_size ?? 1);
     const amount = perPerson * partySize;
     const currency = (r.cancellation_fee_currency ?? "chf").toLowerCase();
@@ -540,6 +544,9 @@ export const chargeNoShowFee = createServerFn({ method: "POST" })
           cancellation_fee_charged_at: new Date().toISOString(),
           cancellation_fee_payment_intent_id: paymentIntent.id,
           cancellation_fee_charge_status: paymentIntent.status,
+          // tatsächlich belasteten Betrag pro Person festhalten
+          no_show_fee_amount: perPerson,
+          cancellation_fee_amount: perPerson,
         })
         .eq("id", data.id);
       if (updErr) return { ok: false, error: updErr.message };
