@@ -524,9 +524,35 @@ export function ReservationsTab() {
 
       {/* ───────────── Filters ───────────── */}
       <section>
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 className="font-display text-xl">Alle Reservierungen</h3>
+        <div className="mb-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-display text-xl">
+              {view === "past" ? "Abgelaufene Reservierungen" : "Alle Reservierungen"}
+            </h3>
+            <div className="flex items-center gap-2 text-xs">
+              <button
+                onClick={() => { setView("current"); setDateFilter("all"); }}
+                className={`px-3 py-1.5 rounded-full border ${view === "current" ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}
+              >
+                Aktuell &amp; zukünftig ({currentCount})
+              </button>
+              <button
+                onClick={() => { setView("past"); setDateFilter("all"); }}
+                className={`px-3 py-1.5 rounded-full border ${view === "past" ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}
+              >
+                Abgelaufen ({pastCount})
+              </button>
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Name suchen …"
+              className="min-w-[200px] flex-1 rounded-full border border-border bg-card px-4 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+            />
             <select
               value={occasionFilter}
               onChange={(e) => setOccasionFilter(e.target.value)}
@@ -547,14 +573,24 @@ export function ReservationsTab() {
                   );
                 })}
             </select>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40"
+            >
+              <option value="all">Alle Anlass-Daten</option>
+              {dateKeys.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
             {["all", "pending", "confirmed", "declined"].map((f) => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`px-3 py-1.5 rounded-full border ${filter === f ? "bg-gold text-gold-foreground border-gold" : "border-border text-muted-foreground hover:text-foreground"}`}>
                 {f === "all" ? "Alle Status" : STATUS_LABEL[f]}
               </button>
             ))}
+            <span className="text-muted-foreground">{filtered.length} Treffer</span>
           </div>
-
         </div>
 
         {occasionFilter !== "all" && (
