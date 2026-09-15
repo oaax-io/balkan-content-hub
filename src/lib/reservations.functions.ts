@@ -327,7 +327,7 @@ const cancelSchema = z.object({
 });
 
 type CancelResult =
-  | { ok: true; fee_charged: boolean; days_until: number; payment_intent_id?: string }
+  | { ok: true; fee_charged: boolean; days_until: number; payment_intent_id?: string; fee_error?: string }
   | { ok: false; error: string };
 
 export const cancelReservation = createServerFn({ method: "POST" })
@@ -379,7 +379,7 @@ export const cancelReservation = createServerFn({ method: "POST" })
     }
 
     // 4) Kostenpflichtige Stornierung — Doppel-Belastung verhindern
-    if (r.cancellation_fee_charged_at || r.cancellation_fee_payment_intent_id) {
+    if (r.cancellation_fee_charged_at) {
       return { ok: false, error: "Für diese Reservation wurde bereits eine Gebühr belastet." };
     }
     if (!r.stripe_customer_id || !r.stripe_payment_method_id) {
