@@ -73,6 +73,7 @@ export function ReservationsTab() {
   const [busy, setBusy] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [feeDetails, setFeeDetails] = useState<null | "cancellation" | "no_show">(null);
+  const [ticketDetails, setTicketDetails] = useState(false);
 
   // In-App-Dialoge (ersetzen window.confirm / window.prompt)
   const [noShowTarget, setNoShowTarget] = useState<
@@ -408,9 +409,9 @@ export function ReservationsTab() {
           </div>
 
           <div className="grid gap-4">
-            <Stat icon={CircleDollarSign} label="Ticket-Einnahmen" value={ticketRevenue} hint={`${paidTickets.length} bezahlte Reservierung(en) · ${ticketPersons} Pers.`} accent={ticketRevenue > 0} currency />
+            <Stat icon={CircleDollarSign} label="Ticket-Einnahmen" value={ticketRevenue} hint={`${paidTickets.length} bezahlte Reservierung(en) · ${ticketPersons} Pers. — Zahlungen ansehen`} accent={ticketRevenue > 0} currency onClick={() => setTicketDetails(true)} />
             <Stat icon={TrendingUp} label="Storno-Einnahmen" value={feeRevenue} hint={`${chargedFees.length} belastete Gebühr(en)`} accent={feeRevenue > 0} currency />
-            <Stat icon={Clock} label="Offene Zahlungen" value={pendingTicketAmount} hint={`${pendingTickets.length} noch nicht bezahlt`} accent={pendingTickets.length > 0} currency />
+            <Stat icon={Clock} label="Offene Zahlungen" value={pendingTicketAmount} hint={`${pendingTickets.length} noch nicht bezahlt — Zahlungen ansehen`} accent={pendingTickets.length > 0} currency onClick={() => setTicketDetails(true)} />
           </div>
         </div>
 
@@ -519,6 +520,91 @@ export function ReservationsTab() {
                 Abgelehnte Belastungen werden automatisch an weiteren Tagen erneut versucht, bis die Zahlung
                 durchgeht. Bei jedem Versuch – erfolgreich oder abgelehnt – geht eine Benachrichtigung an die
                 hinterlegte Benachrichtigungs-Adresse.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {ticketDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" onClick={() => setTicketDetails(false)}>
+            <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-card p-6" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-display text-xl">Online-Zahlungen (Tickets)</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Bezahlt CHF {ticketRevenue.toFixed(2)} · Offen CHF {pendingTicketAmount.toFixed(2)}
+                  </p>
+                </div>
+                <button type="button" onClick={() => setTicketDetails(false)} className="rounded p-1 hover:bg-muted">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <h4 className="mt-5 text-xs uppercase tracking-widest text-muted-foreground">
+                Bezahlt &amp; in der Datenbank gespeichert
+              </h4>
+              {paidTickets.length === 0 ? (
+                <p className="mt-2 text-sm text-muted-foreground">Keine bezahlten Ticket-Reservierungen.</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {paidTickets.map((r) => (
+                    <li key={r.id} className="rounded border border-green-300 bg-green-50 p-3 text-sm">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="font-medium">{r.guest_name}</span>
+                        <span className="tabular-nums font-semibold">
+                          CHF {((r.ticket_total_rappen ?? 0) / 100).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {(r.occasion || "—")} · {Math.max(1, r.party_size || 1)} Pers. ·{" "}
+                        {r.ticket_paid_at
+                          ? `bezahlt am ${new Date(r.ticket_paid_at).toLocaleString("de-CH")}`
+                          : "Zahlungszeit unbekannt"}
+                      </div>
+                      <div className="mt-1 text-[11px] text-muted-foreground break-all">
+                        Checkout: {(r as any).stripe_checkout_session_id || "—"}
+                        <br />
+                        Zahlung: {(r as any).stripe_payment_intent_id || "—"}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <h4 className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">
+                Offen (Checkout begonnen, nicht abgeschlossen)
+              </h4>
+              {pendingTickets.length === 0 ? (
+                <p className="mt-2 text-sm text-muted-foreground">Keine offenen Zahlungen.</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {pendingTickets.map((r) => (
+                    <li key={r.id} className="rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="font-medium">{r.guest_name}</span>
+                        <span className="tabular-nums font-semibold">
+                          CHF {((r.ticket_total_rappen ?? 0) / 100).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {(r.occasion || "—")} · {Math.max(1, r.party_size || 1)} Pers. ·{" "}
+                        {r.guest_email}
+                      </div>
+                      <div className="mt-1 text-[11px] text-muted-foreground break-all">
+                        Checkout: {(r as any).stripe_checkout_session_id || "—"}
+                      </div>
+                      <div className="mt-1 text-xs text-amber-700">
+                        Noch keine Zahlungsbestätigung erhalten — über das Aktionsmenü der Reservierung kann
+                        eine Zahlungserinnerung gesendet werden.
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <p className="mt-5 text-[11px] text-muted-foreground">
+                Sobald eine Online-Zahlung abgeschlossen ist, wird sie automatisch bei der Reservierung
+                gespeichert (Zahlungszeit und Zahlungsreferenz) und die Reservierung bestätigt.
               </p>
             </div>
           </div>
