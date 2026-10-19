@@ -17,7 +17,7 @@ export const Route = createFileRoute("/reservieren")({
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: Reserve,
-  errorComponent: ({ error }) => <div className="p-10">Fehler: {error.message}</div>,
+  errorComponent: RouteError,
 });
 
 function Reserve() {

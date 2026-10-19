@@ -16,7 +16,7 @@ export const Route = createFileRoute("/dinner")({
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: DinnerPage,
-  errorComponent: ({ error }) => <div className="p-10">Fehler: {error.message}</div>,
+  errorComponent: RouteError,
 });
 
 function DinnerPage() {

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/kontakt")({
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: Contact,
-  errorComponent: ({ error }) => <div className="p-10">Fehler: {error.message}</div>,
+  errorComponent: RouteError,
 });
 
 function extractMapsSrc(input: string): string {
