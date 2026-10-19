@@ -1,3 +1,4 @@
+import { RouteError } from "@/components/site/RouteError";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { publicDataQuery } from "@/lib/queries";
