@@ -1,3 +1,4 @@
+import { RouteError } from "@/components/site/RouteError";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { publicDataQuery } from "@/lib/queries";
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/reservieren")({
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: Reserve,
-  errorComponent: ({ error }) => <div className="p-10">Fehler: {error.message}</div>,
+  errorComponent: RouteError,
 });
 
 function Reserve() {

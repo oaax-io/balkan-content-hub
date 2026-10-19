@@ -9,72 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UeberUnsRouteImport } from './routes/ueber-uns'
-import { Route as ReservierenRouteImport } from './routes/reservieren'
-import { Route as ReservationDankeRouteImport } from './routes/reservation-danke'
-import { Route as NewsletterAbmeldenRouteImport } from './routes/newsletter-abmelden'
-import { Route as KontaktRouteImport } from './routes/kontakt'
-import { Route as GutscheinDankeRouteImport } from './routes/gutschein-danke'
-import { Route as EventsRouteImport } from './routes/events'
-import { Route as DinnerRouteImport } from './routes/dinner'
-import { Route as BrunchRouteImport } from './routes/brunch'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AgbRouteImport } from './routes/agb'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ReservationCancelTokenRouteImport } from './routes/reservation-cancel.$token'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AgbRouteImport } from './routes/agb'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BrunchRouteImport } from './routes/brunch'
+import { Route as DinnerRouteImport } from './routes/dinner'
+import { Route as EventsRouteImport } from './routes/events'
+import { Route as GutscheinDankeRouteImport } from './routes/gutschein-danke'
+import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as NewsletterAbmeldenRouteImport } from './routes/newsletter-abmelden'
+import { Route as ReservationDankeRouteImport } from './routes/reservation-danke'
+import { Route as ReservierenRouteImport } from './routes/reservieren'
+import { Route as UeberUnsRouteImport } from './routes/ueber-uns'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ReservationCancelTokenRouteImport } from './routes/reservation-cancel.$token'
 import { Route as ApiPublicRetryFeesRouteImport } from './routes/api/public/retry-fees'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
-const UeberUnsRoute = UeberUnsRouteImport.update({
-  id: '/ueber-uns',
-  path: '/ueber-uns',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReservierenRoute = ReservierenRouteImport.update({
-  id: '/reservieren',
-  path: '/reservieren',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReservationDankeRoute = ReservationDankeRouteImport.update({
-  id: '/reservation-danke',
-  path: '/reservation-danke',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NewsletterAbmeldenRoute = NewsletterAbmeldenRouteImport.update({
-  id: '/newsletter-abmelden',
-  path: '/newsletter-abmelden',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KontaktRoute = KontaktRouteImport.update({
-  id: '/kontakt',
-  path: '/kontakt',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GutscheinDankeRoute = GutscheinDankeRouteImport.update({
-  id: '/gutschein-danke',
-  path: '/gutschein-danke',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsRoute = EventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DinnerRoute = DinnerRouteImport.update({
-  id: '/dinner',
-  path: '/dinner',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BrunchRoute = BrunchRouteImport.update({
-  id: '/brunch',
-  path: '/brunch',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgbRoute = AgbRouteImport.update({
@@ -82,24 +41,65 @@ const AgbRoute = AgbRouteImport.update({
   path: '/agb',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const BrunchRoute = BrunchRouteImport.update({
+  id: '/brunch',
+  path: '/brunch',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReservationCancelTokenRoute = ReservationCancelTokenRouteImport.update({
-  id: '/reservation-cancel/$token',
-  path: '/reservation-cancel/$token',
+const DinnerRoute = DinnerRouteImport.update({
+  id: '/dinner',
+  path: '/dinner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GutscheinDankeRoute = GutscheinDankeRouteImport.update({
+  id: '/gutschein-danke',
+  path: '/gutschein-danke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KontaktRoute = KontaktRouteImport.update({
+  id: '/kontakt',
+  path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsletterAbmeldenRoute = NewsletterAbmeldenRouteImport.update({
+  id: '/newsletter-abmelden',
+  path: '/newsletter-abmelden',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReservationDankeRoute = ReservationDankeRouteImport.update({
+  id: '/reservation-danke',
+  path: '/reservation-danke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReservierenRoute = ReservierenRouteImport.update({
+  id: '/reservieren',
+  path: '/reservieren',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UeberUnsRoute = UeberUnsRouteImport.update({
+  id: '/ueber-uns',
+  path: '/ueber-uns',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ReservationCancelTokenRoute = ReservationCancelTokenRouteImport.update({
+  id: '/reservation-cancel/$token',
+  path: '/reservation-cancel/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicRetryFeesRoute = ApiPublicRetryFeesRouteImport.update({
   id: '/api/public/retry-fees',
@@ -248,81 +248,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/ueber-uns': {
-      id: '/ueber-uns'
-      path: '/ueber-uns'
-      fullPath: '/ueber-uns'
-      preLoaderRoute: typeof UeberUnsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reservieren': {
-      id: '/reservieren'
-      path: '/reservieren'
-      fullPath: '/reservieren'
-      preLoaderRoute: typeof ReservierenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reservation-danke': {
-      id: '/reservation-danke'
-      path: '/reservation-danke'
-      fullPath: '/reservation-danke'
-      preLoaderRoute: typeof ReservationDankeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/newsletter-abmelden': {
-      id: '/newsletter-abmelden'
-      path: '/newsletter-abmelden'
-      fullPath: '/newsletter-abmelden'
-      preLoaderRoute: typeof NewsletterAbmeldenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kontakt': {
-      id: '/kontakt'
-      path: '/kontakt'
-      fullPath: '/kontakt'
-      preLoaderRoute: typeof KontaktRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/gutschein-danke': {
-      id: '/gutschein-danke'
-      path: '/gutschein-danke'
-      fullPath: '/gutschein-danke'
-      preLoaderRoute: typeof GutscheinDankeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events': {
-      id: '/events'
-      path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof EventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dinner': {
-      id: '/dinner'
-      path: '/dinner'
-      fullPath: '/dinner'
-      preLoaderRoute: typeof DinnerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/brunch': {
-      id: '/brunch'
-      path: '/brunch'
-      fullPath: '/brunch'
-      preLoaderRoute: typeof BrunchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agb': {
-      id: '/agb'
-      path: '/agb'
-      fullPath: '/agb'
-      preLoaderRoute: typeof AgbRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -332,18 +262,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/agb': {
+      id: '/agb'
+      path: '/agb'
+      fullPath: '/agb'
+      preLoaderRoute: typeof AgbRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reservation-cancel/$token': {
-      id: '/reservation-cancel/$token'
-      path: '/reservation-cancel/$token'
-      fullPath: '/reservation-cancel/$token'
-      preLoaderRoute: typeof ReservationCancelTokenRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brunch': {
+      id: '/brunch'
+      path: '/brunch'
+      fullPath: '/brunch'
+      preLoaderRoute: typeof BrunchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dinner': {
+      id: '/dinner'
+      path: '/dinner'
+      fullPath: '/dinner'
+      preLoaderRoute: typeof DinnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gutschein-danke': {
+      id: '/gutschein-danke'
+      path: '/gutschein-danke'
+      fullPath: '/gutschein-danke'
+      preLoaderRoute: typeof GutscheinDankeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kontakt': {
+      id: '/kontakt'
+      path: '/kontakt'
+      fullPath: '/kontakt'
+      preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newsletter-abmelden': {
+      id: '/newsletter-abmelden'
+      path: '/newsletter-abmelden'
+      fullPath: '/newsletter-abmelden'
+      preLoaderRoute: typeof NewsletterAbmeldenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reservation-danke': {
+      id: '/reservation-danke'
+      path: '/reservation-danke'
+      fullPath: '/reservation-danke'
+      preLoaderRoute: typeof ReservationDankeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reservieren': {
+      id: '/reservieren'
+      path: '/reservieren'
+      fullPath: '/reservieren'
+      preLoaderRoute: typeof ReservierenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ueber-uns': {
+      id: '/ueber-uns'
+      path: '/ueber-uns'
+      fullPath: '/ueber-uns'
+      preLoaderRoute: typeof UeberUnsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -352,6 +345,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/reservation-cancel/$token': {
+      id: '/reservation-cancel/$token'
+      path: '/reservation-cancel/$token'
+      fullPath: '/reservation-cancel/$token'
+      preLoaderRoute: typeof ReservationCancelTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/retry-fees': {
       id: '/api/public/retry-fees'

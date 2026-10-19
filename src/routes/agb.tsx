@@ -1,3 +1,4 @@
+import { RouteError } from "@/components/site/RouteError";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { publicDataQuery } from "@/lib/queries";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/agb")({
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: AGB,
-  errorComponent: ({ error }) => <div className="p-10">Fehler: {error.message}</div>,
+  errorComponent: RouteError,
 });
 
 function AGB() {

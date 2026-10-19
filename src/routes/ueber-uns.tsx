@@ -1,3 +1,4 @@
+import { RouteError } from "@/components/site/RouteError";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { publicDataQuery } from "@/lib/queries";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/ueber-uns")({
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publicDataQuery),
   component: About,
-  errorComponent: ({ error }) => <div className="p-10">Fehler: {error.message}</div>,
+  errorComponent: RouteError,
 });
 
 function About() {
